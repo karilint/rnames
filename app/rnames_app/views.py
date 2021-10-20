@@ -40,6 +40,7 @@ from .filters import UserFilter
 import sys
 from subprocess import run, PIPE
 from .utils.root_binning import main_binning_fun
+from .utils.tools import (get_cron_relations, get_time_slices)
 from io import StringIO
 from contextlib import redirect_stdout
 # , APINameFilter
@@ -56,17 +57,20 @@ def external(request):
     num_opinions = Relation.objects.is_active().count()
 
     # inp = request.POST.get('param', 'K') # This doesn't appear to be used anywhere in binning
-    out = io.StringIO()
-
-    with redirect_stdout(out):
-        main_binning_fun()
-
-    print(out.getvalue())
+    rels = get_cron_relations()
+    result = main_binning_fun(rels[0], get_time_slices())
 
     return render(
         request,
-        'run_binning.html',
-        context={'num_opinions': num_opinions, 'data1': out.getvalue()},
+        'binning_done.html',
+        context={
+            'dl_duration': rels[1],
+            'duration': result['duration'],
+            'berg': result['berg'].to_html(classes='w3-table'),
+            'webby': result['webby'].to_html(classes='w3-table'),
+            'periods': result['binned_periods'].to_html(classes='w3-table'),
+            'stages': result['binned_stages'].to_html(classes='w3-table')
+        },
     )
 
 

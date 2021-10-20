@@ -6,9 +6,10 @@ import csv
 import pandas as pd
 import numpy as np
 #from rnames_app.utils import rn_funs
+from bisect import (bisect_left, bisect_right)
 from .rn_funs import *
 
-def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
+def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange, time_slices):
 
     print("We begin with six search algorithms binning all relations within the given binning scheme with references.")
     print("This takes a few minutes....")
@@ -32,19 +33,19 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
     # Binning schemes
 
     if binning_scheme == "r":
-        used_ts = rassm_ts
+        used_ts = time_slices['rassm']
         t_scheme = "TimeSlice_Rassmussen"
     if binning_scheme == "w":
-        used_ts = webby_ts
+        used_ts = time_slices['webby']
         t_scheme = "TimeSlice_Webby"
     if binning_scheme == "b":
-        used_ts = berg_ts
+        used_ts = time_slices['berg']
         t_scheme = "TimeSlice_Bergstrom"
     if binning_scheme == "s":
-        used_ts = stages_ts
+        used_ts = time_slices['stages']
         t_scheme = "Stage"
     if binning_scheme == "p":
-        used_ts = periods_ts
+        used_ts = time_slices['periods']
         t_scheme = "Period"
 
     # range limitation
@@ -101,27 +102,132 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
 
     ##############################################################
     ##############################################################
+    results = {}
+
     #rule 0 = all direct relations between chronostrat names and binning scheme
+    results['rule_0'] = rule0(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme)
+
+    ##############################################################
+    ##############################################################
+    #rule 1 = all direct relations between biostrat names and binning scheme
+    results['rule_1'] = rule1(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme)
+
+    ##############################################################
+    ##############################################################
+    ### Rule_2: direct relations between non-bio* with binning scheme
+    ### except chronostratigraphy
+    results['rule_2'] = rule2(results, c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme)
+
+    ##############################################################
+    ##############################################################
+    # the second tier has two binning rules and bins all indirect names via biostrat
+
+    ##############################################################
+    ##############################################################
+    #rule_3 all relations between biostrat and biostrat that refer indirectly to binning scheme
+    results['rule_3'] = rule3(results, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme)
+
+    ##############################################################
+    resis_bio = pd.concat([results['rule_1'], results['rule_3']], axis=0)
+    resis_bio = pd.DataFrame.drop_duplicates(resis_bio)
+    ### Rule 4: indirect relations of non-bio via resis_bio to binning scheme
+    ### except direct chronostratigraphy links
+    results['rule_4'] = rule4(results, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme)
+
+    ##################################################################################
+    cr_g = c_rels.loc[~(c_rels["strat_qualifier_1"]=="Biostratigraphy")
+                              & ~(c_rels["strat_qualifier_2"]=="Biostratigraphy")
+                              & ~(c_rels["qualifier_name_1"]==t_scheme)
+                              & ~(c_rels["qualifier_name_2"]==t_scheme),
+                              ["reference_id","name_1","name_2", "reference_year"]]
+    cr_g.to_csv("x_cr_g.csv", index = False, header=True)
+    ### Rule 5:  indirect relations of non-bio* to resis_4 with link to bio* (route via resi_4)
+    results['rule_5'] = rule5(results, cr_g, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme)
+
+    ##################################################################################
+    ### Rule 6: indirect relations of non-bio* to resis_bio to binning scheme (route via resis_bio)
+    #rule 6 corrected at 23.03.2020
+    results['rule_6'] = rule6(results, cr_g, runrange, used_ts, xnames_raw, b_scheme)
+
+    end = time.time()
+    dura = (end - start)/60
+
+    print("############################################")
+    print("The binning took", round(dura, 2), "minutes")
+    print("############################################")
+
+    print("Now we search for the shortest time bins within these 6 results.")
+    ##################################################################################
+    ##################################################################################
+    ## search for shortest time bins among 5 & 6
+    start = time.time()
+    combi_names = shortestTimeBins(results, used_ts)
+    end = time.time()
+    dura2 = (end - start)/60
+    print("We find", len(combi_names),
+          "binned names. It took ", round(dura, 2), "+", round(dura2, 2),  "minutes.")
+    return combi_names
+
+def bin_unique_names_0(ibs, cr_x, used_ts, xnames_raw):
+    # cr_x columns [reference_id, name_1, name_2, ts, ts_index, reference_year]
+    # xnames ['name', 'strat_qualifier', 'ref', 'combi']
+    k_reference_id = 0
+    k_name_id = 1
+    k_ts = 3
+    k_ts_index = 4
+    xk_ref = 2
+
+    bnu = pd.unique(cr_x["name_1"])
+    cr_x = cr_x.sort_values(by = ['name_1', 'reference_id', 'ts_index'])
+    cr_x = cr_x.values
+
+    xnames_raw = xnames_raw.sort_values(by='name')
+    xnames_raw = xnames_raw.values
+
+    rows = []
+    for name in bnu:
+        data = cr_x[bisect_left(cr_x[:, 1], name):bisect_right(cr_x[:, 1], name)]
+        xnames = xnames_raw[bisect_left(xnames_raw[:, 0], name):bisect_right(xnames_raw[:, 0], name)]
+
+        data = data[~np.isin(data[:, k_reference_id], xnames[:, xk_ref])]
+
+        if data.size == 0:
+            continue
+
+        # select all references
+        if ibs == 0:
+            data = bifu_s(data, xnames)
+        if ibs == 1:
+            data = bifu_y(data, xnames)
+        if ibs == 2:
+            data = bifu_c(data, xnames)
+
+        # and collect the references which have that opinions
+        refs_f = ', '.join(map(str, np.unique(data[:, k_reference_id])))
+
+        # youngest, oldest and ts_count
+        ts_max = np.max(data[:, k_ts_index])
+        ts_min = np.min(data[:, k_ts_index])
+        ts_c = ts_max - ts_min
+
+        youngest = data[data[:, k_ts_index] == ts_max]
+        oldest = data[data[:, k_ts_index] == ts_min]
+
+        rows.append((name, oldest[0, k_ts], youngest[0, k_ts], ts_c, refs_f))
+
+    ret = pd.DataFrame(rows, columns=["name", "oldest", "youngest", "ts_count", "refs"])
+    return ret.dropna()
+
+
+def rule0(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme):
     cr_x = c_rels_d.loc[((c_rels_d["strat_qualifier_1"]=="Chronostratigraphy"))
                               & ((c_rels_d["qualifier_name_2"]==t_scheme)),
                               ["reference_id","name_1","name_2", "ts", "ts_index", "reference_year"]]
 
     cr_x =  cr_x.loc[~(cr_x["name_1"]=="not specified")]
-    bnu = cr_x["name_1"]
-    bnu = bnu.drop_duplicates()
-    bnurange = np.arange(0,len(bnu),1)
 
     for ibs in runrange:
-        resi_0 = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-        resi_0 = pd.DataFrame.transpose(resi_0)
-        for i in bnurange:
-            if ibs == 0:
-                resi_0a = bifu_s(cr_x.loc[cr_x["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-            if ibs == 1:
-                resi_0a = bifu_y(cr_x.loc[cr_x["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-            if ibs == 2:
-                resi_0a = bifu_c(cr_x.loc[cr_x["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-            resi_0 = pd.concat([resi_0, resi_0a], axis=0, sort=True)
+        resi_0 = bin_unique_names_0(ibs, cr_x, used_ts, xnames_raw)
         resi_0["rule"] = 0.0
         resi_0 = resi_0.loc(axis=1)["name", "oldest", "youngest", "ts_count", "refs", "rule"]
         resi_0 =  resi_0[~resi_0["name"].isin(used_ts["ts"])]
@@ -138,96 +244,25 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
             resi_0c["b_scheme"] = "c"
     resi_0 = resi_0.dropna()
     if b_scheme == "cc":
-        resi_0 = pd.concat([resi_0s, resi_0y, resi_0c])
-        x1 = pd.merge(resi_0, used_ts, how= 'inner', left_on="oldest", right_on="ts")
-        x1 = x1[['name', 'oldest', 'ts_index', 'youngest', 'ts_count',
-                 'refs', 'rule', "b_scheme"]]
-        x1.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'ts_count',
-                      'refs', 'rule', "b_scheme"]
-        x1 = pd.merge(x1, used_ts, how= 'inner', left_on="youngest", right_on="ts")
-        x1 = x1[['name', 'oldest', 'oldest_index', 'youngest', 'ts_index','ts_count',
-                 'refs', 'rule', "b_scheme"]]
-        x1.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'youngest_index', 'ts_count',
-                      'refs', 'rule', "b_scheme"]
-        x_resi = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-        x_resi = pd.DataFrame.transpose(x_resi)
-        xal = pd.merge(pd.merge(resi_0s,resi_0y,on='name'),resi_0c,on='name')
-        bnu = xal["name"]
-        bnu = bnu.drop_duplicates()
-        bnu = bnu.dropna()
-        bnurange = np.arange(0,len(bnu),1)
-        for i in bnurange:
-        #i=2
-            i_name = bnu.iloc[i]
-            x1_sub = x1.loc[((x1["name"]== i_name))]
-            x1_subs = x1.loc[((x1["name"]== i_name) & (x1["b_scheme"]== "s"))]
-            x1_suby = x1.loc[((x1["name"]== i_name) & (x1["b_scheme"]== "y"))]
-            x1_subc = x1.loc[((x1["name"]== i_name) & (x1["b_scheme"]== "c"))]
-            # youngest = max, oldest = min index
-            x_range_s = np.array([min(x1_subs["oldest_index"])])
-            x_range_y = np.array([min(x1_suby["oldest_index"])])
-            x_range_c = np.array([min(x1_subc["oldest_index"])])
-
-            if min(x1_subs["oldest_index"]) != max(x1_subs["youngest_index"]):
-                x_range_s = np.arange(min(x1_subs["oldest_index"]),max(x1_subs["youngest_index"])+1,1)
-            if min(x1_suby["oldest_index"]) != max(x1_suby["youngest_index"]):
-                x_range_y = np.arange(min(x1_suby["oldest_index"]),max(x1_suby["youngest_index"])+1,1)
-            if min(x1_subc["oldest_index"]) != max(x1_subc["youngest_index"]):
-                x_range_c = np.arange(min(x1_subc["oldest_index"]),max(x1_subc["youngest_index"])+1,1)
-
-            rax = np.concatenate((x_range_s, x_range_s, x_range_c))
-            # filter for third quantile, only bins with highest score
-            rax_counts = pd.DataFrame(np.unique(rax, return_counts=True), index = ['ts_bins', 'counts'])
-            rax_counts = rax_counts.transpose()
-            rq = round(np.quantile(rax_counts['counts'], 0.75),0)
-            rax_sub = rax_counts.loc[rax_counts['counts']>= rq, ['ts_bins']]
-            rax_sub = pd.merge(rax_sub, used_ts, how= 'inner', left_on="ts_bins", right_on="ts_index")
-            x_youngest = rax_sub.loc[(rax_sub["ts_index"]== max(rax_sub["ts_index"])), ['ts']]
-            x_oldest = rax_sub.loc[(rax_sub["ts_index"]== min(rax_sub["ts_index"])), ['ts']]
-            ts_c = max(rax_sub["ts_index"])-min(rax_sub["ts_index"])
-            refs_f = pd.unique(x1_sub['refs'])
-            refs_f = pd.DataFrame(refs_f)
-            refs_f = refs_f[0].apply(str)
-            refs_f = refs_f.str.cat(sep=', ')
-            ref_list = refs_f.split(", ")
-            ref_list_u = list(set(ref_list))
-            str1 = ", "
-            refs_f = str1.join(ref_list_u)
-            x_resib = pd.DataFrame([[i_name, x_oldest.iloc[0,0], x_youngest.iloc[0,0], ts_c, refs_f]],
-                               columns=["name", "oldest", "youngest", "ts_count", "refs"])
-            x_resi = pd.concat([x_resi, x_resib], axis=0, sort=True)
-        resi_0 = x_resi
+        resi_0 = merge_cc(resi_0s, resi_0y, resi_0c, used_ts)
         resi_0['rule'] = 0.0
 
     resi_0 = resi_0.loc(axis=1)["name", "oldest", "youngest", "ts_count", "refs", "rule"]
     print("rule 0 has ", len(resi_0), "binned relations")
     print("Rule 0:  relations among named biostratigraphical units that have direct relations to binning scheme")
     resi_0.to_csv("x_rule0.csv", index = False, header=True)
+    return resi_0
 
-    ##############################################################
-    ##############################################################
+def rule1(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme):
     #rule 1 = all direct relations between biostrat names and binning scheme
     cr_a = c_rels_d.loc[((c_rels_d["strat_qualifier_1"]=="Biostratigraphy"))
                               & ((c_rels_d["qualifier_name_2"]==t_scheme)),
                               ["reference_id","name_1","name_2", "ts", "ts_index", "reference_year"]]
     #take out  relations that also relate to not specified in same reference
     cr_a =  cr_a.loc[~(cr_a["name_1"]=="not specified")]
-    bnu = cr_a["name_1"]
-    bnu = bnu.drop_duplicates()
-    bnurange = np.arange(0,len(bnu),1)
 
     for ibs in runrange:
-        resi_1 = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-        resi_1 = pd.DataFrame.transpose(resi_1)
-        for i in bnurange:
-            if ibs == 0:
-                resi_1a = bifu_s(cr_a.loc[cr_a["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-            if ibs == 1:
-                resi_1a = bifu_y(cr_a.loc[cr_a["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-            if ibs == 2:
-                resi_1a = bifu_c(cr_a.loc[cr_a["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-            resi_1 = pd.concat([resi_1, resi_1a], axis=0, sort=True)
-        resi_1 = resi_1.dropna()
+        resi_1 = bin_unique_names_0(ibs, cr_a, used_ts, xnames_raw)
         resi_1["rule"] = 1.0
         resi_1 = resi_1.loc(axis=1)["name", "oldest", "youngest", "ts_count", "refs", "rule"]
         resi_1 =  resi_1[~resi_1["name"].isin(used_ts["ts"])]
@@ -244,97 +279,27 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
             resi_1c["b_scheme"] = "c"
 
     if b_scheme == "cc":
-        resi_1 = pd.concat([resi_1s, resi_1y, resi_1c])
-        x1 = pd.merge(resi_1, used_ts, how= 'inner', left_on="oldest", right_on="ts")
-        x1 = x1[['name', 'oldest', 'ts_index', 'youngest', 'ts_count',
-                 'refs', 'rule', "b_scheme"]]
-        x1.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'ts_count',
-                      'refs', 'rule', "b_scheme"]
-        x1 = pd.merge(x1, used_ts, how= 'inner', left_on="youngest", right_on="ts")
-        x1 = x1[['name', 'oldest', 'oldest_index', 'youngest', 'ts_index','ts_count',
-                 'refs', 'rule', "b_scheme"]]
-        x1.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'youngest_index', 'ts_count',
-                      'refs', 'rule', "b_scheme"]
-        x_resi = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-        x_resi = pd.DataFrame.transpose(x_resi)
-        xal = pd.merge(pd.merge(resi_1s,resi_1y,on='name'),resi_1c,on='name')
-        bnu = xal["name"]
-        bnu = bnu.drop_duplicates()
-        bnu = bnu.dropna()
-        bnurange = np.arange(0,len(bnu),1)
-        for i in bnurange:
-        #i=2
-            i_name = bnu.iloc[i]
-            x1_sub = x1.loc[((x1["name"]== i_name))]
-            x1_subs = x1.loc[((x1["name"]== i_name) & (x1["b_scheme"]== "s"))]
-            x1_suby = x1.loc[((x1["name"]== i_name) & (x1["b_scheme"]== "y"))]
-            x1_subc = x1.loc[((x1["name"]== i_name) & (x1["b_scheme"]== "c"))]
-            # youngest = max, oldest = min index
-            x_range_s = np.array([min(x1_subs["oldest_index"])])
-            x_range_y = np.array([min(x1_suby["oldest_index"])])
-            x_range_c = np.array([min(x1_subc["oldest_index"])])
-
-            if min(x1_subs["oldest_index"]) != max(x1_subs["youngest_index"]):
-                x_range_s = np.arange(min(x1_subs["oldest_index"]),max(x1_subs["youngest_index"])+1,1)
-            if min(x1_suby["oldest_index"]) != max(x1_suby["youngest_index"]):
-                x_range_y = np.arange(min(x1_suby["oldest_index"]),max(x1_suby["youngest_index"])+1,1)
-            if min(x1_subc["oldest_index"]) != max(x1_subc["youngest_index"]):
-                x_range_c = np.arange(min(x1_subc["oldest_index"]),max(x1_subc["youngest_index"])+1,1)
-
-            rax = np.concatenate((x_range_s, x_range_s, x_range_c))
-            # filter for third quantile, only bins with highest score
-            rax_counts = pd.DataFrame(np.unique(rax, return_counts=True), index = ['ts_bins', 'counts'])
-            rax_counts = rax_counts.transpose()
-            rq = round(np.quantile(rax_counts['counts'], 0.75),0)
-            rax_sub = rax_counts.loc[rax_counts['counts']>= rq, ['ts_bins']]
-            rax_sub = pd.merge(rax_sub, used_ts, how= 'inner', left_on="ts_bins", right_on="ts_index")
-            x_youngest = rax_sub.loc[(rax_sub["ts_index"]== max(rax_sub["ts_index"])), ['ts']]
-            x_oldest = rax_sub.loc[(rax_sub["ts_index"]== min(rax_sub["ts_index"])), ['ts']]
-            ts_c = max(rax_sub["ts_index"])-min(rax_sub["ts_index"])
-            refs_f = pd.unique(x1_sub['refs'])
-            refs_f = pd.DataFrame(refs_f)
-            refs_f = refs_f[0].apply(str)
-            refs_f = refs_f.str.cat(sep=', ')
-            ref_list = refs_f.split(", ")
-            ref_list_u = list(set(ref_list))
-            str1 = ", "
-            refs_f = str1.join(ref_list_u)
-            x_resib = pd.DataFrame([[i_name, x_oldest.iloc[0,0], x_youngest.iloc[0,0], ts_c, refs_f]],
-                               columns=["name", "oldest", "youngest", "ts_count", "refs"])
-            x_resi = pd.concat([x_resi, x_resib], axis=0, sort=True)
-        resi_1 = x_resi
+        resi_1 = merge_cc(resi_1s, resi_1y, resi_1c, used_ts)
         resi_1['rule'] = 1.0
 
     resi_1 = resi_1.loc(axis=1)["name", "oldest", "youngest", "ts_count", "refs", "rule"]
     print("rule 1 has ", len(resi_1), "binned relations")
     print("Rule 1: direct relations of named units to binning scheme")
     resi_1.to_csv("x_rule1.csv", index = False, header=True)
+    return resi_1
 
-    ##############################################################
-    ##############################################################
+def rule2(results, c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme):
+    resi_0 = results["rule_0"]
     ### Rule_2: direct relations between non-bio* with binning scheme
     ### except chronostratigraphy
-
     cr_c = c_rels_d.loc[~(c_rels_d["strat_qualifier_1"]=="Biostratigraphy")
                           & ~(c_rels_d["strat_qualifier_1"]=="Chronostratigraphy")
                           & (c_rels_d["qualifier_name_2"]==t_scheme),
                               ["reference_id","name_1","name_2", "ts", "ts_index", "reference_year"]]
     cr_c =  cr_c.loc[~(cr_c["name_1"]=="not specified")]
-    bnu = cr_c["name_1"]
-    bnu = bnu.drop_duplicates()
-    bnurange = np.arange(0,len(bnu),1)
 
     for ibs in runrange:
-        resi_2 = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-        resi_2 = pd.DataFrame.transpose(resi_2)
-        for i in bnurange:
-            if ibs == 0:
-                resi_2a = bifu_s(cr_c.loc[cr_c["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-            if ibs == 1:
-                resi_2a = bifu_y(cr_c.loc[cr_c["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-            if ibs == 2:
-                resi_2a = bifu_c(cr_c.loc[cr_c["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-            resi_2 = pd.concat([resi_2, resi_2a], axis=0, sort=True)
+        resi_2 = bin_unique_names_0(ibs, cr_c, used_ts, xnames_raw)
         resi_2["rule"] = 2.0
         resi_2 = resi_2.loc(axis=1)["name", "oldest", "youngest", "ts_count", "refs", "rule"]
         resi_2 =  resi_2[~resi_2["name"].isin(used_ts["ts"])]
@@ -352,65 +317,7 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
 
     resi_2 = resi_2.dropna()
     if b_scheme == "cc":
-        resi_2 = pd.concat([resi_2s, resi_2y, resi_2c])
-        x1 = pd.merge(resi_2, used_ts, how= 'inner', left_on="oldest", right_on="ts")
-        x1 = x1[['name', 'oldest', 'ts_index', 'youngest', 'ts_count',
-                 'refs', 'rule', "b_scheme"]]
-        x1.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'ts_count',
-                      'refs', 'rule', "b_scheme"]
-        x1 = pd.merge(x1, used_ts, how= 'inner', left_on="youngest", right_on="ts")
-        x1 = x1[['name', 'oldest', 'oldest_index', 'youngest', 'ts_index','ts_count',
-                 'refs', 'rule', "b_scheme"]]
-        x1.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'youngest_index', 'ts_count',
-                      'refs', 'rule', "b_scheme"]
-        x_resi = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-        x_resi = pd.DataFrame.transpose(x_resi)
-        xal = pd.merge(pd.merge(resi_2s,resi_2y,on='name'),resi_2c,on='name')
-        bnu = xal["name"]
-        bnu = bnu.drop_duplicates()
-        bnu = bnu.dropna()
-        bnurange = np.arange(0,len(bnu),1)
-        for i in bnurange:
-        #i=2
-            i_name = bnu.iloc[i]
-            x1_sub = x1.loc[((x1["name"]== i_name))]
-            x1_subs = x1.loc[((x1["name"]== i_name) & (x1["b_scheme"]== "s"))]
-            x1_suby = x1.loc[((x1["name"]== i_name) & (x1["b_scheme"]== "y"))]
-            x1_subc = x1.loc[((x1["name"]== i_name) & (x1["b_scheme"]== "c"))]
-            # youngest = max, oldest = min index
-            x_range_s = np.array([min(x1_subs["oldest_index"])])
-            x_range_y = np.array([min(x1_suby["oldest_index"])])
-            x_range_c = np.array([min(x1_subc["oldest_index"])])
-
-            if min(x1_subs["oldest_index"]) != max(x1_subs["youngest_index"]):
-                x_range_s = np.arange(min(x1_subs["oldest_index"]),max(x1_subs["youngest_index"])+1,1)
-            if min(x1_suby["oldest_index"]) != max(x1_suby["youngest_index"]):
-                x_range_y = np.arange(min(x1_suby["oldest_index"]),max(x1_suby["youngest_index"])+1,1)
-            if min(x1_subc["oldest_index"]) != max(x1_subc["youngest_index"]):
-                x_range_c = np.arange(min(x1_subc["oldest_index"]),max(x1_subc["youngest_index"])+1,1)
-
-            rax = np.concatenate((x_range_s, x_range_s, x_range_c))
-            # filter for third quantile, only bins with highest score
-            rax_counts = pd.DataFrame(np.unique(rax, return_counts=True), index = ['ts_bins', 'counts'])
-            rax_counts = rax_counts.transpose()
-            rq = round(np.quantile(rax_counts['counts'], 0.75),0)
-            rax_sub = rax_counts.loc[rax_counts['counts']>= rq, ['ts_bins']]
-            rax_sub = pd.merge(rax_sub, used_ts, how= 'inner', left_on="ts_bins", right_on="ts_index")
-            x_youngest = rax_sub.loc[(rax_sub["ts_index"]== max(rax_sub["ts_index"])), ['ts']]
-            x_oldest = rax_sub.loc[(rax_sub["ts_index"]== min(rax_sub["ts_index"])), ['ts']]
-            ts_c = max(rax_sub["ts_index"])-min(rax_sub["ts_index"])
-            refs_f = pd.unique(x1_sub['refs'])
-            refs_f = pd.DataFrame(refs_f)
-            refs_f = refs_f[0].apply(str)
-            refs_f = refs_f.str.cat(sep=', ')
-            ref_list = refs_f.split(", ")
-            ref_list_u = list(set(ref_list))
-            str1 = ", "
-            refs_f = str1.join(ref_list_u)
-            x_resib = pd.DataFrame([[i_name, x_oldest.iloc[0,0], x_youngest.iloc[0,0], ts_c, refs_f]],
-                               columns=["name", "oldest", "youngest", "ts_count", "refs"])
-            x_resi = pd.concat([x_resi, x_resib], axis=0, sort=True)
-        resi_2 = x_resi
+        resi_2 = merge_cc(resi_2s, resi_2y, resi_2c, used_ts)
         resi_2['rule'] = 2.0
 
     resi_2= resi_2.loc(axis=1)["name", "oldest", "youngest", "ts_count", "refs", "rule"]
@@ -418,16 +325,45 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
     print("rule 2 has ", len(resi_2), "binned relations")
     print("Rule 2:  relations among named biostratigraphical units that have indirect relations to binning scheme")
     resi_2.to_csv("x_rule2.csv", index = False, header=True)
+    return resi_2
 
-    ##############################################################
-    ##############################################################
-    ##############################################################
-    ##############################################################
-    ##############################################################
-    # the second tier has two binning rules and bins all indirect names via biostrat
+def bin_unique_names_1(ibs, x1, used_ts, xnames_raw):
+    if x1.empty:
+        return pd.DataFrame([], columns=["name", "oldest", "youngest", "ts_count", "refs"])
 
-    ##############################################################
-    ##############################################################
+    rows = []
+    x1 = x1.sort_values(by=['name_1', 'reference_year'])
+    xnames_raw = xnames_raw.sort_values(by='name')
+    x1_list = list(x1['name_1'])
+    xnames_list = list(xnames_raw['name'])
+
+    x1 = x1.values
+    xnames_raw = xnames_raw.values
+
+    for name in np.unique(x1_list):
+        x1_begin = bisect_left(x1_list, name)
+        x1_end = bisect_right(x1_list, name)
+        xnames_begin = bisect_left(xnames_list, name)
+        xnames_end = bisect_right(xnames_list, name)
+
+        if ibs == 0:
+            x3a = bifu_s2(x1[x1_begin:x1_end], used_ts, xnames_raw[xnames_begin:xnames_end])
+            rows.append(x3a)
+        if ibs == 1:
+            x3a = bifu_y2(x1[x1_begin:x1_end], used_ts, xnames_raw[xnames_begin:xnames_end])
+            rows.append(x3a)
+        if ibs == 2:
+            x3a = bifu_c2(x1[x1_begin:x1_end], used_ts, xnames_raw[xnames_begin:xnames_end])
+            rows.append(x3a)
+
+
+    x3 = pd.DataFrame(rows, columns=["name", "oldest", "youngest", "ts_count", "refs"])
+    x3 = pd.DataFrame.drop_duplicates(x3)
+    x3 = x3.dropna()
+    return x3
+
+def rule3(results, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme):
+    resi_1 = results["rule_1"]
     #rule_3 all relations between biostrat and biostrat that refer indirectly to binning scheme
     cr_b = c_rels.loc[(c_rels["strat_qualifier_1"]=="Biostratigraphy")
                                   & (c_rels["strat_qualifier_2"]=="Biostratigraphy")
@@ -436,26 +372,11 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
                                   ["reference_id","name_1","name_2", "reference_year"]]
 
     x1 = pd.merge(resi_1, cr_b, left_on="name", right_on="name_2") # name_2 is already binned here
-    x1 = pd.merge(x1, used_ts, how= 'inner', left_on="oldest", right_on="ts") # time bin info is added here
-    x1 = x1[['name_2', 'name_1', 'oldest', "ts_index", 'youngest', 'ts_count', 'refs',
-             'rule', 'reference_id', "reference_year"]]
-    x1.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'ts_count', 'refs',
-                  'rule', 'reference_id', "reference_year"]
-    x1 = pd.merge(x1, used_ts, how= 'inner', left_on="youngest", right_on="ts") # time bin info is added here
-    x1 = x1[['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', "ts_index", 'ts_count', 'refs',
-             'rule', 'reference_id', "reference_year"]]
-    x1.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'youngest_index', 'ts_count', 'refs',
-                  'rule', 'reference_id', "reference_year"]
-    x1m = x1[['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', "youngest_index", 'ts_count', 'refs',
-             'rule', 'reference_id', "reference_year"]]
-    x1.columns = ['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', 'youngest_index', 'ts_count', 'refs',
-                  'rule', 'reference_id', "reference_year"]
-    x1  = pd.concat((x1,x1m), axis=0)
+    x1 = merge_time_info(x1, used_ts)
     x1 =  x1.loc[~(x1["name_1"]=="not specified")]
     x1 = x1[~x1["name_1"].isin(resi_1["name"])]# filter out all names that are already binned with rule 1
     # name_1 is already binned, name_2 not binned yet
     x1["rule"] = 3.6
-    pd.DataFrame.head(x1)
     x1 = x1.drop_duplicates()
     # all names that are not binned via rule 1
     x2 = cr_b[~cr_b["name_1"].isin(x1["name_1"])]
@@ -464,27 +385,10 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
     resi_3 = pd.DataFrame.transpose(resi_3)
     for ibs in runrange:
         for k in np.arange(1,5,1):
-            bnu = x1["name_1"]
-            bnu = bnu.drop_duplicates()
-            bnurange = np.arange(0,len(bnu),1)
-
-            x3 = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-            x3 = pd.DataFrame.transpose(x3)
-            for i in bnurange:
-                if ibs == 0:
-                    x3a = bifu_s2(x1.loc[x1["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-                if ibs == 1:
-                    x3a = bifu_y2(x1.loc[x1["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-                if ibs == 2:
-                    x3a = bifu_c2(x1.loc[x1["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-                x3 = pd.concat([x3, x3a], axis=0, sort=True)
-            x3 = pd.DataFrame.drop_duplicates(x3)
-            x3 = x3.dropna()
+            x3 = bin_unique_names_1(ibs, x1, used_ts, xnames_raw)
             x3["rule"] = 3.0+((k-1)*0.1)
             x3b = x3[~x3["name"].isin(resi_3["name"])] # filter for already binned names
             resi_3 = pd.concat([resi_3, x3b], axis=0, sort=True) # appended to previous ruling
-            pd.DataFrame.head(resi_3)
-            x2a = cr_b[~cr_b["name_2"].isin(resi_1["name"])] #  # all non binned names yet
 
             #create a new x1 based on above ruling
             if (k==1):
@@ -493,24 +397,9 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
                 x4a = pd.concat((x4a, x3), axis=0)
 
             x4 = pd.merge(x4a, cr_b, left_on="name", right_on="name_2") # name_2 is already binned here
-            x4 = pd.merge(x4, used_ts, how= 'inner', left_on="oldest", right_on="ts") # time bin info is added here
-            x4 = x4[['name_2', 'name_1', 'oldest', "ts_index", 'youngest', 'ts_count', 'refs',
-                     'rule', 'reference_id', "reference_year"]]
-            x4.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'ts_count', 'refs',
-                          'rule', 'reference_id', "reference_year"]
-            x4 = pd.merge(x4, used_ts, how= 'inner', left_on="youngest", right_on="ts") # time bin info is added here
-            x4 = x4[['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', "ts_index", 'ts_count', 'refs',
-                     'rule', 'reference_id', "reference_year"]]
-            x4.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'youngest_index', 'ts_count', 'refs',
-                          'rule', 'reference_id', "reference_year"]
-            x4m = x4[['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', "youngest_index", 'ts_count', 'refs',
-                     'rule', 'reference_id', "reference_year"]]
-            x4.columns = ['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', 'youngest_index', 'ts_count', 'refs',
-                          'rule', 'reference_id', "reference_year"]
-            x1  = pd.concat((x4,x4m), axis=0)
+            x1 = merge_time_info(x4, used_ts)
             x1 =  x1.loc[~(x1["name_1"]=="not specified")]
             x1["rule"] = 3.7
-            pd.DataFrame.head(x1)
             x1 = x1.drop_duplicates()
             x2b = cr_b[~cr_b["name_1"].isin(x1["name_1"])] # all not yet binned in cr_g
             x2b = pd.DataFrame.drop_duplicates(x2b)
@@ -531,65 +420,7 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
             resi_3c["b_scheme"] = "c"
 
     if b_scheme == "cc":
-        resi_3 = pd.concat([resi_3s, resi_3y, resi_3c])
-        x2 = pd.merge(resi_3, used_ts, how= 'inner', left_on="oldest", right_on="ts")
-        x2 = x2[['name', 'oldest', 'ts_index', 'youngest', 'ts_count',
-                 'refs', 'rule', "b_scheme"]]
-        x2.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'ts_count',
-                      'refs', 'rule', "b_scheme"]
-        x2 = pd.merge(x2, used_ts, how= 'inner', left_on="youngest", right_on="ts")
-        x2 = x2[['name', 'oldest', 'oldest_index', 'youngest', 'ts_index','ts_count',
-                 'refs', 'rule', "b_scheme"]]
-        x2.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'youngest_index', 'ts_count',
-                      'refs', 'rule', "b_scheme"]
-        x_resi = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-        x_resi = pd.DataFrame.transpose(x_resi)
-        xal = pd.merge(pd.merge(resi_3s,resi_3y,on='name'),resi_3c,on='name')
-        bnu = xal["name"]
-        bnu = bnu.drop_duplicates()
-        bnu = bnu.dropna()
-        bnurange = np.arange(0,len(bnu),1)
-        for i in bnurange:
-        #i=2
-            i_name = bnu.iloc[i]
-            x2_sub = x2.loc[((x2["name"]== i_name))]
-            x2_subs = x2.loc[((x2["name"]== i_name) & (x2["b_scheme"]== "s"))]
-            x2_suby = x2.loc[((x2["name"]== i_name) & (x2["b_scheme"]== "y"))]
-            x2_subc = x2.loc[((x2["name"]== i_name) & (x2["b_scheme"]== "c"))]
-            # youngest = max, oldest = min index
-            x_range_s = np.array([min(x2_subs["oldest_index"])])
-            x_range_y = np.array([min(x2_suby["oldest_index"])])
-            x_range_c = np.array([min(x2_subc["oldest_index"])])
-
-            if min(x2_subs["oldest_index"]) != max(x2_subs["youngest_index"]):
-                x_range_s = np.arange(min(x2_subs["oldest_index"]),max(x2_subs["youngest_index"])+1,1)
-            if min(x2_suby["oldest_index"]) != max(x2_suby["youngest_index"]):
-                x_range_y = np.arange(min(x2_suby["oldest_index"]),max(x2_suby["youngest_index"])+1,1)
-            if min(x2_subc["oldest_index"]) != max(x2_subc["youngest_index"]):
-                x_range_c = np.arange(min(x2_subc["oldest_index"]),max(x2_subc["youngest_index"])+1,1)
-
-            rax = np.concatenate((x_range_s, x_range_s, x_range_c))
-            # filter for third quantile, only bins with highest score
-            rax_counts = pd.DataFrame(np.unique(rax, return_counts=True), index = ['ts_bins', 'counts'])
-            rax_counts = rax_counts.transpose()
-            rq = round(np.quantile(rax_counts['counts'], 0.75),0)
-            rax_sub = rax_counts.loc[rax_counts['counts']>= rq, ['ts_bins']]
-            rax_sub = pd.merge(rax_sub, used_ts, how= 'inner', left_on="ts_bins", right_on="ts_index")
-            x_youngest = rax_sub.loc[(rax_sub["ts_index"]== max(rax_sub["ts_index"])), ['ts']]
-            x_oldest = rax_sub.loc[(rax_sub["ts_index"]== min(rax_sub["ts_index"])), ['ts']]
-            ts_c = max(rax_sub["ts_index"])-min(rax_sub["ts_index"])
-            refs_f = pd.unique(x2_sub['refs'])
-            refs_f = pd.DataFrame(refs_f)
-            refs_f = refs_f[0].apply(str)
-            refs_f = refs_f.str.cat(sep=', ')
-            ref_list = refs_f.split(", ")
-            ref_list_u = list(set(ref_list))
-            str1 = ", "
-            refs_f = str1.join(ref_list_u)
-            x_resib = pd.DataFrame([[i_name, x_oldest.iloc[0,0], x_youngest.iloc[0,0], ts_c, refs_f]],
-                               columns=["name", "oldest", "youngest", "ts_count", "refs"])
-            x_resi = pd.concat([x_resi, x_resib], axis=0, sort=True)
-        resi_3 = x_resi
+        resi_3 = merge_cc(resi_3s, resi_3y, resi_3c, used_ts)
         resi_3['rule'] = 3.9
 
 
@@ -599,13 +430,39 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
     print("rule 3 has ", len(resi_3), "binned relations")
     print("Rule 3:  relations among named biostratigraphical units that have direct relations to binning scheme")
     resi_3.to_csv("x_rule3.csv", index = False, header=True)
+    return resi_3
 
-    ##############################################################
+def merge_time_info(x1, used_ts):
+    columns = ['name_1', 'name_2', 'oldest', 'oldest_index', 'youngest', 'youngest_index', 'ts_count', 'refs',
+        'rule', 'reference_id', "reference_year"]
+    x1 = pd.merge(x1, used_ts, how= 'inner', left_on="oldest", right_on="ts") # time bin info is added here
+    x1.rename(inplace=True, columns={'ts_index': 'oldest_index'})
+    x1 = pd.merge(x1, used_ts, how= 'inner', left_on="youngest", right_on="ts") # time bin info is added here
+    x1.rename(inplace=True, columns={'ts_index': 'youngest_index'})
+    x1 = x1[columns]
+
+    # Swap name_1 and name_2 columns
+    x1.rename(inplace=True, columns={
+        'name_1': 'name_2',
+        'name_2': 'name_1'
+    })
+
+    # x1 columns are now [name_2, name_1...]
+    # x1m picks [name_1, name_2...]
+    x1m = x1[columns]
+    # Reset x1 column order for concatenation
+    x1.columns = columns
+    return pd.concat((x1,x1m), axis=0)
+
+def rule4(results, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme):
+    resi_0 = results["rule_0"]
+    resi_1 = results["rule_1"]
+    resi_2 = results["rule_2"]
+    resi_3 = results["rule_3"]
     ### Rule 4: indirect relations of non-bio via resis_bio to binning scheme
     ### except direct chronostratigraphy links
-    resis_bio = pd.concat([resi_1, resi_3], axis=0)
-    #resis_bio.to_csv('resis_bio.csv') # all binnings via bio only = Bio*
 
+    #resis_bio.to_csv('resis_bio.csv') # all binnings via bio only = Bio*
     cr_d = c_rels.loc[~(c_rels["strat_qualifier_1"]=="Biostratigraphy")
                               & (c_rels["strat_qualifier_2"]=="Biostratigraphy")
                               & ~(c_rels["qualifier_name_1"]==t_scheme)
@@ -613,28 +470,13 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
                               ["reference_id","name_1","name_2", "reference_year"]]
 
     cr_d =  cr_d[~cr_d["name_1"].isin(resi_0["name"])] #filter for chronostrat rule 0
-    resis_bio = pd.DataFrame.drop_duplicates(resis_bio)
+
     x1 = pd.merge(resis_bio, cr_d, left_on="name", right_on="name_2") # name_2 is already binned here
-    x1 = pd.merge(x1, used_ts, how= 'inner', left_on="oldest", right_on="ts") # time bin info is added here
-    x1 = x1[['name_2', 'name_1', 'oldest', "ts_index", 'youngest', 'ts_count', 'refs',
-             'rule', 'reference_id', "reference_year"]]
-    x1.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'ts_count', 'refs',
-                  'rule', 'reference_id', "reference_year"]
-    x1 = pd.merge(x1, used_ts, how= 'inner', left_on="youngest", right_on="ts") # time bin info is added here
-    x1 = x1[['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', "ts_index", 'ts_count', 'refs',
-             'rule', 'reference_id', "reference_year"]]
-    x1.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'youngest_index', 'ts_count', 'refs',
-                  'rule', 'reference_id', "reference_year"]
-    x1m = x1[['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', "youngest_index", 'ts_count', 'refs',
-             'rule', 'reference_id', "reference_year"]]
-    x1.columns = ['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', 'youngest_index', 'ts_count', 'refs',
-                  'rule', 'reference_id', "reference_year"]
-    x1  = pd.concat((x1,x1m), axis=0)
+    x1 = merge_time_info(x1, used_ts)
     x1 = x1[~x1["name_1"].isin(resi_2["name"])] # filter non-bio rule 2
     x1 =  x1[~x1["name_1"].isin(resi_0["name"])] # filter direct chronostrat rule 0
     x1 =  x1.loc[~(x1["name_1"]=="not specified")] # filter "Not specified"
     x1["rule"] = 4.6
-    pd.DataFrame.head(x1)
     x1 = x1.drop_duplicates()
 
     x2 = cr_d[~cr_d["name_1"].isin(resis_bio["name"])]
@@ -643,26 +485,10 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
     resi_4 = pd.DataFrame.transpose(resi_4)
     for ibs in runrange:
         for k in np.arange(1,5,1):
-            bnu = x1["name_1"]
-            bnu = bnu.drop_duplicates()
-            bnurange = np.arange(0,len(bnu),1)
-
-            x3 = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-            x3 = pd.DataFrame.transpose(x3)
-            for i in bnurange:
-                if ibs == 0:
-                    x3a = bifu_s2(x1.loc[x1["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-                if ibs == 1:
-                    x3a = bifu_y2(x1.loc[x1["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-                if ibs == 2:
-                    x3a = bifu_c2(x1.loc[x1["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-                x3 = pd.concat([x3, x3a], axis=0, sort=True)
-            x3 = pd.DataFrame.drop_duplicates(x3)
-            x3 = x3.dropna()
+            x3 = bin_unique_names_1(ibs, x1, used_ts, xnames_raw)
             x3["rule"] = 4.0+((k-1)*0.1)
             x3b = x3[~x3["name"].isin(resi_4["name"])] # filter for already binned names
             resi_4 = pd.concat([resi_4, x3b], axis=0, sort=True) # appended to previous ruling
-            pd.DataFrame.head(resi_4)
             x2a = cr_d[~cr_d["name_1"].isin(resi_4["name"])] # all non binned names in cr_g with current rule
 
             #now create a new x1 based on above ruling
@@ -672,28 +498,11 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
                 x4a = pd.concat((x4a, x3), axis=0)
 
             x4 = pd.merge(x4a, cr_d, left_on="name", right_on="name_2") # name_2 is already binned here
-            x4 = pd.merge(x4, used_ts, how= 'inner', left_on="oldest", right_on="ts") # time bin info is added here
-            x4 = x4[['name_2', 'name_1', 'oldest', "ts_index", 'youngest', 'ts_count', 'refs',
-                     'rule', 'reference_id', "reference_year"]]
-            x4.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'ts_count', 'refs',
-                          'rule', 'reference_id', "reference_year"]
-            x4 = pd.merge(x4, used_ts, how= 'inner', left_on="youngest", right_on="ts") # time bin info is added here
-            x4 = x4[['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', "ts_index", 'ts_count', 'refs',
-                     'rule', 'reference_id', "reference_year"]]
-            x4.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'youngest_index',
-                          'ts_count', 'refs', 'rule', 'reference_id', "reference_year"]
-            x4m = x4[['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', "youngest_index", 'ts_count', 'refs',
-                     'rule', 'reference_id', "reference_year"]]
-            x4.columns = ['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', 'youngest_index',
-                          'ts_count', 'refs', 'rule', 'reference_id', "reference_year"]
-            x1  = pd.concat((x4,x4m), axis=0)
+            x1 = merge_time_info(x4, used_ts)
             x1 =  x1.loc[~(x1["name_1"]=="not specified")]
             x1 =  x1[~x1["name_1"].isin(resi_0["name"])]
             x1["rule"] = 6.7
-            pd.DataFrame.head(x1)
             x1 = x1.drop_duplicates()
-            x2b = cr_d[~cr_d["name_1"].isin(x1["name_1"])] # all not yet binned in cr_g
-            x2b = pd.DataFrame.drop_duplicates(x2b)
 
             if len(x2a)== len(x2):
                 break
@@ -710,66 +519,8 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
             resi_4c["b_scheme"] = "c"
 
     if b_scheme == "cc":
-            resi_4 = pd.concat([resi_4s, resi_4y, resi_4c])
-            x2 = pd.merge(resi_4, used_ts, how= 'inner', left_on="oldest", right_on="ts")
-            x2 = x2[['name', 'oldest', 'ts_index', 'youngest', 'ts_count',
-                     'refs', 'rule', "b_scheme"]]
-            x2.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'ts_count',
-                          'refs', 'rule', "b_scheme"]
-            x2 = pd.merge(x2, used_ts, how= 'inner', left_on="youngest", right_on="ts")
-            x2 = x2[['name', 'oldest', 'oldest_index', 'youngest', 'ts_index','ts_count',
-                     'refs', 'rule', "b_scheme"]]
-            x2.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'youngest_index', 'ts_count',
-                          'refs', 'rule', "b_scheme"]
-            x_resi = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-            x_resi = pd.DataFrame.transpose(x_resi)
-            xal = pd.merge(pd.merge(resi_4s,resi_4y,on='name'),resi_4c,on='name')
-            bnu = xal["name"]
-            bnu = bnu.drop_duplicates()
-            bnu = bnu.dropna()
-            bnurange = np.arange(0,len(bnu),1)
-            for i in bnurange:
-            #i=2
-                i_name = bnu.iloc[i]
-                x2_sub = x2.loc[((x2["name"]== i_name))]
-                x2_subs = x2.loc[((x2["name"]== i_name) & (x2["b_scheme"]== "s"))]
-                x2_suby = x2.loc[((x2["name"]== i_name) & (x2["b_scheme"]== "y"))]
-                x2_subc = x2.loc[((x2["name"]== i_name) & (x2["b_scheme"]== "c"))]
-                # youngest = max, oldest = min index
-                x_range_s = np.array([min(x2_subs["oldest_index"])])
-                x_range_y = np.array([min(x2_suby["oldest_index"])])
-                x_range_c = np.array([min(x2_subc["oldest_index"])])
-
-                if min(x2_subs["oldest_index"]) != max(x2_subs["youngest_index"]):
-                    x_range_s = np.arange(min(x2_subs["oldest_index"]),max(x2_subs["youngest_index"])+1,1)
-                if min(x2_suby["oldest_index"]) != max(x2_suby["youngest_index"]):
-                    x_range_y = np.arange(min(x2_suby["oldest_index"]),max(x2_suby["youngest_index"])+1,1)
-                if min(x2_subc["oldest_index"]) != max(x2_subc["youngest_index"]):
-                    x_range_c = np.arange(min(x2_subc["oldest_index"]),max(x2_subc["youngest_index"])+1,1)
-
-                rax = np.concatenate((x_range_s, x_range_s, x_range_c))
-                # filter for third quantile, only bins with highest score
-                rax_counts = pd.DataFrame(np.unique(rax, return_counts=True), index = ['ts_bins', 'counts'])
-                rax_counts = rax_counts.transpose()
-                rq = round(np.quantile(rax_counts['counts'], 0.75),0)
-                rax_sub = rax_counts.loc[rax_counts['counts']>= rq, ['ts_bins']]
-                rax_sub = pd.merge(rax_sub, used_ts, how= 'inner', left_on="ts_bins", right_on="ts_index")
-                x_youngest = rax_sub.loc[(rax_sub["ts_index"]== max(rax_sub["ts_index"])), ['ts']]
-                x_oldest = rax_sub.loc[(rax_sub["ts_index"]== min(rax_sub["ts_index"])), ['ts']]
-                ts_c = max(rax_sub["ts_index"])-min(rax_sub["ts_index"])
-                refs_f = pd.unique(x2_sub['refs'])
-                refs_f = pd.DataFrame(refs_f)
-                refs_f = refs_f[0].apply(str)
-                refs_f = refs_f.str.cat(sep=', ')
-                ref_list = refs_f.split(", ")
-                ref_list_u = list(set(ref_list))
-                str1 = ", "
-                refs_f = str1.join(ref_list_u)
-                x_resib = pd.DataFrame([[i_name, x_oldest.iloc[0,0], x_youngest.iloc[0,0], ts_c, refs_f]],
-                                   columns=["name", "oldest", "youngest", "ts_count", "refs"])
-                x_resi = pd.concat([x_resi, x_resib], axis=0, sort=True)
-            resi_4 = x_resi
-            resi_4['rule'] = 4.9
+        resi_4 = merge_cc(resi_4s, resi_4y, resi_4c, used_ts)
+        resi_4['rule'] = 4.9
 
     resi_4 = pd.DataFrame.drop_duplicates(resi_4)
     resi_4 = resi_4[['name', 'oldest', 'youngest', 'ts_count', 'refs', 'rule']]
@@ -778,37 +529,22 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
     print("rule 4 has ", len(resi_4), "binned relations")
     print("Rule 4:  relations among named non-biostratigraphical units that have direct relations to binning scheme")
     resi_4.to_csv("x_rule4.csv", index = False, header=True)
+    return resi_4
 
-    ##################################################################################
+def rule5(results, cr_g, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme):
+    resi_0 = results["rule_0"]
+    resi_1 = results["rule_1"]
+    resi_2 = results["rule_2"]
+    resi_3 = results["rule_3"]
+    resi_4 = results["rule_4"]
     ### Rule 5:  indirect relations of non-bio* to resis_4 with link to bio* (route via resi_4)
 
-    cr_g = c_rels.loc[~(c_rels["strat_qualifier_1"]=="Biostratigraphy")
-                              & ~(c_rels["strat_qualifier_2"]=="Biostratigraphy")
-                              & ~(c_rels["qualifier_name_1"]==t_scheme)
-                              & ~(c_rels["qualifier_name_2"]==t_scheme),
-                              ["reference_id","name_1","name_2", "reference_year"]]
-    cr_g.to_csv("x_cr_g.csv", index = False, header=True)
     x1 = pd.merge(resi_4, cr_g, left_on="name", right_on="name_2")
-    x1 = pd.merge(x1, used_ts, how= 'inner', left_on="oldest", right_on="ts") # time bin info is added here
-    x1 = x1[['name_2', 'name_1', 'oldest', "ts_index", 'youngest', 'ts_count', 'refs',
-             'rule', 'reference_id', "reference_year"]]
-    x1.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'ts_count', 'refs',
-                  'rule', 'reference_id', "reference_year"]
-    x1 = pd.merge(x1, used_ts, how= 'inner', left_on="youngest", right_on="ts") # time bin info is added here
-    x1 = x1[['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', "ts_index", 'ts_count', 'refs',
-             'rule', 'reference_id', "reference_year"]]
-    x1.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'youngest_index', 'ts_count', 'refs',
-                  'rule', 'reference_id', "reference_year"]
-    x1m = x1[['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', "youngest_index", 'ts_count', 'refs',
-             'rule', 'reference_id', "reference_year"]]
-    x1.columns = ['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', 'youngest_index', 'ts_count', 'refs',
-                  'rule', 'reference_id', "reference_year"]
-    x1  = pd.concat((x1,x1m), axis=0)
+    x1 = merge_time_info(x1, used_ts)
     x1 = x1[~x1["name_1"].isin(resi_2["name"])] # filter first level  linked non-bio*
     x1 =  x1[~x1["name_1"].isin(resi_0["name"])] # filter direct  chronostrat rule 0
     x1 =  x1.loc[~(x1["name_1"]=="not specified")]
     x1["rule"] = 5.0
-    pd.DataFrame.head(x1)
     x1 = x1.drop_duplicates()
 
     x2 = cr_g[~cr_g["name_2"].isin(resis_bio["name"])]
@@ -817,25 +553,10 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
     resi_5 = pd.DataFrame.transpose(resi_5)
     for ibs in runrange:
         for k in np.arange(1,5,1):
-            bnu = x1["name_1"] # changed from name_1 23.03
-            bnu = bnu.drop_duplicates()
-            bnurange = np.arange(0,len(bnu),1)
-            x3 = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-            x3 = pd.DataFrame.transpose(x3)
-            for i in bnurange:
-                if ibs == 0:
-                    x3a = bifu_s2(x1.loc[x1["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-                if ibs == 1:
-                    x3a = bifu_y2(x1.loc[x1["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-                if ibs == 2:
-                    x3a = bifu_c2(x1.loc[x1["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-                x3 = pd.concat([x3, x3a], axis=0, sort=True)
-            x3 = pd.DataFrame.drop_duplicates(x3)
-            x3 = x3.dropna()
+            x3 = bin_unique_names_1(ibs, x1, used_ts, xnames_raw)
             x3["rule"] = 5.0+((k-1)*0.1)
             x3b = x3[~x3["name"].isin(resi_5["name"])] # filter for already binned names
             resi_5 = pd.concat([resi_5, x3b], axis=0, sort=True) # appended to previous ruling
-            pd.DataFrame.head(resi_5)
             x2a = cr_g[~cr_g["name_1"].isin(resi_5["name"])] # all non binned names in cr_g with current rule
 
             #create a new x1 based on above ruling
@@ -845,27 +566,10 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
                 x4a = pd.concat((x4a, x3), axis=0)
 
             x4 = pd.merge(x4a, cr_g, left_on="name", right_on="name_2") # name_2 is already binned here
-            x4 = pd.merge(x4, used_ts, how= 'inner', left_on="oldest", right_on="ts") # time bin info is added here
-            x4 = x4[['name_2', 'name_1', 'oldest', "ts_index", 'youngest', 'ts_count', 'refs',
-                     'rule', 'reference_id', "reference_year"]]
-            x4.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'ts_count', 'refs',
-                          'rule', 'reference_id', "reference_year"]
-            x4 = pd.merge(x4, used_ts, how= 'inner', left_on="youngest", right_on="ts") # time bin info is added here
-            x4 = x4[['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', "ts_index", 'ts_count', 'refs',
-                     'rule', 'reference_id', "reference_year"]]
-            x4.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'youngest_index',
-                          'ts_count', 'refs', 'rule', 'reference_id', "reference_year"]
-            x4m = x4[['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', "youngest_index", 'ts_count', 'refs',
-                     'rule', 'reference_id', "reference_year"]]
-            x4.columns = ['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', 'youngest_index',
-                          'ts_count', 'refs', 'rule', 'reference_id', "reference_year"]
-            x1  = pd.concat((x4,x4m), axis=0)
+            x1 = merge_time_info(x4, used_ts)
             x1 =  x1.loc[~(x1["name_1"]=="not specified")]
             x1["rule"] = 5.7
-            pd.DataFrame.head(x1)
             x1 = x1.drop_duplicates()
-            x2b = cr_g[~cr_g["name_1"].isin(x1["name_1"])] # all not yet binned in cr_g
-            x2b = pd.DataFrame.drop_duplicates(x2b)
 
             if len(x2a)== len(x2):
                 break
@@ -881,66 +585,8 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
             resi_5c = resi_5
             resi_5c["b_scheme"] = "c"
     if b_scheme == "cc":
-            resi_5 = pd.concat([resi_5s, resi_5y, resi_5c])
-            x2 = pd.merge(resi_5, used_ts, how= 'inner', left_on="oldest", right_on="ts")
-            x2 = x2[['name', 'oldest', 'ts_index', 'youngest', 'ts_count',
-                     'refs', 'rule', "b_scheme"]]
-            x2.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'ts_count',
-                          'refs', 'rule', "b_scheme"]
-            x2 = pd.merge(x2, used_ts, how= 'inner', left_on="youngest", right_on="ts")
-            x2 = x2[['name', 'oldest', 'oldest_index', 'youngest', 'ts_index','ts_count',
-                     'refs', 'rule', "b_scheme"]]
-            x2.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'youngest_index', 'ts_count',
-                          'refs', 'rule', "b_scheme"]
-            x_resi = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-            x_resi = pd.DataFrame.transpose(x_resi)
-            xal = pd.merge(pd.merge(resi_5s,resi_5y,on='name'),resi_5c,on='name')
-            bnu = xal["name"]
-            bnu = bnu.drop_duplicates()
-            bnu = bnu.dropna()
-            bnurange = np.arange(0,len(bnu),1)
-            for i in bnurange:
-            #i=2
-                i_name = bnu.iloc[i]
-                x2_sub = x2.loc[((x2["name"]== i_name))]
-                x2_subs = x2.loc[((x2["name"]== i_name) & (x2["b_scheme"]== "s"))]
-                x2_suby = x2.loc[((x2["name"]== i_name) & (x2["b_scheme"]== "y"))]
-                x2_subc = x2.loc[((x2["name"]== i_name) & (x2["b_scheme"]== "c"))]
-                # youngest = max, oldest = min index
-                x_range_s = np.array([min(x2_subs["oldest_index"])])
-                x_range_y = np.array([min(x2_suby["oldest_index"])])
-                x_range_c = np.array([min(x2_subc["oldest_index"])])
-
-                if min(x2_subs["oldest_index"]) != max(x2_subs["youngest_index"]):
-                    x_range_s = np.arange(min(x2_subs["oldest_index"]),max(x2_subs["youngest_index"])+1,1)
-                if min(x2_suby["oldest_index"]) != max(x2_suby["youngest_index"]):
-                    x_range_y = np.arange(min(x2_suby["oldest_index"]),max(x2_suby["youngest_index"])+1,1)
-                if min(x2_subc["oldest_index"]) != max(x2_subc["youngest_index"]):
-                    x_range_c = np.arange(min(x2_subc["oldest_index"]),max(x2_subc["youngest_index"])+1,1)
-
-                rax = np.concatenate((x_range_s, x_range_s, x_range_c))
-                # filter for third quantile, only bins with highest score
-                rax_counts = pd.DataFrame(np.unique(rax, return_counts=True), index = ['ts_bins', 'counts'])
-                rax_counts = rax_counts.transpose()
-                rq = round(np.quantile(rax_counts['counts'], 0.75),0)
-                rax_sub = rax_counts.loc[rax_counts['counts']>= rq, ['ts_bins']]
-                rax_sub = pd.merge(rax_sub, used_ts, how= 'inner', left_on="ts_bins", right_on="ts_index")
-                x_youngest = rax_sub.loc[(rax_sub["ts_index"]== max(rax_sub["ts_index"])), ['ts']]
-                x_oldest = rax_sub.loc[(rax_sub["ts_index"]== min(rax_sub["ts_index"])), ['ts']]
-                ts_c = max(rax_sub["ts_index"])-min(rax_sub["ts_index"])
-                refs_f = pd.unique(x2_sub['refs'])
-                refs_f = pd.DataFrame(refs_f)
-                refs_f = refs_f[0].apply(str)
-                refs_f = refs_f.str.cat(sep=', ')
-                ref_list = refs_f.split(", ")
-                ref_list_u = list(set(ref_list))
-                str1 = ", "
-                refs_f = str1.join(ref_list_u)
-                x_resib = pd.DataFrame([[i_name, x_oldest.iloc[0,0], x_youngest.iloc[0,0], ts_c, refs_f]],
-                                   columns=["name", "oldest", "youngest", "ts_count", "refs"])
-                x_resi = pd.concat([x_resi, x_resib], axis=0, sort=True)
-            resi_5 = x_resi
-            resi_5['rule'] = 5.9
+        resi_5 = merge_cc(resi_5s, resi_5y, resi_5c, used_ts)
+        resi_5['rule'] = 5.9
 
 
     resi_5 = pd.DataFrame.drop_duplicates(resi_5)
@@ -952,34 +598,25 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
     print("Rule 5:  relations among named non-biostratigraphical units that have indirect relations to binning scheme")
     print("via biostratigraphical units.")
     resi_5.to_csv("x_rule5.csv", index = False, header=True)
+    return resi_5
 
-    ##################################################################################
-    ### Rule 6: indirect relations of non-bio* to resis_bio to binning scheme (route via resis_bio)
-    #rule 6 corrected at 23.03.2020
+def rule6(results, cr_g, runrange, used_ts, xnames_raw, b_scheme):
+    resi_0 = results["rule_0"]
+    resi_1 = results["rule_1"]
+    resi_2 = results["rule_2"]
+    resi_3 = results["rule_3"]
+    resi_4 = results["rule_4"]
+
+    ## search for shortest time bins among 5 & 6
     resis_nbio = pd.concat([resi_0, resi_2], axis=0)
     resis_nbio.to_csv('resis_nbio.csv') # all binnings via bio non bio only
 
     x1 = pd.merge(resis_nbio, cr_g, left_on="name", right_on="name_1")
-    x1 = pd.merge(x1, used_ts, how= 'inner', left_on="oldest", right_on="ts") # time bin info is added here
-    x1 = x1[['name_2', 'name_1', 'oldest', "ts_index", 'youngest', 'ts_count', 'refs',
-             'rule', 'reference_id', "reference_year"]]
-    x1.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'ts_count', 'refs',
-                  'rule', 'reference_id', "reference_year"]
-    x1 = pd.merge(x1, used_ts, how= 'inner', left_on="youngest", right_on="ts") # time bin info is added here
-    x1 = x1[['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', "ts_index", 'ts_count', 'refs',
-             'rule', 'reference_id', "reference_year"]]
-    x1.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'youngest_index', 'ts_count', 'refs',
-                  'rule', 'reference_id', "reference_year"]
-    x1m = x1[['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', "youngest_index", 'ts_count', 'refs',
-             'rule', 'reference_id', "reference_year"]]
-    x1.columns = ['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', 'youngest_index', 'ts_count', 'refs',
-                  'rule', 'reference_id', "reference_year"]
-    x1  = pd.concat((x1,x1m), axis=0)
+    x1 = merge_time_info(x1, used_ts)
     x1 = x1[~x1["name_1"].isin(resi_0["name"])]
     x1 = x1[~x1["name_1"].isin(resi_2["name"])]# all first level linked non-bio* to rule 2
     x1 =  x1.loc[~(x1["name_1"]=="not specified")]
     x1["rule"] = 6.6 # only for control
-    pd.DataFrame.head(x1)
     x1 = x1.drop_duplicates()
     x1.to_csv("x_x1.csv", index = False, header=True)
 
@@ -990,27 +627,10 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
     resi_6 = pd.DataFrame.transpose(resi_6)
     for ibs in runrange:
         for k in np.arange(1,5,1):
-            bnu = x1["name_1"]
-            bnu = bnu.drop_duplicates()
-            bnurange = np.arange(0,len(bnu),1)
-            x3 = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-            x3 = pd.DataFrame.transpose(x3)
-            #for loop runs through each name_1
-            for i in bnurange:
-                if ibs == 0:
-                    x3a = bifu_s2(x1.loc[x1["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-                if ibs == 1:
-                    x3a = bifu_y2(x1.loc[x1["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-                if ibs == 2:
-                    x3a = bifu_c2(x1.loc[x1["name_1"]==bnu.iloc[i]], used_ts, xnames_raw)
-                x3 = pd.concat([x3, x3a], axis=0, sort=True)
-            x3 = pd.DataFrame.drop_duplicates(x3)
-            x3 = x3.dropna()
+            x3 = bin_unique_names_1(ibs, x1, used_ts, xnames_raw)
             x3["rule"] = 6.0+((k-1)*0.1)
             x3b = x3[~x3["name"].isin(resi_6["name"])] # filter for already binned names
             resi_6 = pd.concat([resi_6, x3b], axis=0, sort=True) # appended to previous ruling; these are now binned
-            pd.DataFrame.head(resi_6)
-            x2a = cr_g[~cr_g["name_1"].isin(resi_6["name"])] # all non binned names in cr_g with current rule
 
             #create a new x1 based on above ruling
             if (k==1):
@@ -1019,24 +639,9 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
                 x4a = pd.concat((x4a, x3), axis=0)
 
             x4 = pd.merge(x4a, cr_g, left_on="name", right_on="name_2") # name_2 is already binned here
-            x4 = pd.merge(x4, used_ts, how= 'inner', left_on="oldest", right_on="ts") # time bin info is added here
-            x4 = x4[['name_2', 'name_1', 'oldest', "ts_index", 'youngest', 'ts_count', 'refs',
-                     'rule', 'reference_id', "reference_year"]]
-            x4.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'ts_count', 'refs',
-                          'rule', 'reference_id', "reference_year"]
-            x4 = pd.merge(x4, used_ts, how= 'inner', left_on="youngest", right_on="ts") # time bin info is added here
-            x4 = x4[['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', "ts_index", 'ts_count', 'refs',
-                     'rule', 'reference_id', "reference_year"]]
-            x4.columns = ['name_2', 'name_1', 'oldest', "oldest_index", 'youngest', 'youngest_index',
-                          'ts_count', 'refs', 'rule', 'reference_id', "reference_year"]
-            x4m = x4[['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', "youngest_index", 'ts_count', 'refs',
-                     'rule', 'reference_id', "reference_year"]]
-            x4.columns = ['name_1', 'name_2', 'oldest', "oldest_index", 'youngest', 'youngest_index',
-                          'ts_count', 'refs', 'rule', 'reference_id', "reference_year"]
-            x1  = pd.concat((x4,x4m), axis=0)
+            x1 = merge_time_info(x4, used_ts)
             x1 =  x1.loc[~(x1["name_1"]=="not specified")]
             x1["rule"] = 6.7
-            pd.DataFrame.head(x1)
             x1 = x1.drop_duplicates()
             x2b = cr_g[~cr_g["name_1"].isin(x1["name_1"])] # all not yet binned in cr_g
             x2b = pd.DataFrame.drop_duplicates(x2b)
@@ -1057,66 +662,8 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
             resi_6c["b_scheme"] = "c"
 
     if b_scheme == "cc":
-            resi_6 = pd.concat([resi_6s, resi_6y, resi_6c])
-            x2 = pd.merge(resi_6, used_ts, how= 'inner', left_on="oldest", right_on="ts")
-            x2 = x2[['name', 'oldest', 'ts_index', 'youngest', 'ts_count',
-                     'refs', 'rule', "b_scheme"]]
-            x2.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'ts_count',
-                          'refs', 'rule', "b_scheme"]
-            x2 = pd.merge(x2, used_ts, how= 'inner', left_on="youngest", right_on="ts")
-            x2 = x2[['name', 'oldest', 'oldest_index', 'youngest', 'ts_index','ts_count',
-                     'refs', 'rule', "b_scheme"]]
-            x2.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'youngest_index', 'ts_count',
-                          'refs', 'rule', "b_scheme"]
-            x_resi = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-            x_resi = pd.DataFrame.transpose(x_resi)
-            xal = pd.merge(pd.merge(resi_6s,resi_6y,on='name'),resi_6c,on='name')
-            bnu = xal["name"]
-            bnu = bnu.drop_duplicates()
-            bnu = bnu.dropna()
-            bnurange = np.arange(0,len(bnu),1)
-            for i in bnurange:
-            #i=2
-                i_name = bnu.iloc[i]
-                x2_sub = x2.loc[((x2["name"]== i_name))]
-                x2_subs = x2.loc[((x2["name"]== i_name) & (x2["b_scheme"]== "s"))]
-                x2_suby = x2.loc[((x2["name"]== i_name) & (x2["b_scheme"]== "y"))]
-                x2_subc = x2.loc[((x2["name"]== i_name) & (x2["b_scheme"]== "c"))]
-                # youngest = max, oldest = min index
-                x_range_s = np.array([min(x2_subs["oldest_index"])])
-                x_range_y = np.array([min(x2_suby["oldest_index"])])
-                x_range_c = np.array([min(x2_subc["oldest_index"])])
-
-                if min(x2_subs["oldest_index"]) != max(x2_subs["youngest_index"]):
-                    x_range_s = np.arange(min(x2_subs["oldest_index"]),max(x2_subs["youngest_index"])+1,1)
-                if min(x2_suby["oldest_index"]) != max(x2_suby["youngest_index"]):
-                    x_range_y = np.arange(min(x2_suby["oldest_index"]),max(x2_suby["youngest_index"])+1,1)
-                if min(x2_subc["oldest_index"]) != max(x2_subc["youngest_index"]):
-                    x_range_c = np.arange(min(x2_subc["oldest_index"]),max(x2_subc["youngest_index"])+1,1)
-
-                rax = np.concatenate((x_range_s, x_range_s, x_range_c))
-                # filter for third quantile, only bins with highest score
-                rax_counts = pd.DataFrame(np.unique(rax, return_counts=True), index = ['ts_bins', 'counts'])
-                rax_counts = rax_counts.transpose()
-                rq = round(np.quantile(rax_counts['counts'], 0.75),0)
-                rax_sub = rax_counts.loc[rax_counts['counts']>= rq, ['ts_bins']]
-                rax_sub = pd.merge(rax_sub, used_ts, how= 'inner', left_on="ts_bins", right_on="ts_index")
-                x_youngest = rax_sub.loc[(rax_sub["ts_index"]== max(rax_sub["ts_index"])), ['ts']]
-                x_oldest = rax_sub.loc[(rax_sub["ts_index"]== min(rax_sub["ts_index"])), ['ts']]
-                ts_c = max(rax_sub["ts_index"])-min(rax_sub["ts_index"])
-                refs_f = pd.unique(x2_sub['refs'])
-                refs_f = pd.DataFrame(refs_f)
-                refs_f = refs_f[0].apply(str)
-                refs_f = refs_f.str.cat(sep=', ')
-                ref_list = refs_f.split(", ")
-                ref_list_u = list(set(ref_list))
-                str1 = ", "
-                refs_f = str1.join(ref_list_u)
-                x_resib = pd.DataFrame([[i_name, x_oldest.iloc[0,0], x_youngest.iloc[0,0], ts_c, refs_f]],
-                                   columns=["name", "oldest", "youngest", "ts_count", "refs"])
-                x_resi = pd.concat([x_resi, x_resib], axis=0, sort=True)
-            resi_6 = x_resi
-            resi_6['rule'] = 6.9
+        resi_6 = merge_cc(resi_6s, resi_6y, resi_6c, used_ts)
+        resi_6['rule'] = 6.9
 
     resi_6 = pd.DataFrame.drop_duplicates(resi_6)
     resi_6 = resi_6[['name', 'oldest', 'youngest', 'ts_count', 'refs', 'rule']]
@@ -1127,19 +674,17 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
     print("Rule 6:  relations among named non-biostratigraphical units that have indirect relations to binning scheme")
     print("via non-biostratigraphical units.")
     resi_6.to_csv("x_rule6.csv", index = False, header=True)
+    return resi_6
 
-    end = time.time()
-    dura = (end - start)/60
-
-    print("############################################")
-    print("The binning took", round(dura, 2), "minutes")
-    print("############################################")
-    print("Now we search for the shortest time bins within these 6 results.")
-
-    ##################################################################################
-    ##################################################################################
+def shortestTimeBins(results, used_ts):
+    resi_0 = results["rule_0"]
+    resi_1 = results["rule_1"]
+    resi_2 = results["rule_2"]
+    resi_3 = results["rule_3"]
+    resi_4 = results["rule_4"]
+    resi_5 = results["rule_5"]
+    resi_6 = results["rule_6"]
     ## search for shortest time bins among 5 & 6
-    start = time.time()
     # all where names of 5 and 6 in common and range is identical
     com_a = pd.merge(resi_5, resi_6,how='inner', on="name") # all names that 5 and 6 have in common
     cas = com_a.loc[com_a["youngest_x"]==com_a["youngest_y"],
@@ -1212,7 +757,7 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
     bnu = cau["name"]
     bnu = bnu.drop_duplicates()
     bnurange = np.arange(0,len(bnu),1)
-    com_56_s = pd.DataFrame([] * 6, index=["name", "oldest", "youngest", "ts_count", "refs", "rule"])
+    rows = []
     for i in bnurange:
         i_name = bnu.iloc[i]
         cau_sub = cau.loc[cau["name"]== i_name]
@@ -1240,10 +785,8 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
         ts_c = young_max-old_min
         res_youngest = ts_numbered.iloc[young_max] [0]
         res_oldest = ts_numbered.iloc[old_min] [0]
-        com_56_sa = pd.DataFrame([i_name, res_oldest,res_youngest, ts_c, refs_f, "5, 6"],
-                           index=["name", "oldest", "youngest", "ts_count", "refs", "rule"])
-        com_56_s = pd.concat([com_56_s, com_56_sa], axis=1, sort=True)
-    com_56_s = com_56_s.transpose()
+        rows.append((i_name, res_oldest,res_youngest, ts_c, refs_f, "5, 6"))
+    com_56_s = pd.DataFrame(rows, columns=["name", "oldest", "youngest", "ts_count", "refs", "rule"])
     #com_56_s.to_csv("x_com_56_s.csv", index = False, header=True)
 
     # all where 5 and 6 are not in common
@@ -1260,9 +803,79 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange):
                              c5, combi_56, c6], axis=0, sort=False)
     combi_names.to_csv("x_combi_names.csv", index = False, header=True)
 
-    end = time.time()
-    dura2 = (end - start)/60
-
-    print("We find", len(combi_names),
-          "binned names. It took ", round(dura, 2), "+", round(dura2, 2),  "minutes.")
     return(combi_names)
+
+def merge_cc(resi_s, resi_y, resi_c, used_ts):
+    k_oldest_index = 2
+    k_youngest_index = 4
+    k_ref = 6
+    k_b_scheme = 8
+
+    resi = pd.concat([resi_s, resi_y, resi_c])
+    x2 = pd.merge(resi, used_ts, how= 'inner', left_on="oldest", right_on="ts")
+    x2 = x2[['name', 'oldest', 'ts_index', 'youngest', 'ts_count',
+             'refs', 'rule', "b_scheme"]]
+    x2.rename(inplace=True, columns={'ts_index': 'oldest_index'})
+    x2 = pd.merge(x2, used_ts, how= 'inner', left_on="youngest", right_on="ts")
+    x2 = x2[['name', 'oldest', 'oldest_index', 'youngest', 'ts_index','ts_count',
+             'refs', 'rule', "b_scheme"]]
+    x2.rename(inplace=True, columns={'ts_index': 'youngest_index'})
+    rows = []
+
+    xal = pd.merge(pd.merge(resi_s,resi_y,on='name'),resi_c,on='name')
+
+    x2 = x2.sort_values(by=['name', 'b_scheme'])
+    x2 = x2.values
+    used_ts = used_ts.values
+
+    for i_name in xal["name"].dropna().unique():
+    #i=2
+        x2_sub = x2[bisect_left(x2[:, 0], i_name):bisect_right(x2[:, 0], i_name)]
+
+        # We need the oldest and youngest index in the ranges
+        x2_subs = x2_sub[bisect_left(x2_sub[:, k_b_scheme], 's'):bisect_right(x2_sub[:, k_b_scheme], 's')]
+        x2_suby = x2_sub[bisect_left(x2_sub[:, k_b_scheme], 'y'):bisect_right(x2_sub[:, k_b_scheme], 'y')]
+        x2_subc = x2_sub[bisect_left(x2_sub[:, k_b_scheme], 'c'):bisect_right(x2_sub[:, k_b_scheme], 'c')]
+        # youngest = max, oldest = min index
+        x_range_s = np.array([np.min(x2_subs[:, k_oldest_index])])
+        x_range_y = np.array([np.min(x2_suby[:, k_oldest_index])])
+        x_range_c = np.array([np.min(x2_subc[:, k_oldest_index])])
+
+        if np.min(x2_subs[:, k_oldest_index]) != np.max(x2_subs[:, k_youngest_index]):
+            x_range_s = np.arange(np.min(x2_subs[:, k_oldest_index]), np.max(x2_subs[:, k_youngest_index])+1,1)
+        if np.min(x2_suby[:, k_oldest_index]) != max(x2_suby[:, k_youngest_index]):
+            x_range_y = np.arange(np.min(x2_suby[:, k_oldest_index]), np.max(x2_suby[:, k_youngest_index])+1,1)
+        if np.min(x2_subc[:, k_oldest_index]) != max(x2_subc[:, k_youngest_index]):
+            x_range_c = np.arange(np.min(x2_subc[:, k_oldest_index]), np.max(x2_subc[:, k_youngest_index])+1,1)
+
+        rax = np.concatenate((x_range_s, x_range_s, x_range_c))
+        # filter for third quantile, only bins with highest score
+        rax_counts = np.unique(rax, return_counts=True) #rax_counts[0] is ts_bins, rax_counts[1] is counts
+        rq = round(np.quantile(rax_counts[1], 0.75),0)
+        rax_counts = rax_counts[0][rax_counts[1] >= rq]
+
+        # used_ts column indices
+        k_ts = 0
+        k_ts_index = 1
+
+        # Inner join on table with only one column is identical to filtering
+        rax_sub = used_ts[np.isin(used_ts[:, 1], rax_counts)]
+
+        rax_sub_max = np.max(rax_sub[:, k_ts_index])
+        rax_sub_min = np.min(rax_sub[:, k_ts_index])
+
+        x_youngest = rax_sub[rax_sub[:, k_ts_index] == rax_sub_max]
+        x_oldest = rax_sub[rax_sub[:, k_ts_index] == rax_sub_min]
+
+        ts_c = rax_sub_max - rax_sub_min
+
+        refs = set()
+        for ref in x2_sub[:, k_ref]:
+            for r in ref.split(', '):
+                refs.add(r)
+
+        refs_f = ', '.join(list(refs))
+
+        rows.append((i_name, x_oldest[0, k_ts], x_youngest[0, k_ts], float(ts_c), refs_f))
+
+    return pd.DataFrame(rows, columns=["name", "oldest", "youngest", "ts_count", "refs"])

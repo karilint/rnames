@@ -1,0 +1,55 @@
+{% extends 'base_generic.html' %}
+{% block title %}RNames - Home{% endblock %}
+
+{% block content %}
+<script>
+const show = ty => {
+  let ids = ['berg', 'webby', 'stages', 'periods']
+  ids.forEach(v => {
+    let elem = document.getElementById(v)
+    if (ty === v)
+      elem.style.display = 'initial'
+    else
+      elem.style.display = 'none'
+  })
+}
+
+show('berg')
+</script>
+
+<!-- Beginning of binning -->
+
+<h2>Binning done</h2>
+<p>Download duration: {{ dl_duration }} seconds</p>
+<p>Binning duration: {{ duration }} seconds</p>
+
+<div>
+  <button class="w3-btn w3-green" onclick="show('berg')">Berg</button>
+  <button class="w3-btn w3-green" onclick="show('webby')">Webby</button>
+  <button class="w3-btn w3-green" onclick="show('stages')">Stages</button>
+  <button class="w3-btn w3-green" onclick="show('periods')">Periods</button>
+</div>
+
+<div id ="berg">
+  <h2>Berg</h2>
+  <div> {{ berg | safe }} </div> 
+</div> 
+
+<div id ="webby">
+  <h2>Webby</h2>
+  <div> {{ webby | safe }} </div>
+</div> 
+
+<div id ="stages">
+  <h2>Binned Stages</h2>
+  <div> {{ stages | safe }} </div> 
+</div> 
+
+<div id ="periods">
+  <h2>Binned Periods</h2>
+  <div> {{ periods | safe }} </div> 
+</div> 
+
+<!-- End of binning -->
+
+{% endblock %}

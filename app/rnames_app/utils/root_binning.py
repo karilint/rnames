@@ -8,13 +8,15 @@ import time
 import csv
 import pandas as pd
 import numpy as np
+from bisect import (bisect_left, bisect_right)
 from .rn_funs import *
 from .binning_fun import *
+from .tools import Task
 
-def main_binning_fun():
+def main_binning_fun(cron_relations, time_slices):
     pd.set_option('display.max_columns', 30)
     pd.set_option('display.max_rows', 5)
-
+    start = time.time()
     # In[3]:
 
 
@@ -23,15 +25,6 @@ def main_binning_fun():
 
 
     # In[4]:
-
-
-    url = "http://karilint.pythonanywhere.com/rnames/api/relations/?format=json"
-    start = time.time()
-    cron_relations = pd.read_json (url)
-    #cron_relations = pd.read_csv("view_cron_relations.csv") # from file
-    end = time.time()
-    print("Downloaded ", len(cron_relations), "relations. Download time: ", end - start, "seconds")
-    cron_relations.to_csv("cron_relations.csv", index = False, header=True)
 
 
     # In[5]:
@@ -56,35 +49,56 @@ def main_binning_fun():
 
     #### this goes into loop on binning_algorithm
     ### binning_algorithms: shortest, youngest, compromise, combined
-    robin_b = bin_fun(c_rels = cron_relations, binning_algorithm = "combined", binning_scheme = "b",
-                                  xrange = 'Ordovician')
-    robin_b.to_csv("x_robinb.csv", index = False, header=True)
-
+    robin_b = Task(bin_fun, {
+        'c_rels': cron_relations.copy(),
+        'binning_algorithm': "combined",
+        'binning_scheme': "b",
+        'xrange': 'Ordovician',
+        'time_slices': time_slices
+    })
 
     # In[6]:
 
-
-    robin_w = bin_fun(c_rels = cron_relations, binning_algorithm = "combined", binning_scheme = "w",
-                                  xrange = 'Ordovician')
-    robin_w.to_csv("x_robinw.csv", index = False, header=True)
-
+    robin_w = Task(bin_fun, {
+        'c_rels': cron_relations.copy(),
+        'binning_algorithm': "combined",
+        'binning_scheme': "w",
+        'xrange': 'Ordovician',
+        'time_slices': time_slices
+    })
 
     # In[7]:
 
-
-    robin_s = bin_fun(c_rels = cron_relations, binning_algorithm = "combined", binning_scheme = "s",
-                                  xrange = 'Phanerozoic')
-    robin_s.to_csv("x_robins.csv", index = False, header=True)
-
-
+    robin_s = Task(bin_fun, {
+        'c_rels': cron_relations.copy(),
+        'binning_algorithm': "combined",
+        'binning_scheme': "s",
+        'xrange': 'Phanerozoic',
+        'time_slices': time_slices
+    })
     # In[8]:
+    robin_p = Task(bin_fun, {
+        'c_rels': cron_relations.copy(),
+        'binning_algorithm': "combined",
+        'binning_scheme': "p",
+        'xrange': 'Phanerozoic',
+        'time_slices': time_slices
+    })
 
+    robin_b = robin_b.join()
+    robin_w = robin_w.join()
+    robin_s = robin_s.join()
+    robin_p = robin_p.join()
 
-    robin_p = bin_fun(c_rels = cron_relations, binning_algorithm = "combined", binning_scheme = "p",
-                                  xrange = 'Phanerozoic')
+    robin_b.to_csv("x_robinb.csv", index = False, header=True)
+    robin_w.to_csv("x_robinw.csv", index = False, header=True)
+    robin_s.to_csv("x_robins.csv", index = False, header=True)
     robin_p.to_csv("x_robinp.csv", index = False, header=True)
 
-
+    berg_ts = time_slices['berg']
+    webby_ts = time_slices['webby']
+    stages_ts = time_slices['stages']
+    periods_ts = time_slices['periods']
     # In[9]:
 
 
@@ -118,56 +132,55 @@ def main_binning_fun():
     x1 = pd.merge(x1, stages_ts, how= 'inner', left_on="youngest", right_on="ts")
     x1 = x1[['name', 'oldest', 'oldest_index', 'youngest', 'ts_index','ts_count','refs']]
     x1.columns = ['name', 'oldest', 'oldest_index', 'youngest', 'youngest_index', 'ts_count','refs']
-    mc_bw = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-    bnu = mwbs["name"]
-    bnu = bnu.drop_duplicates()
-    mc_bw = pd.DataFrame.transpose(mc_bw)
-    bnurange = np.arange(0,len(bnu),1)
-    for i in bnurange:
-        i_name = bnu.iloc[i]
-        bio_sel = pd.DataFrame([] * 5, index=["name", "oldest", "youngest", "ts_count", "refs"])
-        bio_set = x1.loc[x1["name"] == i_name]
+    x1 = x1.sort_values(by='name')
+    x1 = x1.values
+
+    # x1 column indices
+    k_name = 0
+    k_oldest = 1
+    k_oldest_index = 2
+    k_youngest = 3
+    k_youngest_index = 4
+    k_ts_count = 5
+    k_refs = 6
+
+    bnu = mwbs["name"].drop_duplicates()
+    rows = []
+    for i_name in bnu:
+        bio_set = x1[bisect_left(x1[:, k_name], i_name):bisect_right(x1[:, k_name], i_name)]
+
         if binning_algorithm == "combined" or binning_algorithm == "compromise":
             cpts = bio_set
         if binning_algorithm == "shortest" or binning_algorithm == "youngest":
-            mincount = min(bio_set['ts_count'])
-            cpts = bio_set.loc[bio_set["ts_count"] == mincount]
-        refs_f = pd.unique(cpts['refs'])
-        refs_f = pd.DataFrame(refs_f)
-        refs_f = refs_f[0].apply(str)
-        refs_f = refs_f.str.cat(sep=', ')
-        cpts_youngest =  cpts.loc[(cpts["youngest_index"]== max(cpts["youngest_index"])), ['youngest']]
-        cpts_oldest = cpts.loc[(cpts["oldest_index"]== min(cpts["oldest_index"])), ['oldest']]
-        ts_c = max(cpts["youngest_index"])-min(cpts["oldest_index"])
-        bio_sel = pd.DataFrame([[i_name, cpts_oldest.iloc[0,0], cpts_youngest.iloc[0,0], ts_c, refs_f]],
-                                   columns=["name", "oldest", "youngest", "ts_count", "refs"])
-        mc_bw = pd.concat([mc_bw, bio_sel], axis=0, sort=True)
+            mincount = np.min(bio_set[:, k_ts_count])
+            cpts = bio_set[bio_set[:, k_ts_count] == mincount]
+
+        refs_f = ', '.join(map(str, np.unique(cpts[:, k_refs])))
+        max_youngest = np.max(cpts[:, k_youngest_index])
+        min_oldest = np.min(cpts[:, k_oldest_index])
+
+        cpts_youngest = cpts[cpts[:, k_youngest_index] == max_youngest]
+        cpts_oldest = cpts[cpts[:, k_oldest_index] == min_oldest]
+        ts_c = max_youngest - min_oldest
+
+        rows.append((i_name, cpts_oldest[0, k_oldest], cpts_youngest[0, k_youngest], ts_c, refs_f))
+
+    mc_bw = pd.DataFrame(rows, columns=["name", "oldest", "youngest", "ts_count", "refs"])
     mc_bw = mc_bw[~mc_bw["name"].isin(stages_ts["ts"])]
 
     rest_s =  robin_s[~robin_s["name"].isin(bnu)]
     rest_s = rest_s[["name", "oldest", "youngest", "ts_count", "refs"]]
     binned_stages = pd.concat([mc_bw, rest_s], axis=0, sort=True)
 
-    refs = binned_stages['refs']
-    refs = pd.DataFrame(refs)
-    bnurange = np.arange(0,len(refs),1)
-    for i in bnurange:
-        refs_f = refs.iloc[i]
-        #refs_f = refs_f.apply(str)
-        refs_f = refs_f.str.cat(sep=', ')
-        ref_list = refs_f.split(", ")
-        ref_list_u = list(set(ref_list))
-        ref_list_u = sorted(map(int, ref_list_u))
-        ref_list_u = pd.DataFrame(ref_list_u)
-        ref_list_u = ref_list_u.drop_duplicates()
-        ref_list_u = ref_list_u[0].apply(str)
-        str1 = ", "
-        refs.iloc[i] = str1.join(ref_list_u)
+    refs = []
+    for refs_f in binned_stages['refs']:
+        refs_f = sorted(list(set(refs_f.split(', '))))
+        refs.append(', '.join(refs_f))
+
     binned_stages.loc[:,'refs'] = refs
 
     binned_stages =  binned_stages[~binned_stages["name"].isin(stages_ts["ts"])]
     binned_stages.to_csv("x_binned_stages.csv", index = False, header=True)
-
 
     # In[10]:
 
@@ -190,24 +203,21 @@ def main_binning_fun():
     rest_p = rest_p[['name', 'oldest', 'youngest', 'ts_count', 'refs']]
     binned_periods = pd.concat([msp, rest_p], axis=0, sort=True)
 
-    refs = binned_periods['refs']
-    refs = pd.DataFrame(refs)
-    bnurange = np.arange(0,len(refs),1)
-    for i in bnurange:
-        refs_f = refs.iloc[i]
-        #refs_f = refs_f.apply(str)
-        refs_f = refs_f.str.cat(sep=', ')
-        ref_list = refs_f.split(", ")
-        ref_list_u = list(set(ref_list))
-        ref_list_u = sorted(map(int, ref_list_u))
-        ref_list_u = pd.DataFrame(ref_list_u)
-        ref_list_u = ref_list_u.drop_duplicates()
-        ref_list_u = ref_list_u[0].apply(str)
-        str1 = ", "
-        refs.iloc[i] = str1.join(ref_list_u)
+    refs = []
+    for refs_f in binned_periods['refs']:
+        refs_f = sorted(list(set(refs_f.split(', '))))
+        refs.append(', '.join(refs_f))
+
     binned_periods.loc[:,'refs'] = refs
     binned_periods =  binned_periods[~binned_periods["name"].isin(periods_ts["ts"])]
     binned_periods.to_csv("x_binned_periods.csv", index = False, header=True)
 
-
     # In[ ]:
+
+    return {
+        'duration': time.time() - start,
+        'berg': robin_b,
+        'webby': robin_w,
+        'binned_stages': binned_stages,
+        'binned_periods': binned_periods
+    }
