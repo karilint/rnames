@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { loadServerData } from '../services/server'
 import { updateRel, deleteRel } from '../store/relations/actions'
@@ -13,9 +13,12 @@ export const Relation = ({ data }) => {
 		return [
 			v.sname.concat(loadServerData('structured_names')).map(v => v.id),
 			sname1 ? formatStructuredName(sname1, v) : '',
-			sname2 ? formatStructuredName(sname2, v) : ''
+			sname2 ? formatStructuredName(sname2, v) : '',
 		]
 	})
+
+	const [name1, setName1Text] = useState(name1text)
+	const [name2, setName2Text] = useState(name2text)
 
 	const update = ({ target }, field) => {
 		const r = { ...data }
@@ -36,8 +39,11 @@ export const Relation = ({ data }) => {
 			<input
 				name='name1'
 				type='text'
-				value={data.name1 == -1 ? '' : name1text}
-				onChange={e => update(e, 'name1')}
+				value={name1}
+				onChange={e => {
+					update(e, 'name1')
+					setName1Text(e.target.value)
+				}}
 				list={id1}
 			/>
 			<datalist id={id1}>
@@ -50,8 +56,11 @@ export const Relation = ({ data }) => {
 			<input
 				name='name2'
 				type='text'
-				value={data.name2 == -1 ? '' : name2text}
-				onChange={e => update(e, 'name2')}
+				value={name2}
+				onChange={e => {
+					update(e, 'name2')
+					setName2Text(e.target.value)
+				}}
 				list={id2}
 			/>
 			<datalist id={id2}>
