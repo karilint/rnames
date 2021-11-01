@@ -1,23 +1,14 @@
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { loadServerData } from '../services/server'
-import { formatStructuredName } from '../utilities'
 import { updateRel, deleteRel } from '../store/relations/actions'
-import { Dropdown } from './Dropdown'
+import { SnameOption } from './SnameOption'
 
 export const Relation = ({ data }) => {
 	const dispatch = useDispatch()
-	const state = useSelector(v => v)
-
-	const name1Options = state.sname
-		.concat(...loadServerData('structured_names'))
-		.filter(v => v.id !== data.name2)
-		.map(v => [v.id, formatStructuredName(v, state)])
-
-	const name2Options = state.sname
-		.concat(...loadServerData('structured_names'))
-		.filter(v => v.id !== data.name1)
-		.map(v => [v.id, formatStructuredName(v, state)])
+	const snames = useSelector(v =>
+		v.sname.concat(loadServerData('structured_names')).map(v => v.id)
+	)
 
 	const update = ({ target }, field) => {
 		const r = { ...data }
@@ -25,35 +16,42 @@ export const Relation = ({ data }) => {
 		dispatch(updateRel(r))
 	}
 
-	const refOptions = state.ref
-		.concat(...loadServerData('references'))
-		.map(v => [v.id, v.title])
-	
 	const deleteRelHandler = () => {
 		dispatch(deleteRel(data))
 	}
 
+	const id1 = `${data.id}-name1`
+	const id2 = `${data.id}-name2`
+
 	return (
 		<div>
-			<label htmlFor='reference'>Reference</label>
-			<Dropdown
-				name='reference'
-				options={refOptions}
-				value={data.reference_id}
-				onChange={e => update(e, 'reference_id')}
-			/>
-			<br />
-			<Dropdown
-				options={name1Options}
-				value={data.name1}
+			<label htmlFor='name1'>Name 1</label>
+			<input
+				name='name1'
+				type='text'
+				value={data.name1 == -1 ? '' : data.name1}
 				onChange={e => update(e, 'name1')}
+				list={id1}
 			/>
+			<datalist id={id1}>
+				{snames.map(v => (
+					<SnameOption key={v} data={v} />
+				))}
+			</datalist>
 			<br />
-			<Dropdown
-				options={name2Options}
-				value={data.name2}
+			<label htmlFor='name2'>Name 2</label>
+			<input
+				name='name2'
+				type='text'
+				value={data.name2 == -1 ? '' : data.name2}
 				onChange={e => update(e, 'name2')}
+				list={id2}
 			/>
+			<datalist id={id2}>
+				{snames.map(v => (
+					<SnameOption key={v} data={v} />
+				))}
+			</datalist>
 			<br />
 			<button type='button' onClick={deleteRelHandler}>
 				Delete
