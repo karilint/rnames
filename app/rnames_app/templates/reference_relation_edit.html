@@ -60,7 +60,7 @@
   <header>
       <h5>{{ name_one }} has the following relations</h5>
    </header>
-  <table class="w3-row">
+  <table class="w3-table-all">
     <tr>
       <th>Structured Name</th>
       <th>Belongs to</th>
@@ -74,9 +74,9 @@
       <td>{{ r.name_two }}</td>
       <td>{{ r.belongs_to }}</td>
       <td>
-        <a class="btn btn-default" href="{% url 'relation-detail' pk=r.pk %}"><span class="fa fa-search"></span></a>
-        <a class="btn btn-default" href="{% url 'relation-edit' pk=r.pk %}"><span class="fa fa-pencil-square-o"></span></a>
-        <a class="btn btn-default" href="{% url 'relation-delete' pk=r.pk %}"><span class="fa  fa-trash-o"></span></a>
+        <a href="{% url 'relation-detail' pk=r.pk %}"><span class="fa fa-search"></span></a>
+        <a href="{% url 'relation-edit' pk=r.pk %}"><span class="fa fa-pencil-square-o"></span></a>
+        <a href="{% url 'relation-delete' pk=r.pk %}"><span class="fa  fa-trash-o"></span></a>
       </td>
       {% else %}
       <td>{{ r.name_one }}</td>

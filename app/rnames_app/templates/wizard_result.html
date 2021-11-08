@@ -1,0 +1,99 @@
+{% extends 'base_generic.html' %}
+{% block title %}RNames - Wizard Submission{% endblock %}
+
+{% block content %}
+
+<h3>Reference</h3>
+<table class="w3-table-all">
+  <tr>
+    <th>id</th>
+    <th>First Author</th>
+    <th>Year</th>
+    <th>Title</th>
+    <th>Link</th>
+  </tr>
+  <tr>
+    <td>{{reference.id}}</td>
+    <td>{{reference.first_author}}</td>
+    <td>{{reference.year}}</td>
+    <td>{{reference.title}}</td>
+    <td><a href="{{reference.link}}">{{reference.link}}</a></td>
+  </tr>
+</table>
+
+{% if names|length > 0 %}
+  <h3>Added Names</h3>
+  <table class="w3-table-all">
+    <tr>
+      <th>id</th>
+      <th>Name</th>
+    </tr>
+    {% for name in names %}
+      <tr>
+        <td>{{name.id}}</td>
+        <td>{{name.name}}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
+{% if locations|length > 0 %}
+  <h3>Added Locations</h3>
+  <table class="w3-table-all">
+    <tr>
+      <th>id</th>
+      <th>Location</th>
+    </tr>
+    {% for location in locations %}
+      <tr>
+        <td>{{location.id}}</td>
+        <td>{{location.name}}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
+{% if structured_names|length > 0 %}
+  <h3>Added Structured Names</h3>
+  <table class="w3-table-all">
+    <tr>
+      <th>id</th>
+      <th>Name</th>
+      <th>Qualifier</th>
+      <th>Location</th>
+    </tr>
+    {% for name in structured_names %}
+      <tr>
+        <td>{{name.id}}</td>
+        <td>{{name.name}}</td>
+        <td>{{name.qualifier}}</td>
+        <td>{{name.location}}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
+
+{% if relations|length > 0 %}
+  <h3>Added Relations</h3>
+  <table class="w3-table-all">
+    <tr>
+      <th>id</th>
+      <th>Name 1</th>
+      <th>Name 2</th>
+      <th>Belongs to</th>
+    </tr>
+    {% for relation in relations %}
+      <tr>
+        <td>{{relation.id}}</td>
+        <td>{{relation.name_one}}</td>
+        <td>{{relation.name_two}}</td>
+        <td>{{relation.belongs_to}}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
+
+
+{% endblock %}

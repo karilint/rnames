@@ -12,6 +12,7 @@
     "react-redux": "^7.2.5",
     "react-scripts": "4.0.3",
     "redux-thunk": "^2.3.0",
+    "reselect": "^4.1.1",
     "web-vitals": "^1.1.2"
   },
   "scripts": {
@@ -19,7 +20,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "dev": "webpack --mode development --watch",
-    "build": "webpack --mode production"
+    "build": "webpack --mode production",
+    "lint": "eslint ."
   },
   "eslintConfig": {
     "extends": [
@@ -40,6 +42,10 @@
     ]
   },
   "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-plugin-react": "^7.26.1",
+    "prettier": "^2.4.1",
+    "redux-devtools-extension": "^2.13.9",
     "webpack-cli": "^4.8.0"
   }
 }

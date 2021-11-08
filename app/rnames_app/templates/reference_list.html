@@ -11,13 +11,13 @@
     </form>
     {% if user.is_authenticated %}
       <br>
-      <a class="btn btn-default" href="{% url 'reference-new' %}"><span class="fa  fa-plus"></span> Add</a>
+      <a href="{% url 'reference-new' %}"><span class="fa  fa-plus"></span> Add</a>
       <br>
     {% endif %}
 
     {% if page_obj %}
-      <table style="width:100%">
-        <tr>
+    <table class="w3-table-all">
+      <tr>
           <th>First Author</th>
           <th>Year</th>
           <th>Title</th>
@@ -32,10 +32,10 @@
             <td>{{ x.title|truncatechars:70 }}</td>
             <td><a href="{{ x.link }}" target="_blank">{{ x.link|truncatechars_html:20 }}</a></td>
             <td>
-              <a class="btn btn-default" href="{% url 'reference-detail' pk=x.pk %}"><span class="fa fa-search"></span></a>
+              <a href="{% url 'reference-detail' pk=x.pk %}"><span class="fa fa-search"></span></a>
               {% if user.is_authenticated %}
-                <a class="btn btn-default" href="{% url 'reference-edit' pk=x.pk %}"><span class="fa fa-pencil-square-o"></span></a>
-                <a class="btn btn-default" href="{% url 'reference-delete' pk=x.pk %}"><span class="fa  fa-trash-o"></span></a>
+                <a href="{% url 'reference-edit' pk=x.pk %}"><span class="fa fa-pencil-square-o"></span></a>
+                <a href="{% url 'reference-delete' pk=x.pk %}"><span class="fa  fa-trash-o"></span></a>
               {% endif %}
             </td>
           </tr>

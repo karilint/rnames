@@ -11,8 +11,8 @@
   </form>
 
   {% if page_obj %}
-    <table class="w3-row">
-      <tr>
+  <table class="w3-table-all">
+    <tr>
         <th>Name 1</th>
         <th>Name 2</th>
         <th>Belongs to</th>
@@ -29,9 +29,9 @@
             <td>{{ x.name_two }}</td>
             <td>{{ x.belongs_to }}</td>
             <td>
-              <a class="btn btn-default" href="{% url 'relation-detail' pk=x.pk %}"><span class="fa fa-search"></span></a>
-              <a class="btn btn-default" href="{% url 'relation-edit' pk=x.pk %}"><span class="fa fa-pencil-square-o"></span></a>
-              <a class="btn btn-default" href="{% url 'relation-delete' pk=x.pk %}"><span class="fa  fa-trash-o"></span></a>
+              <a href="{% url 'relation-detail' pk=x.pk %}"><span class="fa fa-search"></span></a>
+              <a href="{% url 'relation-edit' pk=x.pk %}"><span class="fa fa-pencil-square-o"></span></a>
+              <a href="{% url 'relation-delete' pk=x.pk %}"><span class="fa  fa-trash-o"></span></a>
             </td>
 
           {% else %}

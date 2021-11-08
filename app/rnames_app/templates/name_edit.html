@@ -11,8 +11,8 @@
       <form method="POST" novalidate>
         {% csrf_token %}
         {% include 'includes/w3c-form.html' with form=form %}
-        <a href="{{request.META.HTTP_REFERER}}" class="w3-btn w3-button w3-teal" style="width:120px"><i class="fas fa-angle-double-left"></i>&nbsp;Go back</a>
-        <button type="submit" class="w3-btn w3-padding w3-teal" style="width:120px">Submit &nbsp; <i class="fas fa-angle-right"></i></button>
+        <a href="{{request.META.HTTP_REFERER}}" class="w3-button w3-border w3-light-grey" style="width:120px"><i class="fas fa-angle-double-left"></i>&nbsp;Go back</a>
+        <button type="submit" class="w3-button w3-border w3-light-grey" style="width:120px">Submit &nbsp; <i class="fas fa-angle-right"></i></button>      
       </form>
     {% else %}
       <p><a href="{% url 'account_login'%}?next={{request.path}}">Please login first</a></p>

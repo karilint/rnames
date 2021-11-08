@@ -15,8 +15,8 @@
     {% endif %}
 
     {% if page_obj %}
-      <table style="width:100%">
-        <tr>
+    <table class="w3-table-all">
+      <tr>
           <th>Binning scheme</th>
           <th>Name</th>
           <th>Oldest</th>
@@ -32,7 +32,7 @@
             <td>{{ x.oldest }}</td>
             <td>{{ x.youngest }}</td>
             <td>{{ x.ts_count }}</td>
-            <td><a class="btn btn-default" href="{% url 'structuredname-list' %}?name__name={{ x.name }}"><span class="fa fa-search"></span></a></td>
+            <td><a href="{% url 'structuredname-list' %}?name__name={{ x.name }}"><span class="fa fa-search"></span></a></td>
           </tr>
         {% endfor %}
       </table>

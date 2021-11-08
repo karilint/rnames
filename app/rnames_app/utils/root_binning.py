@@ -13,10 +13,23 @@ from .rn_funs import *
 from .binning_fun import *
 from .tools import Task
 
-def main_binning_fun(cron_relations, time_slices):
+def main_binning_fun(cron_relations, cron_columns, time_slices):
     pd.set_option('display.max_columns', 30)
     pd.set_option('display.max_rows', 5)
     start = time.time()
+
+    # Create a data frame from the ordered list of time slice scheme names
+    def make_ts_df(values):
+        index = np.arange(0, len(values), 1)
+        df = pd.DataFrame({'ts': values, 'ts_index': index}, index=index)
+        df = df.append({'ts' : 'not specified' , 'ts_index' : len(values)} , ignore_index=True)
+        return df
+
+    for k in time_slices.keys():
+        time_slices[k] = make_ts_df(time_slices[k])
+
+    cron_relations = pd.DataFrame(cron_relations, columns=cron_columns)
+
     # In[3]:
 
 
@@ -41,7 +54,6 @@ def main_binning_fun(cron_relations, time_slices):
            'strat_qualifier_2', 'level_2', 'locality_name_2']
     cron_relations = pd.concat([cron_relations.reset_index(drop=False), cron_relationsx.reset_index(drop=False)], axis=0)
     cron_relations = cron_relations.reset_index(drop=True)
-    cron_relations.to_csv("cron_relations.csv", index = False, header=True)
 
 
     # In[6]:
@@ -90,10 +102,6 @@ def main_binning_fun(cron_relations, time_slices):
     robin_s = robin_s.join()
     robin_p = robin_p.join()
 
-    robin_b.to_csv("x_robinb.csv", index = False, header=True)
-    robin_w.to_csv("x_robinw.csv", index = False, header=True)
-    robin_s.to_csv("x_robins.csv", index = False, header=True)
-    robin_p.to_csv("x_robinp.csv", index = False, header=True)
 
     berg_ts = time_slices['berg']
     webby_ts = time_slices['webby']
@@ -180,7 +188,6 @@ def main_binning_fun(cron_relations, time_slices):
     binned_stages.loc[:,'refs'] = refs
 
     binned_stages =  binned_stages[~binned_stages["name"].isin(stages_ts["ts"])]
-    binned_stages.to_csv("x_binned_stages.csv", index = False, header=True)
 
     # In[10]:
 
@@ -210,14 +217,14 @@ def main_binning_fun(cron_relations, time_slices):
 
     binned_periods.loc[:,'refs'] = refs
     binned_periods =  binned_periods[~binned_periods["name"].isin(periods_ts["ts"])]
-    binned_periods.to_csv("x_binned_periods.csv", index = False, header=True)
-
     # In[ ]:
 
     return {
         'duration': time.time() - start,
         'berg': robin_b,
         'webby': robin_w,
+        'stages': robin_s,
+        'periods': robin_p,
         'binned_stages': binned_stages,
         'binned_periods': binned_periods
     }

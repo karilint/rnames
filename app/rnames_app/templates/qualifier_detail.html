@@ -6,8 +6,8 @@
 <article>
     <div class="qualifier">
       {% if user.is_authenticated %}
-        <a class="btn btn-default" href="{% url 'qualifier-edit' pk=qualifier.pk %}"><span class="fa fa-pencil-square-o"></span></a>
-        <a class="btn btn-default" href="{% url 'qualifier-delete' pk=qualifier.pk %}"><span class="fa  fa-trash-o"></span></a>
+        <a href="{% url 'qualifier-edit' pk=qualifier.pk %}"><span class="fa fa-pencil-square-o"></span></a>
+        <a href="{% url 'qualifier-delete' pk=qualifier.pk %}"><span class="fa  fa-trash-o"></span></a>
       {% endif %}
       <p><a href="{{request.META.HTTP_REFERER}}">Go back</a></p>
       <header class="w3-hide">

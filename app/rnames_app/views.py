@@ -14,12 +14,13 @@ import mpltern
 from mpltern.ternary.datasets import get_scatter_points
 import numpy as np
 # end
+import json
 
 from django.db import connection
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import HttpResponse
+from django.http import (HttpResponse, JsonResponse, HttpResponseBadRequest)
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -29,20 +30,21 @@ from rest_framework.response import Response
 #from .utils.utils import YourClassOrFunction
 from rest_framework import status, generics
 from .models import (Binning, Location, Name, Qualifier, QualifierName,
-                     Relation, Reference, StratigraphicQualifier, StructuredName)
+                     Relation, Reference, StratigraphicQualifier, StructuredName, TimeSlice)
 from .filters import (BinningSchemeFilter, LocationFilter, NameFilter, QualifierFilter, QualifierNameFilter,
-                      ReferenceFilter, RelationFilter, StratigraphicQualifierFilter, StructuredNameFilter)
+                      ReferenceFilter, RelationFilter, StratigraphicQualifierFilter, StructuredNameFilter, TimeSliceFilter)
 from .forms import (ColorfulContactForm, ContactForm, LocationForm, NameForm, QualifierForm, QualifierNameForm, ReferenceForm,
-                    ReferenceRelationForm, ReferenceStructuredNameForm, RelationForm, StratigraphicQualifierForm, StructuredNameForm)
+                    ReferenceRelationForm, ReferenceStructuredNameForm, RelationForm, StratigraphicQualifierForm, StructuredNameForm, TimeSliceForm)
 from django.contrib.auth.models import User
 from .filters import UserFilter
 
 import sys
 from subprocess import run, PIPE
 from .utils.root_binning import main_binning_fun
-from .utils.tools import (get_cron_relations, get_time_slices)
 from io import StringIO
 from contextlib import redirect_stdout
+from types import SimpleNamespace
+import time
 # , APINameFilter
 
 
@@ -52,24 +54,99 @@ from contextlib import redirect_stdout
 #    return render(request, 'name_list.html', {'names': names})
 
 def external(request):
+    def time_slices(scheme):
+        return list(TimeSlice.objects.is_active().filter(scheme=scheme).order_by('order').values_list('name', flat=True))
 
-    # Generate counts of some of the main objects
-    num_opinions = Relation.objects.is_active().count()
+    queryset_list = list(Relation.objects.is_active().select_related().values_list(
+        'id',
+        'reference',
+        'reference__year',
+        'name_one__id',
+        'name_one__location__name',
+        'name_one__name__name',
+        'name_one__qualifier__level',
+        'name_one__qualifier__qualifier_name__name',
+        'name_one__qualifier__stratigraphic_qualifier__name',
 
-    # inp = request.POST.get('param', 'K') # This doesn't appear to be used anywhere in binning
-    rels = get_cron_relations()
-    result = main_binning_fun(rels[0], get_time_slices())
+        'name_two__id',
+        'name_two__location__name',
+        'name_two__name__name',
+        'name_two__qualifier__level',
+        'name_two__qualifier__qualifier_name__name',
+        'name_two__qualifier__stratigraphic_qualifier__name',
+    ))
+
+    cols = [
+        'id',
+        'reference_id',
+        'reference_year',
+
+        'name_1_id',
+        'locality_name_1',
+        'name_1',
+        'level_1',
+        'qualifier_name_1',
+        'strat_qualifier_1',
+
+        'name_2_id',
+        'locality_name_2',
+        'name_2',
+        'level_2',
+        'qualifier_name_2',
+        'strat_qualifier_2',
+    ]
+
+    result = main_binning_fun(queryset_list, cols, {
+        'rassm': time_slices('rasmussen'),
+        'berg': time_slices('bergstrom'),
+        'webby': time_slices('webby'),
+        'stages': time_slices('stages'),
+        'periods': time_slices('periods'),
+        'epochs': time_slices('epochs'),
+        'eras': time_slices('eras'),
+        'eons': time_slices('eons')
+    })
+
+    def update(obj, oldest, youngest, ts_count, refs, rule):
+        obj.oldest = oldest
+        obj.youngest = youngest
+        obj.ts_count = ts_count
+        obj.refs = refs
+        obj.rule = rule
+        obj.save()
+
+    def create(name, scheme, oldest, youngest, ts_count, refs, rule):
+        obj = Binning(name=name, binning_scheme=scheme, oldest=oldest, youngest=youngest, ts_count=ts_count, refs=refs, rule=rule)
+        obj.save()
+
+    def process_result(df, scheme):
+        col = SimpleNamespace(**{k: v for v, k in enumerate(df.columns)})
+
+        for row in df.values:
+            name = row[col.name]
+            data = Binning.objects.is_active().filter(name=name, binning_scheme=scheme)
+            if len(data) == 0:
+                create(name, scheme, row[col.oldest], row[col.youngest], row[col.ts_count], row[col.refs], row[col.rule])
+            else:
+                update(data[0], row[col.oldest], row[col.youngest], row[col.ts_count], row[col.refs], row[col.rule])
+
+    start = time.time()
+    process_result(result['berg'], 'x_robinb')
+    process_result(result['webby'], 'x_robinw')
+    process_result(result['stages'], 'x_robins')
+    process_result(result['periods'], 'x_robinp')
+    end = time.time()
 
     return render(
         request,
         'binning_done.html',
         context={
-            'dl_duration': rels[1],
-            'duration': result['duration'],
+            'duration': round(result['duration']),
+            'update_duration': round(end - start),
             'berg': result['berg'].to_html(classes='w3-table'),
             'webby': result['webby'].to_html(classes='w3-table'),
-            'periods': result['binned_periods'].to_html(classes='w3-table'),
-            'stages': result['binned_stages'].to_html(classes='w3-table')
+            'periods': result['periods'].to_html(classes='w3-table'),
+            'stages': result['stages'].to_html(classes='w3-table')
         },
     )
 
@@ -1102,3 +1179,201 @@ def user_search(request):
     user_list = User.objects.all()
     user_filter = UserFilter(request.GET, queryset=user_list)
     return render(request, 'user_list.html', {'filter': user_filter})
+
+class timeslice_delete(DeleteView):
+    model = TimeSlice
+    success_url = reverse_lazy('timeslice-list')
+
+
+def timeslice_detail(request, pk):
+    ts = get_object_or_404(TimeSlice, pk=pk, is_active=1)
+    return render(request, 'timeslice_detail.html', {'timeslice': ts})
+
+
+@login_required
+def timeslice_edit(request, pk):
+    timeslice = get_object_or_404(TimeSlice, pk=pk, is_active=1)
+    if request.method == "POST":
+        form = TimeSliceForm(request.POST, instance=timeslice)
+        if form.is_valid():
+            timeslice = form.save(commit=False)
+            timeslice.save()
+            return redirect('timeslice-detail', pk=timeslice.pk)
+    else:
+        form = TimeSliceForm(instance=timeslice)
+    return render(request, 'timeslice_edit.html', {'form': form})
+
+
+def timeslice_list(request):
+    f = TimeSliceFilter(
+        request.GET, queryset=TimeSlice.objects.is_active().order_by('scheme', 'order'))
+
+    paginator = Paginator(f.qs, 10)
+
+    page_number = request.GET.get('page')
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    return render(
+        request,
+        'timeslice_list.html',
+        {'page_obj': page_obj, 'filter': f, }
+    )
+
+
+@login_required
+def timeslice_new(request):
+    if request.method == "POST":
+        form = TimeSliceForm(request.POST)
+        if form.is_valid():
+            timeslice = form.save(commit=False)
+            timeslice.created_by_id = request.user.id
+            timeslice.created_on = timezone.now()
+            timeslice.save()
+            return redirect('timeslice-detail', pk=timeslice.pk)
+    else:
+        form = TimeSliceForm()
+    return render(request, 'timeslice_edit.html', {'form': form})
+
+@login_required
+def submit(request):
+    names = {}
+    locations = {}
+    structured_names = {}
+    relations = []
+
+    data = json.loads(request.body)
+
+    reference = Reference(
+        first_author=data['reference']['firstAuthor'],
+        year=data['reference']['year'],
+        title=data['reference']['title'],
+        doi=data['reference']['doi'],
+        link=data['reference']['link']
+    )
+
+    for name_data in data['names']:
+        ty = name_data['id']['type']
+        value = name_data['id']['value']
+        name = name_data['name']
+
+        if ty == 'name':
+            names[value] = Name(name=name)
+        if ty == 'location':
+            locations[value] = Location(name=name)
+
+    for structured_name_data in data['structured_names']:
+        id = structured_name_data['id']['value']
+
+        name_id = structured_name_data['name_id']['value']
+        name_type = structured_name_data['name_id']['type']
+
+        location_id = structured_name_data['location_id']['value']
+        location_type = structured_name_data['location_id']['type']
+
+        if location_type == 'db_location':
+            location = Location.objects.is_active().get(pk=location_id)
+        elif location_type == 'location':
+            location = locations[location_id]
+        else:
+            location = None
+
+        if name_type == 'db_name':
+            name = Name.objects.is_active().get(pk=name_id)
+        elif name_type == 'name':
+            name = names[name_id]
+        else:
+            name = None
+
+        if name == None or location == None:
+            return HttpResponseBadRequest()
+
+        # Wizard doesn't allow creating new qualifiers so this is always a value that exists
+        # in the database
+        qualifier = Qualifier.objects.is_active().get(pk=structured_name_data['qualifier_id']['value'])
+
+        structured_names[id] = StructuredName(
+            name=name,
+            qualifier=qualifier,
+            location=location,
+            reference=reference
+            # remarks = ''
+        )
+
+    for relation_data in data['relations']:
+        name_one_id = relation_data['name1']['value']
+        name_one_type = relation_data['name1']['type']
+
+        name_two_id = relation_data['name2']['value']
+        name_two_type = relation_data['name2']['type']
+
+        if name_one_type == 'db_structured_name':
+            name_one = StructuredName.objects.is_active().get(pk=name_one_id)
+        elif name_one_type == 'structured_name':
+            name_one = structured_names[name_one_id]
+        else:
+            name_one = None
+
+        if name_two_type == 'db_structured_name':
+            name_two = StructuredName.objects.is_active().get(pk=name_two_id)
+        elif name_two_type == 'structured_name':
+            name_two = structured_names[name_two_id]
+        else:
+            name_two = None
+
+        if name_one == None or name_two == None:
+            return HttpResponseBadRequest()
+
+        belongs_to = 0 # Todo
+
+        relation = Relation(
+            name_one=name_one,
+            name_two=name_two,
+            belongs_to=belongs_to,
+            reference=reference
+        )
+
+        relations.append(relation)
+
+    reference.full_clean()
+
+    for name in names.values():
+        name.full_clean()
+
+    for location in locations.values():
+        location.full_clean()
+
+    for structured_name in structured_names.values():
+        structured_name.full_clean(exclude=['name', 'location', 'reference'])
+
+    for relation in relations:
+        relation.full_clean(exclude=['name_one', 'name_two', 'reference'])
+
+    reference.save()
+
+    for name in names.values():
+        name.save()
+
+    for location in locations.values():
+        location.save()
+
+    for structured_name in structured_names.values():
+        structured_name.save()
+
+    for relation in relations:
+        relation.save()
+
+    return render(
+        request,
+        'wizard_result.html', {
+            'reference': reference,
+            'names': names.values(),
+            'locations': locations.values(),
+            'structured_names': structured_names.values(),
+            'relations': relations
+        }
+    )

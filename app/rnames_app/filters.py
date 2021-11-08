@@ -10,7 +10,8 @@ from .models import (Binning
     , QualifierName
     , Reference
     , Relation
-    , StratigraphicQualifier)
+    , StratigraphicQualifier
+    , TimeSlice)
 from django.contrib.auth.models import User
 from django_filters import rest_framework as filters
 
@@ -96,3 +97,11 @@ class APINameFilter(filters.FilterSet):
     class Meta:
         model = Name
         fields = ['name', 'created_by__first_name', ]
+
+class TimeSliceFilter(django_filters.FilterSet):
+    scheme = django_filters.CharFilter(lookup_expr='icontains')
+    name = django_filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = TimeSlice
+        fields = ['scheme', 'name' ]

@@ -1,0 +1,8 @@
+export const MAP_VALUE = 'MAP_VALUE'
+export const INITIALIZE_MAP_VALUES = 'INITIALIZE_MAP_VALUES'
+export const ADD_NAME = 'ADD_NAME'
+export const UPDATE_NAME = 'UPDATE_NAME'
+export const ADD = 'ADD'
+export const UPDATE = 'UPDATE'
+export const DELETE = 'DELETE'
+export const DELETE_NAME = 'DELETE_NAME'

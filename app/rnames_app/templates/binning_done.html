@@ -14,14 +14,14 @@ const show = ty => {
   })
 }
 
-show('berg')
+window.addEventListener('DOMContentLoaded', () => show('berg'));
 </script>
 
 <!-- Beginning of binning -->
 
 <h2>Binning done</h2>
-<p>Download duration: {{ dl_duration }} seconds</p>
 <p>Binning duration: {{ duration }} seconds</p>
+<p>Database update duration: {{ update_duration }} seconds</p>
 
 <div>
   <button class="w3-btn w3-green" onclick="show('berg')">Berg</button>
@@ -41,12 +41,12 @@ show('berg')
 </div> 
 
 <div id ="stages">
-  <h2>Binned Stages</h2>
+  <h2>Stages</h2>
   <div> {{ stages | safe }} </div> 
 </div> 
 
 <div id ="periods">
-  <h2>Binned Periods</h2>
+  <h2>Periods</h2>
   <div> {{ periods | safe }} </div> 
 </div> 
 

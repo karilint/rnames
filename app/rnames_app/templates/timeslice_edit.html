@@ -1,0 +1,19 @@
+{% extends 'base_generic.html' %}
+{% block title %}RNames - Edit Time Slice{% endblock %}
+
+{% block content %}
+<!-- Write your comments here -->
+  <article>
+    {% if user.is_authenticated %}
+      <h2>Edit Time Slice</h2>
+      <form method="POST" class="timeslice-form">{% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit" class="w3-btn w3-green">Save</button>
+      </form>
+      <p><button class="w3-btn w3-grey" onClick="javascript:history.back();">Go back</button></p>
+    {% else %}
+      <p><a href="{% url 'account_login'%}?next={{request.path}}">Please login first</a></p>
+    {% endif %}
+
+  </article>
+{% endblock %}

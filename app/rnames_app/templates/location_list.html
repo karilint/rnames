@@ -12,13 +12,13 @@
     </form>
     {% if user.is_authenticated %}
       <br>
-      <a class="btn btn-default" href="{% url 'location-new' %}"><span class="fa  fa-plus"></span> Add</a>
+      <a href="{% url 'location-new' %}"><span class="fa  fa-plus"></span> Add</a>
       <br>
     {% endif %}
 
     {% if page_obj %}
-      <table style="width:100%">
-        <tr>
+    <table class="w3-table-all">
+      <tr>
           <th>Location</th>
           {% if user.is_authenticated %}
           <th>Action</th>
@@ -31,9 +31,9 @@
             {% if user.is_authenticated %}
               <td><a href="{{ x.get_absolute_url }}">{{ x.name }}</td>
               <td>
-                <a class="btn btn-default" href="{% url 'location-detail' pk=x.pk %}"><span class="fa fa-search"></span></a>
-                <a class="btn btn-default" href="{% url 'location-edit' pk=x.pk %}"><span class="fa fa-pencil-square-o"></span></a>
-                <a class="btn btn-default" href="{% url 'location-delete' pk=x.pk %}"><span class="fa  fa-trash-o"></span></a>
+                <a href="{% url 'location-detail' pk=x.pk %}"><span class="fa fa-search"></span></a>
+                <a href="{% url 'location-edit' pk=x.pk %}"><span class="fa fa-pencil-square-o"></span></a>
+                <a href="{% url 'location-delete' pk=x.pk %}"><span class="fa  fa-trash-o"></span></a>
               </td>
 
             {% else %}

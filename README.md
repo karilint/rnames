@@ -10,4 +10,8 @@ See [Development Environment](./docs/dev_environment.md)
 
 ## Production Environment
 
-Not ready yet. 
+Not ready yet.
+
+## Running wizard in development and production environment
+
+See [wizard documentation](./app/frontend/README.md)

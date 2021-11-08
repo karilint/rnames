@@ -1,0 +1,15 @@
+{% extends "base_generic.html" %} {% block content %}
+<!-- Write your comments here -->
+{% if user.is_authenticated %}
+  <h1>Delete Time Slice</h1>
+
+  <p>Are you sure you want to delete the Time Slice: <b><i>{{ timeslice }}</i></b>?</p>
+
+  <form action="" method="POST">
+      {% csrf_token %}
+      <input class="w3-btn w3-red" type="submit" action="" value="Yes, delete." />
+  </form>
+  <p><button class="w3-btn w3-grey" onClick="javascript:history.back();">Go back</button></p>
+{% else %}
+  <p><a href="{% url 'account_login'%}?next={{request.path}}">Please login first</a></p>
+{% endif %} {% endblock %}

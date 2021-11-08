@@ -15,14 +15,14 @@
         <table class="w3-table-all">
           {{ form.as_table }}
         </table>
-          <button type="submit" class="save btn btn-default">Save</button>
+        <a href="{{request.META.HTTP_REFERER}}" class="w3-button w3-border w3-light-grey" style="width:120px"><i class="fas fa-angle-double-left"></i>&nbsp;Go back</a>
+        <button type="submit" class="w3-button w3-border w3-light-grey" style="width:120px">Submit &nbsp; <i class="fas fa-angle-right"></i></button>      
       </form>
 <!--      <form method="POST" class="relation-form">{% csrf_token %}
           {{ form.name_one }}
           <button type="submit" class="save btn btn-default">Save</button>
       </form>
 -->
-      <p><a href="{{request.META.HTTP_REFERER}}">Go back</a></p>
     {% else %}
       <p><a href="{% url 'account_login'%}?next={{request.path}}">Please login first</a></p>
     {% endif %}

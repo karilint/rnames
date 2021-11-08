@@ -11,13 +11,13 @@
     </form>
     {% if user.is_authenticated %}
       <br>
-      <a class="btn btn-default" href="{% url 'structuredname-new' %}"><span class="fa  fa-plus"></span> Add</a>
+      <a href="{% url 'structuredname-new' %}"><span class="fa  fa-plus"></span> Add</a>
       <br>
     {% endif %}
 
     {% if page_obj %}
-      <table style="width:100%">
-        <tr>
+    <table class="w3-table-all">
+      <tr>
           <th>Name</th>
           <th>Qualifier</th>
           <th>Location</th>
@@ -36,10 +36,10 @@
               <td></td>
             {% endif %}
             <td>
-              <a class="btn btn-default" href="{% url 'structuredname-detail' pk=x.pk %}"><span class="fa fa-search"></span></a>
+              <a href="{% url 'structuredname-detail' pk=x.pk %}"><span class="fa fa-search"></span></a>
               {% if user.is_authenticated %}
-                <a class="btn btn-default" href="{% url 'structuredname-edit' pk=x.pk %}"><span class="fa fa-pencil-square-o"></span></a>
-                <a class="btn btn-default" href="{% url 'structuredname-delete' pk=x.pk %}"><span class="fa  fa-trash-o"></span></a>
+                <a href="{% url 'structuredname-edit' pk=x.pk %}"><span class="fa fa-pencil-square-o"></span></a>
+                <a href="{% url 'structuredname-delete' pk=x.pk %}"><span class="fa  fa-trash-o"></span></a>
               {% endif %}
             </td>
           </tr>

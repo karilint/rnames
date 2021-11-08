@@ -7,8 +7,8 @@
 <!-- Write your comments here -->
 <section class="w3-section">
   {% if user.is_authenticated %}
-  <a class="btn btn-default" href="{% url 'structuredname-edit' pk=structuredname.pk %}"><span class="fa fa-pencil-square-o"></span></a>
-  <a class="btn btn-default" href="{% url 'structuredname-delete' pk=structuredname.pk %}"><span class="fa  fa-trash-o"></span></a>
+  <a href="{% url 'structuredname-edit' pk=structuredname.pk %}"><span class="fa fa-pencil-square-o"></span></a>
+  <a href="{% url 'structuredname-delete' pk=structuredname.pk %}"><span class="fa  fa-trash-o"></span></a>
   {% endif %}
   <p><a href="{{request.META.HTTP_REFERER}}">Go back</a></p>
   <header style="display:none;">
@@ -67,7 +67,7 @@
       <td>{{ r.location }}</td>
       <td>{{ r.belongs_to }}</td>
       <td>
-        <a class="btn btn-default" href="{% url 'relation_sql-detail' name_one=structuredname.id name_two=r.fk %}"><span class="fa fa-search"></span></a>
+        <a href="{% url 'relation_sql-detail' name_one=structuredname.id name_two=r.fk %}"><span class="fa fa-search"></span></a>
       </td>
       {% if user.is_authenticated %}
       {% else %}
