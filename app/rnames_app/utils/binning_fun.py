@@ -88,7 +88,8 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange, time_slices, inf
         xnamesc = pd.concat((xnamesa,xnamesb), axis=0)
         xnames_raw1 = xnamesc.drop_duplicates()
     xnames_raw = xnamesc
-    xnames_raw["combi"] = xnames_raw1["name"] + xnames_raw1["ref"].astype(str).copy()
+    if len(c_rels_a) > 0 or len(c_rels_b) > 0:
+        xnames_raw["combi"] = xnames_raw1["name"] + xnames_raw1["ref"].astype(str).copy()
     #xnamelist = xnames_raw["combi"].tolist()
 
     ##############################################################
