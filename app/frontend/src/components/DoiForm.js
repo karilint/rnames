@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { InputField } from './InputField'
 import { doiFormIsValid } from '../validations'
+import { loadServerData } from '../services/server'
 
 export const DoiForm = ({
 	doi,
@@ -17,6 +18,14 @@ export const DoiForm = ({
 	const notify = (message, type = 'error') => {
 		setNotification({ message, type })
 	}
+	const findDuplicateDois = doi =>
+		loadServerData('references')
+		.filter(v => v.doi === doi)
+
+	const findDuplicateLinks = doi =>
+		loadServerData('references')
+		.filter(v => v.link === doi)
+
 
 	useEffect(() => {
 		if (!notification) return
@@ -32,7 +41,10 @@ export const DoiForm = ({
 	const doiSubmit = async e => {
 		e.preventDefault()
 		if (!doiFormIsValid(doi, notify)) return
-
+		if ((findDuplicateDois(doi).length !== 0) || findDuplicateLinks(doi).length !== 0) {
+			notify('An existing reference is using the same doi.')
+			return
+		}
 		try {
 			const result = await axios.get(
 				`https://api.crossref.org/works/${doi}`

@@ -5,6 +5,7 @@ import { makeId } from '../utilities'
 import { referenceFormIsValid } from '../validations'
 import { DoiForm } from './DoiForm'
 import { InputField } from './InputField'
+import { loadServerData } from '../services/server'
 
 export const ReferenceForm = ({
 	displayRefForm,
@@ -29,6 +30,13 @@ export const ReferenceForm = ({
 		link: null,
 	})
 	const [showError, setShowErrors] = useState(false)
+	const findDuplicateDois = doi =>
+	loadServerData('references')
+	.filter(v => v.doi === doi)
+
+	const findDuplicateLinks = doi =>
+	loadServerData('references')
+	.filter(v => v.link === doi)
 
 	useEffect(() => {
 		if (!reference) return
@@ -93,7 +101,11 @@ export const ReferenceForm = ({
 			link,
 			addErrorMessage
 		)
-
+		if ((findDuplicateDois(doi).length !== 0) || (findDuplicateLinks(doi).length !== 0)) {
+			addErrorMessage('An existing reference is using the same doi.', 'doi')
+			showErrorMsgs()
+			return
+		}
 		if (!valid) {
 			showErrorMsgs()
 			return

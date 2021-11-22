@@ -804,7 +804,7 @@ def bin_unique_names_0(ibs, cr_x, xnames_raw):
         xnames_begin = bisect_left(xnames_raw[:, col.xnames.name], name)
         xnames_end = bisect_right(xnames_raw[:, col.xnames.name], name)
 
-        if xnames_begin == len(xnames_raw[col.xnames.name]):
+        if xnames_begin == len(xnames_raw[:, col.xnames.name]):
             continue
 
         data = cr_x[cr_x_begin:cr_x_end]
@@ -867,7 +867,7 @@ def bin_unique_names_1(ibs, x1, xnames_raw):
         xnames_begin = bisect_left(xnames_list, name)
         xnames_end = bisect_right(xnames_list, name)
 
-        if xnames_begin == len(xnames_raw):
+        if xnames_begin == len(xnames_raw[:, col.xnames.name]):
             continue
 
         data = x1[x1_begin:x1_end]
