@@ -688,11 +688,6 @@ def shortest_time_bins(results, used_ts):
     return(combi_names)
 
 def merge_cc(resi_s, resi_y, resi_c, used_ts):
-    k_oldest_index = 2
-    k_youngest_index = 4
-    k_ref = 6
-    k_b_scheme = 8
-
     resi = pd.concat([resi_s, resi_y, resi_c])
     x2 = pd.merge(resi, used_ts, how= 'inner', left_on="oldest", right_on="ts")
     x2 = x2[['name', 'oldest', 'ts_index', 'youngest', 'ts_count',
@@ -708,6 +703,7 @@ def merge_cc(resi_s, resi_y, resi_c, used_ts):
 
     # Sort x2 so binary search can be used to quickly find ranges
     x2 = x2.sort_values(by=['name', 'b_scheme'])
+    col = SimpleNamespace(**{k: v for v, k in enumerate(x2.columns)})
     x2 = x2.values
     used_ts = used_ts.values
 
@@ -716,20 +712,20 @@ def merge_cc(resi_s, resi_y, resi_c, used_ts):
         x2_sub = x2[bisect_left(x2[:, 0], i_name):bisect_right(x2[:, 0], i_name)]
 
         # We need the oldest and youngest index in the ranges
-        x2_subs = x2_sub[bisect_left(x2_sub[:, k_b_scheme], 's'):bisect_right(x2_sub[:, k_b_scheme], 's')]
-        x2_suby = x2_sub[bisect_left(x2_sub[:, k_b_scheme], 'y'):bisect_right(x2_sub[:, k_b_scheme], 'y')]
-        x2_subc = x2_sub[bisect_left(x2_sub[:, k_b_scheme], 'c'):bisect_right(x2_sub[:, k_b_scheme], 'c')]
+        x2_subs = x2_sub[x2_sub[:, col.b_scheme] == 's']
+        x2_suby = x2_sub[x2_sub[:, col.b_scheme] == 'y']
+        x2_subc = x2_sub[x2_sub[:, col.b_scheme] == 'c']
         # youngest = max, oldest = min index
-        x_range_s = np.array([np.min(x2_subs[:, k_oldest_index])])
-        x_range_y = np.array([np.min(x2_suby[:, k_oldest_index])])
-        x_range_c = np.array([np.min(x2_subc[:, k_oldest_index])])
+        x_range_s = np.array([np.min(x2_subs[:, col.oldest_index])])
+        x_range_y = np.array([np.min(x2_suby[:, col.oldest_index])])
+        x_range_c = np.array([np.min(x2_subc[:, col.oldest_index])])
 
-        if np.min(x2_subs[:, k_oldest_index]) != np.max(x2_subs[:, k_youngest_index]):
-            x_range_s = np.arange(np.min(x2_subs[:, k_oldest_index]), np.max(x2_subs[:, k_youngest_index])+1,1)
-        if np.min(x2_suby[:, k_oldest_index]) != max(x2_suby[:, k_youngest_index]):
-            x_range_y = np.arange(np.min(x2_suby[:, k_oldest_index]), np.max(x2_suby[:, k_youngest_index])+1,1)
-        if np.min(x2_subc[:, k_oldest_index]) != max(x2_subc[:, k_youngest_index]):
-            x_range_c = np.arange(np.min(x2_subc[:, k_oldest_index]), np.max(x2_subc[:, k_youngest_index])+1,1)
+        if np.min(x2_subs[:, col.oldest_index]) != np.max(x2_subs[:, col.youngest_index]):
+            x_range_s = np.arange(np.min(x2_subs[:, col.oldest_index]), np.max(x2_subs[:, col.youngest_index])+1,1)
+        if np.min(x2_suby[:, col.oldest_index]) != max(x2_suby[:, col.youngest_index]):
+            x_range_y = np.arange(np.min(x2_suby[:, col.oldest_index]), np.max(x2_suby[:, col.youngest_index])+1,1)
+        if np.min(x2_subc[:, col.oldest_index]) != max(x2_subc[:, col.youngest_index]):
+            x_range_c = np.arange(np.min(x2_subc[:, col.oldest_index]), np.max(x2_subc[:, col.youngest_index])+1,1)
 
         rax = np.concatenate((x_range_s, x_range_s, x_range_c))
         # filter for third quantile, only bins with highest score
@@ -753,7 +749,7 @@ def merge_cc(resi_s, resi_y, resi_c, used_ts):
         ts_c = rax_sub_max - rax_sub_min
 
         refs = set()
-        for ref in x2_sub[:, k_ref]:
+        for ref in x2_sub[:, col.refs]:
             for r in ref.split(', '):
                 refs.add(r)
 
