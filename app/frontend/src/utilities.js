@@ -1,3 +1,5 @@
+import { loadServerData } from './services/server'
+
 const idTypes = [
 	'name',
 	'location',
@@ -70,3 +72,9 @@ export const formatStructuredName = (structuredName, state) => {
 		location ? location.name : ''
 	}`
 }
+
+export const findDuplicateDois = doi =>
+	loadServerData('references').filter(v => v.doi === doi)
+
+export const findDuplicateLinks = doi =>
+	loadServerData('references').filter(v => v.link === doi)

@@ -13,18 +13,18 @@ export const foundDoiResponseData = {
 			timestamp: 1588848082000,
 		},
 		title: [
-			'Katian (Ordovician) to Aeronian (Silurian, Llandovery) graptolite biostratigraphy of the\nYD\n\u20101 drill core, Yuanan County, Hubei Province, China',
+			'Katian (Ordovician) to Aeronian (Silurian, Llandovery) graptolite biostratigraphy of the YD-1 drill core, Yuanan County, Hubei Province, China',
 		],
 		author: [
 			{
 				ORCID: 'http://orcid.org/0000-0001-7986-0617',
 				'authenticated-orcid': false,
-				given: 'J\u00f6rg',
+				given: 'Jörg',
 				family: 'Maletz',
 				sequence: 'first',
 				affiliation: [
 					{
-						name: 'Department of Earth Sciences FU Berlin Malteserstrasse 74\u2010100 D\u201012249 Berlin Germany',
+						name: 'Department of Earth Sciences FU Berlin Malteserstrasse 74-100 D-12249 Berlin Germany',
 					},
 				],
 			},
