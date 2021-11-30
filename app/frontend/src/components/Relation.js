@@ -28,7 +28,7 @@ export const Relation = ({ data }) => {
 	const refOptions = state.ref
 		.concat(...loadServerData('references'))
 		.map(v => [v.id, v.title])
-	
+
 	const deleteRelHandler = () => {
 		dispatch(deleteRel(data))
 	}

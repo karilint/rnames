@@ -1,7 +1,7 @@
 import React from 'react'
 import { Notification } from './Notification'
 
-export const InputField = ({ name, value, notification, setField }) => {
+export const InputField = ({ name, value, notification, setField, autoFocus }) => {
 	return (
 		<>
 			<label htmlFor={name}>{name}</label>
@@ -10,6 +10,7 @@ export const InputField = ({ name, value, notification, setField }) => {
 				name={name}
 				value={value}
 				onChange={e => setField(e.target.value)}
+				autoFocus={autoFocus}
 			/>
 			<Notification notification={notification} />
 			<br />

@@ -78,3 +78,10 @@ export const findDuplicateDois = doi =>
 
 export const findDuplicateLinks = doi =>
 	loadServerData('references').filter(v => v.link === doi)
+
+export const findDuplicateStructuredNames = (sname, structuredNames) =>
+	loadServerData('structured_names')
+		.concat(structuredNames)
+		.filter(v => v.qualifier_id === sname.qualifier_id)
+		.filter(v => v.location_id === sname.location_id)
+		.filter(v => v.name_id === sname.name_id)

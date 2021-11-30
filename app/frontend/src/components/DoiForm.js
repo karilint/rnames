@@ -68,6 +68,7 @@ export const DoiForm = ({
 				value={doi}
 				setField={setDoi}
 				notification={notification}
+				autoFocus={true}
 			/>
 			<button type='submit'>get</button>
 			<button type='button' onClick={() => setQueried(true)}>

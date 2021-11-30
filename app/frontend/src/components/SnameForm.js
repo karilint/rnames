@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { parseId, makeId } from '../utilities'
 import { addName } from '../store/names/actions'
@@ -12,14 +12,32 @@ import {
 } from '../store/snames/selectors'
 import { selectStructuredName } from '../store/selected_structured_names/actions'
 import { Notification } from './Notification'
-import { loadServerData } from '../services/server'
 import { DuplicateNameDialog } from './DuplicateNameDialog'
+import { findDuplicateStructuredNames } from '../utilities'
+
+const NameDataList = React.forwardRef(
+	({ name, names, onChangeHandler }, ref) => {
+		return(
+			<Datalist
+				name='name'
+				options={names}
+				value={name}
+				onChange={onChangeHandler}
+				innerRef={ref}
+			/>
+		)
+	}
+)
 
 export const SnameForm = ({
 	displaySnameForm,
 	showNewSnameForm,
 	newSnameButtonIsDisabled,
 	setNewSnameButtonIsDisabled,
+	setFocusOnSnameButton,
+	displayRefForm,
+	deleteCreatedSname,
+	setDeleteCreatedSname
 }) => {
 	const dispatch = useDispatch()
 	const reference = useSelector(selectRefence)
@@ -48,13 +66,6 @@ export const SnameForm = ({
 	}
 
 	const locations = useSelector(selectAllLocations)
-
-	const findDuplicateStructuredNames = sname =>
-		loadServerData('structured_names')
-			.concat(structuredNames)
-			.filter(v => v.qualifier_id === sname.qualifier_id)
-			.filter(v => v.location_id === sname.location_id)
-			.filter(v => v.name_id === sname.name_id)
 
 	const handleSnameAddition = () => {
 		if (!reference) {
@@ -96,10 +107,12 @@ export const SnameForm = ({
 			save_with_reference_id: saveWithReference,
 		}
 
-		if (findDuplicateStructuredNames(newSname).length === 0)
+		if (
+			findDuplicateStructuredNames(newSname, structuredNames).length === 0
+		)
 			submitSname(newSname)
 		else setStructuredName(newSname)
-	}
+		}
 
 	const submitSname = newSname => {
 		dispatch(addSname(newSname))
@@ -114,10 +127,48 @@ export const SnameForm = ({
 		setStructuredName(undefined)
 		showNewSnameForm()
 		setNewSnameButtonIsDisabled(!newSnameButtonIsDisabled)
+		setFocusOnSnameButton()
 	}
 
+	const nameRef = useRef(null)
+	useEffect(() => {
+		if(newSnameButtonIsDisabled){
+			nameRef.current.focus()
+		}
+
+		if (displayRefForm === 'none') {
+			setFocusOnSnameButton()
+		}
+
+		if (displaySnameForm === 'block' && newSnameButtonIsDisabled) {
+			nameRef.current.focus()
+		}
+	}, [newSnameButtonIsDisabled])
+
+	useEffect(() => {
+		if(displayRefForm === 'none' && newSnameButtonIsDisabled) {
+			nameRef.current.focus()
+		}
+	}, [displayRefForm])
+
+	useEffect(() => {
+		if(displaySnameForm === 'block' && newSnameButtonIsDisabled) {
+			nameRef.current.focus()
+		}
+	}, [displaySnameForm])
+
+	useEffect(() => {
+		if(deleteCreatedSname) {
+			nameRef.current.focus()
+			setDeleteCreatedSname(false)
+		}
+	}, [deleteCreatedSname])
+
 	if (structuredName !== undefined) {
-		const duplicateNames = findDuplicateStructuredNames(structuredName)
+		const duplicateNames = findDuplicateStructuredNames(
+			structuredName,
+			structuredNames
+		)
 		const selectHandler = sname => {
 			if (sname.id === structuredName.id) {
 				submitSname(sname)
@@ -143,11 +194,11 @@ export const SnameForm = ({
 		<div style={{ display: displaySnameForm }}>
 			<Notification notification={notification} />
 			<label htmlFor='name'>Name</label>
-			<Datalist
-				name='name'
-				options={names}
-				value={name}
-				onChange={e => setName(e.target.value)}
+			<NameDataList
+				ref={nameRef}
+				name={name}
+				names={names}
+				onChangeHandler={e => setName(e.target.value)}
 			/>
 			<label htmlFor='qualifier'>Qualifier</label>
 			<Datalist
@@ -172,7 +223,9 @@ export const SnameForm = ({
 			<label htmlFor='structured-name-form-save-with-reference'>
 				Save with reference id
 			</label>
-			<button type='button' onClick={handleSnameAddition}>
+			<button type='button' onClick={() => {
+				handleSnameAddition()
+				setFocusOnSnameButton()}}>
 				Save
 			</button>
 		</div>

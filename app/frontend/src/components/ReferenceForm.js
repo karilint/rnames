@@ -12,6 +12,7 @@ export const ReferenceForm = ({
 	showNewReferenceForm,
 	reference = undefined,
 	isQueried = false,
+	setFocusOnSnameButton
 }) => {
 	const dispatch = useDispatch()
 
@@ -129,6 +130,7 @@ export const ReferenceForm = ({
 
 		clearFields()
 		showNewReferenceForm()
+		document.getElementById('sname-button').focus()
 	}
 
 	if (queried)
@@ -140,6 +142,7 @@ export const ReferenceForm = ({
 						value={firstAuthor}
 						setField={setFirstAuthor}
 						notification={formFieldNotification.firstAuthor}
+						autoFocus={true}
 					/>
 					<InputField
 						name='year'
@@ -165,7 +168,7 @@ export const ReferenceForm = ({
 						setField={setLink}
 						notification={formFieldNotification.link}
 					/>
-					<button type='submit'>Save reference</button>
+					<button type='submit' onClick={setFocusOnSnameButton}>Save reference</button>
 					{reference ? (
 						<>
 							<br />

@@ -29,6 +29,7 @@ export const Sname = ({
 	canDeleteNotify,
 	nameNotify,
 	locationNotify,
+	setDeleteCreatedSname
 }) => {
 	const dispatch = useDispatch()
 	const map = useSelector(selectMap)
@@ -81,6 +82,8 @@ export const Sname = ({
 		if (canDeleteLocation) dispatch(deleteName(sname.location_id))
 		dispatch(deselectStructuredName(sname.id))
 		dispatch(deleteSname(sname))
+		document.getElementById('sname-button').focus()
+		setDeleteCreatedSname(true)
 	}
 
 	return (
