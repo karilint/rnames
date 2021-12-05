@@ -17,9 +17,10 @@ import numpy as np
 # end
 import json
 
+from django import db
 from django.db import connection
 from django.db.models import Q
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import (HttpResponse, JsonResponse, HttpResponseBadRequest)
 from django.shortcuts import render, get_object_or_404, redirect
@@ -46,6 +47,7 @@ from .utils.info import BinningProgressUpdater
 from io import StringIO
 from contextlib import redirect_stdout
 from types import SimpleNamespace
+import multiprocessing as mp
 import time
 # , APINameFilter
 
@@ -55,12 +57,12 @@ import time
 #    names = Name.objects.order_by('name')
 #    return render(request, 'name_list.html', {'names': names})
 
-@login_required
-def external(request):
+def binning_process():
+    connection.connect()
     info = BinningProgressUpdater()
 
     if not info.start_binning():
-        return redirect('/rnames/admin/binning_progress')
+        return
 
     def time_slices(scheme):
         return list(TimeSlice.objects.is_active().filter(scheme=scheme).order_by('order').values_list('name', flat=True))
@@ -118,21 +120,17 @@ def external(request):
     except Exception as e:
         info.set_error(str(e))
         traceback.print_exc()
-        return render(
-            request,
-            'binning_done.html',
-            context={
-                'error': True,
-                'error_message': str(e),
-            },
-        )
+        return
 
     update_progress = info.db_update_progress_updater(
         len(result['berg'])
         + len(result['webby'])
         + len(result['stages'])
         + len(result['periods'])
-        )
+    )
+
+    create_objects = []
+    update_objects = []
 
     def update(obj, oldest, youngest, ts_count, refs, rule):
         obj.oldest = oldest
@@ -140,11 +138,11 @@ def external(request):
         obj.ts_count = ts_count
         obj.refs = refs
         obj.rule = rule
-        obj.save()
+        update_objects.append(obj)
 
     def create(name, scheme, oldest, youngest, ts_count, refs, rule):
         obj = Binning(name=name, binning_scheme=scheme, oldest=oldest, youngest=youngest, ts_count=ts_count, refs=refs, rule=rule)
-        obj.save()
+        create_objects.append(obj)
 
     def process_result(df, scheme):
         col = SimpleNamespace(**{k: v for v, k in enumerate(df.columns)})
@@ -158,23 +156,22 @@ def external(request):
                 update(data[0], row[col.oldest], row[col.youngest], row[col.ts_count], row[col.refs], row[col.rule])
             update_progress.update()
 
-    start = time.time()
     process_result(result['berg'], 'x_robinb')
     process_result(result['webby'], 'x_robinw')
     process_result(result['stages'], 'x_robins')
     process_result(result['periods'], 'x_robinp')
-    end = time.time()
+
+    Binning.objects.bulk_create(create_objects, 100)
+    Binning.objects.bulk_update(update_objects, ['oldest', 'youngest', 'ts_count', 'refs', 'rule'], 100)
 
     info.finish_binning()
 
-    return render(
-        request,
-        'binning_done.html',
-        context={
-            'duration': round(result['duration']),
-            'update_duration': round(end - start),
-        },
-    )
+@login_required
+def external(request):
+    db.connections.close_all()
+    handle = mp.Process(target=binning_process)
+    handle.start()
+    return redirect('/rnames/admin/binning_progress')
 
 
 def binning(request):
@@ -231,6 +228,7 @@ def binning_scheme_list(request):
     )
 
 
+@login_required
 def export_csv_binnings(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="rnames_binnings.csv"'
@@ -257,6 +255,7 @@ def export_csv_binnings(request):
     return response
 
 
+@login_required
 def export_csv_references(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="rnames_references.csv"'
@@ -421,6 +420,7 @@ def location_detail(request, pk):
 
 
 @login_required
+@permission_required('rnames_app.change_location', raise_exception=True)
 def location_edit(request, pk):
     location = get_object_or_404(Location, pk=pk, is_active=1)
     if request.method == "POST":
@@ -456,6 +456,7 @@ def location_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_location', raise_exception=True)
 def location_new(request):
     if request.method == "POST":
         form = LocationForm(request.POST)
@@ -481,6 +482,7 @@ def name_detail(request, pk):
 
 
 @login_required
+@permission_required('rnames_app.change_name', raise_exception=True)
 def name_edit(request, pk):
     name = get_object_or_404(Name, pk=pk, is_active=1)
     if request.method == "POST":
@@ -518,6 +520,7 @@ def name_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_name', raise_exception=True)
 def name_new(request):
     if request.method == "POST":
         form = NameForm(request.POST)
@@ -563,6 +566,7 @@ def qualifier_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_qualifier', raise_exception=True)
 def qualifier_new(request):
     if request.method == "POST":
         form = QualifierForm(request.POST)
@@ -576,6 +580,7 @@ def qualifier_new(request):
 
 
 @login_required
+@permission_required('rnames_app.change_qualifier', raise_exception=True)
 def qualifier_edit(request, pk):
     qualifier = get_object_or_404(Qualifier, pk=pk, is_active=1)
     if request.method == "POST":
@@ -600,6 +605,7 @@ def qualifiername_detail(request, pk):
 
 
 @login_required
+@permission_required('rnames_app.change_qualifiername', raise_exception=True)
 def qualifiername_edit(request, pk):
     qualifiername = get_object_or_404(QualifierName, pk=pk, is_active=1)
     if request.method == "POST":
@@ -637,6 +643,7 @@ def qualifiername_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_qualifiername', raise_exception=True)
 def qualifiername_new(request):
     if request.method == "POST":
         form = QualifierNameForm(request.POST)
@@ -683,6 +690,7 @@ def reference_detail(request, pk):
 
 
 @login_required
+@permission_required('rnames_app.change_reference', raise_exception=True)
 def reference_edit(request, pk):
     reference = get_object_or_404(Reference, pk=pk, is_active=1)
     if request.method == "POST":
@@ -733,6 +741,7 @@ def reference_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_reference', raise_exception=True)
 def reference_new(request):
     if request.method == "POST":
         form = ReferenceForm(request.POST)
@@ -913,6 +922,7 @@ def relation_sql_detail(request, name_one, name_two):
 
 
 @login_required
+@permission_required('rnames_app.change_relation', raise_exception=True)
 def relation_edit(request, pk):
     relation = get_object_or_404(Relation, pk=pk, is_active=1)
     if request.method == "POST":
@@ -953,6 +963,7 @@ def relation_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_relation', raise_exception=True)
 def relation_new(request, reference_id):
     if request.method == "POST":
         form = RelationForm(request.POST)
@@ -997,6 +1008,7 @@ def stratigraphic_qualifier_detail(request, pk):
 
 
 @login_required
+@permission_required('rnames_app.change_stratigraphicqualifier', raise_exception=True)
 def stratigraphic_qualifier_edit(request, pk):
     stratigraphicqualifier = get_object_or_404(
         StratigraphicQualifier, pk=pk, is_active=1)
@@ -1036,6 +1048,7 @@ def stratigraphic_qualifier_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_stratigraphicqualifier', raise_exception=True)
 def stratigraphic_qualifier_new(request):
     if request.method == "POST":
         form = StratigraphicQualifierForm(request.POST)
@@ -1175,6 +1188,7 @@ def structuredname_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_structuredname', raise_exception=True)
 def structuredname_new(request):
     if request.method == "POST":
         form = StructuredNameForm(request.POST)
@@ -1188,6 +1202,7 @@ def structuredname_new(request):
 
 
 @login_required
+@permission_required('rnames_app.change_structuredname', raise_exception=True)
 def structuredname_edit(request, pk):
     structuredname = get_object_or_404(StructuredName, pk=pk, is_active=1)
     if request.method == "POST":
@@ -1239,6 +1254,7 @@ def user_search(request):
     user_filter = UserFilter(request.GET, queryset=user_list)
     return render(request, 'user_list.html', {'filter': user_filter})
 
+
 class timeslice_delete(DeleteView):
     model = TimeSlice
     success_url = reverse_lazy('timeslice-list')
@@ -1250,6 +1266,7 @@ def timeslice_detail(request, pk):
 
 
 @login_required
+@permission_required('rnames_app.change_timeslice', raise_exception=True)
 def timeslice_edit(request, pk):
     timeslice = get_object_or_404(TimeSlice, pk=pk, is_active=1)
     if request.method == "POST":
@@ -1285,6 +1302,7 @@ def timeslice_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_timeslice', raise_exception=True)
 def timeslice_new(request):
     if request.method == "POST":
         form = TimeSliceForm(request.POST)
