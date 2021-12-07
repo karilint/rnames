@@ -73,11 +73,44 @@ export const formatStructuredName = (structuredName, state) => {
 	}`
 }
 
-export const findDuplicateDois = doi =>
-	loadServerData('references').filter(v => v.doi === doi)
+const DOI_REGEX_PATTERNS_FOR_URL_SEARCH = [
+	/10.\d{4,9}\/[-._;()/:A-Z0-9]+$/i,
+	/10.1002\/[^\s]+$/i,
+	/10.\d{4}\/\d+-\d+X?(\d+)\d+<[\d\w]+:[\d\w]*>\d+.\d+.\w+;\d$/i,
+	/10.1021\/\w\w\d+$/i,
+	/10.1207\/[\w\d]+\&\d+_\d+$/i,
+]
 
-export const findDuplicateLinks = doi =>
-	loadServerData('references').filter(v => v.link === doi)
+const extractDoiFromUrl = value => {
+	let doiFound
+	DOI_REGEX_PATTERNS_FOR_URL_SEARCH.some(regex => {
+		doiFound = value.match(regex)
+		if (doiFound) {
+			return true
+		}
+		return false
+	})
+	if (doiFound) {
+		return doiFound[0]
+	}
+	return doiFound
+}
+
+export const findDuplicateDois = value => {
+	if (!value) return false
+	const doi = extractDoiFromUrl(value)
+	if (!doi) return false
+	return loadServerData('references').some(v => {
+		const databaseDoiFromUrl = v.link
+			? extractDoiFromUrl(v.link)
+			: undefined
+		return v.doi
+			? v.doi === doi
+			: false || databaseDoiFromUrl
+			? databaseDoiFromUrl === doi
+			: false
+	})
+}
 
 export const findDuplicateStructuredNames = (sname, structuredNames) =>
 	loadServerData('structured_names')

@@ -29,6 +29,9 @@ def main_binning_fun(cron_relations, cron_columns, time_slices, info):
 
     cron_relations = pd.DataFrame(cron_relations, columns=cron_columns)
 
+    # Filter references with no year
+    cron_relations = cron_relations[~np.isnan(cron_relations['reference_year'])]
+
     # In[3]:
 
 

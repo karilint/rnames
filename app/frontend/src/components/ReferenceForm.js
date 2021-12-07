@@ -12,7 +12,7 @@ export const ReferenceForm = ({
 	showNewReferenceForm,
 	reference = undefined,
 	isQueried = false,
-	setFocusOnSnameButton
+	setFocusOnSnameButton,
 }) => {
 	const dispatch = useDispatch()
 
@@ -95,18 +95,31 @@ export const ReferenceForm = ({
 			link,
 			addErrorMessage
 		)
-		if (
-			findDuplicateDois(doi).length !== 0 ||
-			findDuplicateLinks(doi).length !== 0
-		) {
+
+		if (!valid) {
+			showErrorMsgs()
+			return
+		}
+
+		if (findDuplicateDois(doi)) {
 			addErrorMessage(
-				'An existing reference is using the same doi.',
+				<>
+					An existing reference is using the same doi: &nbsp;
+					<a
+						href={`https://www.doi.org/${doi}`}
+					>{`https://www.doi.org/${doi}`}</a>
+				</>,
 				'doi'
 			)
 			showErrorMsgs()
 			return
 		}
-		if (!valid) {
+
+		if (findDuplicateDois(link)) {
+			addErrorMessage(
+				'An existing reference is using the same permanent link.',
+				'link'
+			)
 			showErrorMsgs()
 			return
 		}
@@ -168,7 +181,9 @@ export const ReferenceForm = ({
 						setField={setLink}
 						notification={formFieldNotification.link}
 					/>
-					<button type='submit' onClick={setFocusOnSnameButton}>Save reference</button>
+					<button type='submit' onClick={setFocusOnSnameButton}>
+						Save reference
+					</button>
 					{reference ? (
 						<>
 							<br />

@@ -60,7 +60,9 @@ describe('Sname', () => {
 					canDeleteNotify={() => {}}
 					nameNotify={() => {}}
 					locationNotify={() => {}}
+					setDeleteCreatedSname={() => {}}
 				/>
+				<button id='sname-button'>Add new structured name</button>
 			</Provider>
 		)
 	})
@@ -119,7 +121,9 @@ test('does not delete sname if there is a relation dependency', () => {
 				canDeleteNotify={() => {}}
 				nameNotify={() => {}}
 				locationNotify={() => {}}
+				setDeleteCreatedSname={() => {}}
 			/>
+			<button id='sname-button'>Add new structured name</button>
 		</Provider>
 	)
 
@@ -148,7 +152,9 @@ test('deletes name created by user if no dependencies found', () => {
 				canDeleteNotify={() => {}}
 				nameNotify={() => {}}
 				locationNotify={() => {}}
+				setDeleteCreatedSname={() => {}}
 			/>
+			<button id='sname-button'>Add new structured name</button>
 		</Provider>
 	)
 
@@ -182,7 +188,9 @@ test('deletes location created by user if no dependencies found', () => {
 				canDeleteNotify={() => {}}
 				nameNotify={() => {}}
 				locationNotify={() => {}}
+				setDeleteCreatedSname={() => {}}
 			/>
+			<button id='sname-button'>Add new structured name</button>
 		</Provider>
 	)
 
@@ -220,7 +228,9 @@ test('deletes both name and location created by user if no dependencies found', 
 				canDeleteNotify={() => {}}
 				nameNotify={() => {}}
 				locationNotify={() => {}}
+				setDeleteCreatedSname={() => {}}
 			/>
+			<button id='sname-button'>Add new structured name</button>
 		</Provider>
 	)
 
@@ -272,7 +282,9 @@ test('does not delete name created by user if dependency found', () => {
 				canDeleteNotify={() => {}}
 				nameNotify={() => {}}
 				locationNotify={() => {}}
+				setDeleteCreatedSname={() => {}}
 			/>
+			<button id='sname-button'>Add new structured name</button>
 		</Provider>
 	)
 
@@ -319,7 +331,9 @@ test('does not delete location created by user if dependency found', () => {
 				canDeleteNotify={() => {}}
 				nameNotify={() => {}}
 				locationNotify={() => {}}
+				setDeleteCreatedSname={() => {}}
 			/>
+			<button id='sname-button'>Add new structured name</button>
 		</Provider>
 	)
 

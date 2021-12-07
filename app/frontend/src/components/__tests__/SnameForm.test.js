@@ -11,7 +11,6 @@ import { refReducer } from '../../store/references/reducers'
 import { mapReducer } from '../../store/map/reducers'
 import { nameReducer } from '../../store/names/reducers'
 import * as utilities from '../../utilities.js'
-import { addSname } from '../../store/snames/actions'
 import { addRef } from '../../store/references/actions'
 import { addName } from '../../store/names/actions'
 
@@ -86,6 +85,10 @@ describe('When reference provided, SnameForm', () => {
 					showNewSnameForm={() => {}}
 					newSnameButtonIsDisabled={true}
 					setNewSnameButtonIsDisabled={() => {}}
+					setFocusOnSnameButton={() => {}}
+					displayRefForm='none'
+					deleteCreatedSname={false}
+					setDeleteCreatedSname={() => {}}
 				/>
 			</Provider>
 		)
@@ -340,6 +343,10 @@ describe('When no reference provided, SnameForm', () => {
 					showNewSnameForm={() => {}}
 					newSnameButtonIsDisabled={true}
 					setNewSnameButtonIsDisabled={() => {}}
+					setFocusOnSnameButton={() => {}}
+					displayRefForm='none'
+					deleteCreatedSname={false}
+					setDeleteCreatedSname={() => {}}
 				/>
 			</Provider>
 		)
@@ -389,6 +396,10 @@ test('does not add duplicate names', () => {
 				showNewSnameForm={() => {}}
 				newSnameButtonIsDisabled={true}
 				setNewSnameButtonIsDisabled={() => {}}
+				setFocusOnSnameButton={() => {}}
+				displayRefForm='none'
+				deleteCreatedSname={false}
+				setDeleteCreatedSname={() => {}}
 			/>
 		</Provider>
 	)
@@ -460,6 +471,10 @@ test('does not add duplicate locations', () => {
 				showNewSnameForm={() => {}}
 				newSnameButtonIsDisabled={true}
 				setNewSnameButtonIsDisabled={() => {}}
+				setFocusOnSnameButton={() => {}}
+				displayRefForm='none'
+				deleteCreatedSname={false}
+				setDeleteCreatedSname={() => {}}
 			/>
 		</Provider>
 	)
@@ -516,6 +531,10 @@ describe('When user tries to create duplicate structured name', () => {
 					showNewSnameForm={() => {}}
 					newSnameButtonIsDisabled={true}
 					setNewSnameButtonIsDisabled={() => {}}
+					setFocusOnSnameButton={() => {}}
+					displayRefForm='none'
+					deleteCreatedSname={false}
+					setDeleteCreatedSname={() => {}}
 				/>
 			</Provider>
 		)
@@ -578,6 +597,10 @@ describe('When user tries to create duplicate structured name', () => {
 					showNewSnameForm={() => {}}
 					newSnameButtonIsDisabled={true}
 					setNewSnameButtonIsDisabled={() => {}}
+					setFocusOnSnameButton={() => {}}
+					displayRefForm='none'
+					deleteCreatedSname={false}
+					setDeleteCreatedSname={() => {}}
 				/>
 			</Provider>
 		)
@@ -650,6 +673,10 @@ describe('When user tries to create duplicate structured name', () => {
 					showNewSnameForm={() => {}}
 					newSnameButtonIsDisabled={true}
 					setNewSnameButtonIsDisabled={() => {}}
+					setFocusOnSnameButton={() => {}}
+					displayRefForm='none'
+					deleteCreatedSname={false}
+					setDeleteCreatedSname={() => {}}
 				/>
 			</Provider>
 		)
