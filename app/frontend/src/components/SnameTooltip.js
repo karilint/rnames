@@ -31,6 +31,9 @@ export const SnameTooltip = ({ sname }) => {
 		<></>
 	)
 
+	if (!data.name || !data.location || !data.qualifierName)
+		return <></>
+
 	return (
 		<div className='tooltip-wrapper'>
 			<div className='w3-card w3-white w3-container w3-padding-16 tooltip-content'>
