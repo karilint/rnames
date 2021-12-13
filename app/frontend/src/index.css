@@ -28,3 +28,28 @@
 .check-notop {
   top: 0 !important;
 }
+
+.tooltip-wrapper {
+  position: relative;
+  opacity: 0;
+}
+
+.tooltip-content {
+  display: none;
+  position: absolute;
+  max-width: 400px;
+  max-height: 200px;
+  overflow-y: auto;
+  transform: translateY(-100%);
+}
+
+.tooltip:hover > .tooltip-wrapper > .tooltip-content {
+  display: inline-block;
+}
+
+.tooltip:hover > .tooltip-wrapper {
+  width: auto;
+  height: auto;
+  opacity: 1;
+  transition: opacity 0.1s linear 1.6s;
+}
