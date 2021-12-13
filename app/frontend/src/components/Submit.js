@@ -69,8 +69,6 @@ export const Submit = () => {
 			),
 		}
 
-		console.log(submit_data)
-
 		const csrfmiddlewaretoken = document.querySelector(
 			'[name=csrfmiddlewaretoken]'
 		).value
