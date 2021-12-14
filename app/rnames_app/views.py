@@ -179,6 +179,9 @@ def binning_process():
 
 @login_required
 def external(request):
+    if not request.user.groups.filter(name='data_admin').exists():
+        raise PermissionDenied
+
     db.connections.close_all()
     handle = mp.Process(target=binning_process)
     handle.start()
