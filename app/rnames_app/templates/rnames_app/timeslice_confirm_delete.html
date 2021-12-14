@@ -9,7 +9,7 @@
       {% csrf_token %}
       <input class="w3-btn w3-red" type="submit" action="" value="Yes, delete." />
   </form>
-  <p><button type="button" class="w3-button w3-border w3-light-grey" onClick="javascript:history.back();" style="width:120px"><i class="fas fa-angle-double-left"></i>&nbsp;Go back</button></p>
-{% else %}
+  <button type="button" class="w3-button w3-border w3-light-grey" onClick="javascript:history.back();" style="width:120px">Cancel</button>
+  {% else %}
   <p><a href="{% url 'account_login'%}?next={{request.path}}">Please login first</a></p>
 {% endif %} {% endblock %}

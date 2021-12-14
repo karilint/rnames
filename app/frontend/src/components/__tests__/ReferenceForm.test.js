@@ -18,6 +18,7 @@ jest.mock('../../utilities.js')
 describe('When no reference information provided, ReferenceForm', () => {
 	let store
 	beforeEach(() => {
+		jest.clearAllMocks()
 		store = mockStore({
 			ref: refReducer,
 		})
@@ -61,8 +62,10 @@ describe('When no reference information provided, ReferenceForm', () => {
 		await screen.findByDisplayValue('Úna C. Farrell')
 	})
 
-	test('creats a new reference on save', async () => {
-		utilities.findDuplicateDois.mockImplementationOnce(value => false)
+	test('creates a new reference on save', async () => {
+		utilities.findDuplicateDois
+			.mockImplementationOnce(value => false)
+			.mockImplementationOnce(value => false)
 		const inputFields = screen.getAllByRole('textbox')
 		const saveReferenceBtn = screen.getByRole('button', { name: /save/i })
 		userEvent.type(
@@ -79,22 +82,29 @@ describe('When no reference information provided, ReferenceForm', () => {
 
 	test('does not show "Make new doi search" button', () => {
 		const makeNewDoiSearchBtn = screen.queryByRole('button', {
-			name: 'Make new doi search',
+			name: 'Make new DOI search',
 		})
 		expect(makeNewDoiSearchBtn).not.toBeInTheDocument()
 	})
 
 	test('does not print error msg if no doi or link duplicates found', async () => {
-		utilities.findDuplicateDois.mockImplementationOnce(value => false)
+		utilities.findDuplicateDois
+			.mockImplementationOnce(value => false)
+			.mockImplementationOnce(value => false)
+		const inputFields = screen.getAllByRole('textbox')
 		const saveReferenceBtn = screen.getByRole('button', { name: /save/i })
+		userEvent.type(
+			inputFields[2],
+			"Beyond Beecher's Trilobite Bed: Widespread pyritization of soft tissues in the Late Ordovician Taconic foreland basin"
+		)
 		userEvent.click(saveReferenceBtn)
 		const notification = await screen.queryByText(
-			'An existing reference is using the same doi.'
+			/An existing reference is using the same doi/i
 		)
 		expect(notification).not.toBeInTheDocument()
 	})
 
-	test('prints error msg if doi or link duplicates found', async () => {
+	test('prints error msg if doi duplicates found', async () => {
 		utilities.findDuplicateDois.mockImplementationOnce(value => true)
 		const inputFields = screen.getAllByRole('textbox')
 		userEvent.type(
@@ -103,10 +113,23 @@ describe('When no reference information provided, ReferenceForm', () => {
 		)
 		const saveReferenceBtn = screen.getByRole('button', { name: /save/i })
 		userEvent.click(saveReferenceBtn)
-		const notification = await screen.queryByText(
-			'An existing reference is using the same doi.'
+		await screen.findByText(/An existing reference is using the same doi/i)
+	})
+
+	test('prints error msg if link duplicates found', async () => {
+		utilities.findDuplicateDois
+			.mockImplementationOnce(value => false)
+			.mockImplementationOnce(value => true)
+		const inputFields = screen.getAllByRole('textbox')
+		userEvent.type(
+			inputFields[2],
+			"Beyond Beecher's Trilobite Bed: Widespread pyritization of soft tissues in the Late Ordovician Taconic foreland basin"
 		)
-		expect(notification).toBeInTheDocument()
+		const saveReferenceBtn = screen.getByRole('button', { name: /save/i })
+		userEvent.click(saveReferenceBtn)
+		await screen.findByText(
+			/An existing reference is using the same permanent link/i
+		)
 	})
 })
 
@@ -151,7 +174,9 @@ describe('When user is editing an existing reference, ReferenceForm', () => {
 	})
 
 	test('does not create a new reference on save', async () => {
-		utilities.findDuplicateDois.mockImplementationOnce(value => false)
+		utilities.findDuplicateDois
+			.mockImplementationOnce(value => false)
+			.mockImplementationOnce(value => false)
 		const inputFields = screen.getAllByRole('textbox')
 		const saveReferenceBtn = screen.getByRole('button', {
 			name: /save/i,
@@ -167,7 +192,9 @@ describe('When user is editing an existing reference, ReferenceForm', () => {
 	})
 
 	test('updates an existing reference on save', async () => {
-		utilities.findDuplicateDois.mockImplementationOnce(value => false)
+		utilities.findDuplicateDois
+			.mockImplementationOnce(value => false)
+			.mockImplementationOnce(value => false)
 		const inputFields = screen.getAllByRole('textbox')
 		const saveReferenceBtn = screen.getByRole('button', { name: /save/i })
 		userEvent.clear(inputFields[0])
@@ -182,7 +209,7 @@ describe('When user is editing an existing reference, ReferenceForm', () => {
 
 	test('shows new empty DoiForm on "Make new doi search" button click', async () => {
 		const makeNewDoiSearchBtn = screen.queryByRole('button', {
-			name: 'Make new doi search',
+			name: 'Make new DOI search',
 		})
 		userEvent.click(makeNewDoiSearchBtn)
 		const doiForm = await screen
@@ -216,7 +243,9 @@ describe('When user has found reference information via doi search, ReferenceFor
 			</Provider>
 		)
 		axios.get.mockImplementationOnce(() => Promise.resolve(data))
-		utilities.findDuplicateDois.mockImplementationOnce(value => false)
+		utilities.findDuplicateDois
+			.mockImplementationOnce(value => false)
+			.mockImplementationOnce(value => false)
 	})
 
 	test('has one button for saving the reference', async () => {
@@ -264,7 +293,9 @@ describe('When user has found reference information via doi search, ReferenceFor
 		userEvent.type(doiInputField, '10.1002/spp2.1267')
 		userEvent.click(getButton)
 		await waitFor(() => {
-			utilities.findDuplicateDois.mockImplementationOnce(value => false)
+			utilities.findDuplicateDois
+				.mockImplementationOnce(value => false)
+				.mockImplementationOnce(value => false)
 			const saveReferenceBtn = screen.getByRole('button', {
 				name: /save/i,
 			})
@@ -296,7 +327,10 @@ describe('ReferenceForm validates input and', () => {
 				<button id='sname-button'>Add new structured name</button>
 			</Provider>
 		)
-		utilities.findDuplicateDois.mockImplementationOnce(value => false)
+		jest.clearAllMocks()
+		utilities.findDuplicateDois
+			.mockImplementationOnce(value => false)
+			.mockImplementationOnce(value => false)
 	})
 
 	test('does not print error msg if user provides correct data for reference', async () => {

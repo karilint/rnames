@@ -6,20 +6,7 @@
   <!DOCTYPE html>
 
 <section class="w3-section">
-  <h2>Run binning</h2>
-  <p id="binningProgressLabel" class="w3-hide">Binning progress:</p>
-
-  <div id="binningProgressBarContainer" class="w3-light-grey w3-hide">
-    <div id="binningProgressBar" class="w3-container w3-green" style="height:24px; width:0%">
-    </div>
-  </div>
-
-  <p id="updateProgressLabel" class="w3-hide">Database update progress:</p>
-  <div id="updateProgressBarContainer" class="w3-light-grey w3-hide">
-    <div id="updateProgressBar" class="w3-container w3-green" style="height:24px; width:0%">
-    </div>
-  </div>
-
+  <h1>Run binning</h1>
   <form id='binningForm' action="/rnames/admin/binning_done" method="post">
     {% csrf_token %}
     <input class="w3-button w3-light-grey" type="submit" value="Start">
@@ -27,38 +14,6 @@
 
 </section>
 
-<script>
-
-window.addEventListener('DOMContentLoaded', () => {
-  const binningProgressLabel = document.getElementById('binningProgressLabel')
-  const binningProgressBar = document.getElementById('binningProgressBar')
-  const binningProgressBarContainer = document.getElementById('binningProgressBarContainer')
-
-  const updateProgressLabel = document.getElementById('updateProgressLabel')
-  const updateProgressBar = document.getElementById('updateProgressBar')
-  const updateProgressBarContainer = document.getElementById('updateProgressBarContainer')
-
-  document.getElementById('binningForm').addEventListener('submit', () => {
-    binningProgressBarContainer.classList.remove('w3-hide')
-    binningProgressLabel.classList.remove('w3-hide')
-
-    document.getElementById('binningForm').classList.add('w3-hide')
-
-    const update = () => fetch('/rnames/admin/binning_info')
-      .then(v => v.json())
-      .then(v => {
-        binningProgressBar.style.width = `${v.binning[0] / v.binning[1] * 100}%`
-        if (v.binning[0] == v.binning[1] && v.binning[1] > 0) {
-          updateProgressLabel.classList.remove('w3-hide')
-          updateProgressBarContainer.classList.remove('w3-hide')
-          updateProgressBar.style.width = `${v.update[0] / v.update[1] * 100}%`
-        }
-      })
-
-    setInterval(update, 5000)
-  })
-});
-</script>
   <!-- End of binning -->
 
 {% endblock %}

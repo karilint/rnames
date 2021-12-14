@@ -21,6 +21,8 @@ from django import db
 from django.db import connection
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import (HttpResponse, JsonResponse, HttpResponseBadRequest)
 from django.shortcuts import render, get_object_or_404, redirect
@@ -56,6 +58,15 @@ import time
 #    names = Name.objects.is_active().order_by('name')
 #    names = Name.objects.order_by('name')
 #    return render(request, 'name_list.html', {'names': names})
+
+def user_is_data_admin_or_owner(user, data):
+    if user.groups.filter(name='data_admin').exists():
+        return True
+
+    if user.groups.filter(name='data_contributor').exists() and data.created_by == user:
+        return True
+
+    return False
 
 def binning_process():
     connection.connect()
@@ -189,6 +200,10 @@ def binning_info(request):
     data['update'] = [0, 0]
 
     for entry in BinningProgress.objects.all():
+        if entry.name == 'status':
+            data['status'] = entry.value_one
+            continue
+
         if entry.name == 'error' or entry.name == 'lock' or entry.name == 'status':
             continue
 
@@ -409,7 +424,10 @@ def child(request):
     )
 
 
-class location_delete(DeleteView):
+class location_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = Location
     success_url = reverse_lazy('location-list')
 
@@ -423,6 +441,10 @@ def location_detail(request, pk):
 @permission_required('rnames_app.change_location', raise_exception=True)
 def location_edit(request, pk):
     location = get_object_or_404(Location, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, location):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = LocationForm(request.POST, instance=location)
         if form.is_valid():
@@ -471,7 +493,10 @@ def location_new(request):
     return render(request, 'location_edit.html', {'form': form})
 
 
-class name_delete(DeleteView):
+class name_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = Name
     success_url = reverse_lazy('name-list')
 
@@ -485,6 +510,10 @@ def name_detail(request, pk):
 @permission_required('rnames_app.change_name', raise_exception=True)
 def name_edit(request, pk):
     name = get_object_or_404(Name, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, name):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = NameForm(request.POST, instance=name)
         if form.is_valid():
@@ -535,7 +564,10 @@ def name_new(request):
     return render(request, 'name_edit.html', {'form': form})
 
 
-class qualifier_delete(DeleteView):
+class qualifier_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = Qualifier
     success_url = reverse_lazy('qualifier-list')
 
@@ -583,6 +615,10 @@ def qualifier_new(request):
 @permission_required('rnames_app.change_qualifier', raise_exception=True)
 def qualifier_edit(request, pk):
     qualifier = get_object_or_404(Qualifier, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, qualifier):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = QualifierForm(request.POST, instance=qualifier)
         if form.is_valid():
@@ -594,7 +630,10 @@ def qualifier_edit(request, pk):
     return render(request, 'qualifier_edit.html', {'form': form})
 
 
-class qualifiername_delete(DeleteView):
+class qualifiername_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = QualifierName
     success_url = reverse_lazy('qualifiername-list')
 
@@ -608,6 +647,10 @@ def qualifiername_detail(request, pk):
 @permission_required('rnames_app.change_qualifiername', raise_exception=True)
 def qualifiername_edit(request, pk):
     qualifiername = get_object_or_404(QualifierName, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, qualifiername):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = QualifierNameForm(request.POST, instance=qualifiername)
         if form.is_valid():
@@ -656,7 +699,10 @@ def qualifiername_new(request):
     return render(request, 'qualifiername_edit.html', {'form': form})
 
 
-class reference_delete(DeleteView):
+class reference_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = Reference
     success_url = reverse_lazy('reference-list')
 
@@ -693,6 +739,10 @@ def reference_detail(request, pk):
 @permission_required('rnames_app.change_reference', raise_exception=True)
 def reference_edit(request, pk):
     reference = get_object_or_404(Reference, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, reference):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = ReferenceForm(request.POST, instance=reference)
         if form.is_valid():
@@ -878,7 +928,10 @@ def reference_relation_new(request, name_one, reference):
     return render(request, 'reference_relation_edit.html', {'name_one': name_one, 'reference': reference, 'current_relations': current_relations, 'available_relations': available_relations, 'form': form},)
 
 
-class relation_delete(DeleteView):
+class relation_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = Relation
     success_url = reverse_lazy('relation-list')
 
@@ -925,6 +978,10 @@ def relation_sql_detail(request, name_one, name_two):
 @permission_required('rnames_app.change_relation', raise_exception=True)
 def relation_edit(request, pk):
     relation = get_object_or_404(Relation, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, relation):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = RelationForm(request.POST, instance=relation)
         if form.is_valid():
@@ -996,7 +1053,10 @@ def run_binning(request):
     )
 
 
-class stratigraphic_qualifier_delete(DeleteView):
+class stratigraphic_qualifier_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = StratigraphicQualifier
     success_url = reverse_lazy('stratigraphic-qualifier-list')
 
@@ -1012,6 +1072,10 @@ def stratigraphic_qualifier_detail(request, pk):
 def stratigraphic_qualifier_edit(request, pk):
     stratigraphicqualifier = get_object_or_404(
         StratigraphicQualifier, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, stratigraphicqualifier):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = StratigraphicQualifierForm(
             request.POST, instance=stratigraphicqualifier)
@@ -1061,7 +1125,10 @@ def stratigraphic_qualifier_new(request):
     return render(request, 'stratigraphic_qualifier_edit.html', {'form': form})
 
 
-class structuredname_delete(DeleteView):
+class structuredname_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = StructuredName
     success_url = reverse_lazy('structuredname-list')
 
@@ -1205,6 +1272,10 @@ def structuredname_new(request):
 @permission_required('rnames_app.change_structuredname', raise_exception=True)
 def structuredname_edit(request, pk):
     structuredname = get_object_or_404(StructuredName, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, structuredname):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = StructuredNameForm(request.POST, instance=structuredname)
         if form.is_valid():
@@ -1255,7 +1326,10 @@ def user_search(request):
     return render(request, 'user_list.html', {'filter': user_filter})
 
 
-class timeslice_delete(DeleteView):
+class timeslice_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = TimeSlice
     success_url = reverse_lazy('timeslice-list')
 
@@ -1269,6 +1343,10 @@ def timeslice_detail(request, pk):
 @permission_required('rnames_app.change_timeslice', raise_exception=True)
 def timeslice_edit(request, pk):
     timeslice = get_object_or_404(TimeSlice, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, timeslice):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = TimeSliceForm(request.POST, instance=timeslice)
         if form.is_valid():
@@ -1410,7 +1488,7 @@ def submit(request):
         if name_one == None or name_two == None:
             return HttpResponseBadRequest()
 
-        belongs_to = 0 # Todo
+        belongs_to = relation_data['belongs_to']
 
         relation = Relation(
             name_one=name_one,

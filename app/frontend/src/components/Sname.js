@@ -29,7 +29,7 @@ export const Sname = ({
 	canDeleteNotify,
 	nameNotify,
 	locationNotify,
-	setDeleteCreatedSname
+	setDeleteCreatedSname,
 }) => {
 	const dispatch = useDispatch()
 	const map = useSelector(selectMap)
@@ -87,11 +87,17 @@ export const Sname = ({
 	}
 
 	return (
-		<div>
-			<button type='button' onClick={deleteSnameHandler}>
-				Delete
-			</button>
-			<span>{formatStructuredName(sname, { map })}</span>
+		<div className='w3-container'>
+			<p>
+				{formatStructuredName(sname, { map })}
+				<button
+					className='w3-button w3-grey w3-circle w3-margin-left'
+					type='button'
+					onClick={deleteSnameHandler}
+				>
+					<i title='Delete' className='fa fa-trash'></i>
+				</button>
+			</p>
 		</div>
 	)
 }

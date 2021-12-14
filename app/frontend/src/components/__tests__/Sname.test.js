@@ -77,16 +77,12 @@ describe('Sname', () => {
 	})
 
 	test('shows "delete" button', () => {
-		const deleteButton = screen.getByRole('button', {
-			name: /delete/i,
-		})
+		const deleteButton = screen.getByTitle(/delete/i)
 		expect(deleteButton).toBeInTheDocument()
 	})
 
 	test('deletes sname on "delete" button click if no dependencies found and does not delete name or location from database', () => {
-		const deleteButton = screen.getByRole('button', {
-			name: /delete/i,
-		})
+		const deleteButton = screen.getByTitle(/delete/i)
 		userEvent.click(deleteButton)
 		expect(store.dispatch).toHaveBeenCalledTimes(2)
 		expect(store.dispatch).toHaveBeenNthCalledWith(2, {
@@ -127,9 +123,7 @@ test('does not delete sname if there is a relation dependency', () => {
 		</Provider>
 	)
 
-	const deleteButton = screen.getByRole('button', {
-		name: /delete/i,
-	})
+	const deleteButton = screen.getByTitle(/delete/i)
 	userEvent.click(deleteButton)
 	expect(store.dispatch).not.toHaveBeenCalled()
 })
@@ -158,9 +152,7 @@ test('deletes name created by user if no dependencies found', () => {
 		</Provider>
 	)
 
-	const deleteButton = screen.getByRole('button', {
-		name: /delete/i,
-	})
+	const deleteButton = screen.getByTitle(/delete/i)
 	userEvent.click(deleteButton)
 	expect(store.dispatch).toHaveBeenCalledTimes(3)
 	expect(store.dispatch).toHaveBeenNthCalledWith(1, {
@@ -194,9 +186,7 @@ test('deletes location created by user if no dependencies found', () => {
 		</Provider>
 	)
 
-	const deleteButton = screen.getByRole('button', {
-		name: /delete/i,
-	})
+	const deleteButton = screen.getByTitle(/delete/i)
 	userEvent.click(deleteButton)
 	expect(store.dispatch).toHaveBeenCalledTimes(3)
 	expect(store.dispatch).toHaveBeenNthCalledWith(1, {
@@ -234,9 +224,7 @@ test('deletes both name and location created by user if no dependencies found', 
 		</Provider>
 	)
 
-	const deleteButton = screen.getByRole('button', {
-		name: /delete/i,
-	})
+	const deleteButton = screen.getByTitle(/delete/i)
 	userEvent.click(deleteButton)
 	expect(store.dispatch).toHaveBeenCalledTimes(4)
 	expect(store.dispatch).toHaveBeenNthCalledWith(1, {
@@ -288,9 +276,7 @@ test('does not delete name created by user if dependency found', () => {
 		</Provider>
 	)
 
-	const deleteButton = screen.getByRole('button', {
-		name: /delete/i,
-	})
+	const deleteButton = screen.getByTitle(/delete/i)
 	userEvent.click(deleteButton)
 	expect(store.dispatch).toHaveBeenCalledTimes(2)
 	expect(store.dispatch).not.toHaveBeenCalledWith({
@@ -337,9 +323,7 @@ test('does not delete location created by user if dependency found', () => {
 		</Provider>
 	)
 
-	const deleteButton = screen.getByRole('button', {
-		name: /delete/i,
-	})
+	const deleteButton = screen.getByTitle(/delete/i)
 	userEvent.click(deleteButton)
 	expect(store.dispatch).toHaveBeenCalledTimes(2)
 	expect(store.dispatch).not.toHaveBeenCalledWith({

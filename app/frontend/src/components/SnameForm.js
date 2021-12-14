@@ -14,10 +14,11 @@ import { selectStructuredName } from '../store/selected_structured_names/actions
 import { Notification } from './Notification'
 import { DuplicateNameDialog } from './DuplicateNameDialog'
 import { findDuplicateStructuredNames } from '../utilities'
+import { InputField } from './InputField'
 
 const NameDataList = React.forwardRef(
 	({ name, names, onChangeHandler }, ref) => {
-		return(
+		return (
 			<Datalist
 				name='name'
 				options={names}
@@ -37,7 +38,7 @@ export const SnameForm = ({
 	setFocusOnSnameButton,
 	displayRefForm,
 	deleteCreatedSname,
-	setDeleteCreatedSname
+	setDeleteCreatedSname,
 }) => {
 	const dispatch = useDispatch()
 	const reference = useSelector(selectRefence)
@@ -47,6 +48,7 @@ export const SnameForm = ({
 	const [notification, setNotification] = useState(null)
 	const [saveWithReference, setSaveWithReference] = useState(false)
 	const [structuredName, setStructuredName] = useState(undefined)
+	const [remarks, setRemarks] = useState('')
 
 	const map = useSelector(selectMap)
 	const names = useSelector(selectAllNames)
@@ -103,7 +105,7 @@ export const SnameForm = ({
 				locations.find(dbLocation => dbLocation[1] === location)[0],
 			qualifier_id: qualifierFromDb[0],
 			reference_id: -1,
-			remarks: '',
+			remarks,
 			save_with_reference_id: saveWithReference,
 		}
 
@@ -112,7 +114,7 @@ export const SnameForm = ({
 		)
 			submitSname(newSname)
 		else setStructuredName(newSname)
-		}
+	}
 
 	const submitSname = newSname => {
 		dispatch(addSname(newSname))
@@ -132,7 +134,7 @@ export const SnameForm = ({
 
 	const nameRef = useRef(null)
 	useEffect(() => {
-		if(newSnameButtonIsDisabled){
+		if (newSnameButtonIsDisabled) {
 			nameRef.current.focus()
 		}
 
@@ -146,20 +148,20 @@ export const SnameForm = ({
 	}, [newSnameButtonIsDisabled])
 
 	useEffect(() => {
-		if(displayRefForm === 'none' && newSnameButtonIsDisabled) {
+		if (displayRefForm === 'none' && newSnameButtonIsDisabled) {
 			nameRef.current.focus()
 		}
 	}, [displayRefForm])
 
 	useEffect(() => {
-		if(displaySnameForm === 'block' && newSnameButtonIsDisabled) {
+		if (displaySnameForm === 'block' && newSnameButtonIsDisabled) {
 			nameRef.current.focus()
 		}
 	}, [displaySnameForm])
 
 	useEffect(() => {
-		if(deleteCreatedSname) {
-			nameRef.current.focus()
+		if (deleteCreatedSname) {
+			nameRef.current && nameRef.current.focus()
 			setDeleteCreatedSname(false)
 		}
 	}, [deleteCreatedSname])
@@ -190,44 +192,78 @@ export const SnameForm = ({
 		)
 	}
 
+	if (displaySnameForm == 'none') return <></>
+
 	return (
-		<div style={{ display: displaySnameForm }}>
-			<Notification notification={notification} />
-			<label htmlFor='name'>Name</label>
-			<NameDataList
-				ref={nameRef}
-				name={name}
-				names={names}
-				onChangeHandler={e => setName(e.target.value)}
-			/>
-			<label htmlFor='qualifier'>Qualifier</label>
-			<Datalist
-				name='qualifier'
-				options={qualifiers}
-				value={qualifier}
-				onChange={e => setQualifier(e.target.value)}
-			/>
-			<label htmlFor='location'>Location</label>
-			<Datalist
-				name='location'
-				options={locations}
-				value={location}
-				onChange={e => setLocation(e.target.value)}
-			/>
-			<input
-				type='checkbox'
-				id='structured-name-form-save-with-reference'
-				checked={saveWithReference}
-				onChange={e => setSaveWithReference(!saveWithReference)}
-			/>
-			<label htmlFor='structured-name-form-save-with-reference'>
-				Save with reference id
-			</label>
-			<button type='button' onClick={() => {
-				handleSnameAddition()
-				setFocusOnSnameButton()}}>
-				Save
-			</button>
-		</div>
+		<>
+			<div className='w3-row'>
+				<Notification notification={notification} />
+				<div className='w3-third w3-container'>
+					<label htmlFor='name'>
+						<b>Name</b>
+					</label>
+					<NameDataList
+						ref={nameRef}
+						name={name}
+						names={names}
+						onChangeHandler={e => setName(e.target.value)}
+					/>
+				</div>
+				<div className='w3-third w3-container'>
+					<label htmlFor='qualifier'>
+						<b>Qualifier</b>
+					</label>
+					<Datalist
+						name='qualifier'
+						options={qualifiers}
+						value={qualifier}
+						onChange={e => setQualifier(e.target.value)}
+					/>
+				</div>
+				<div className='w3-third w3-container'>
+					<label htmlFor='location'>
+						<b>Location</b>
+					</label>
+					<Datalist
+						name='location'
+						options={locations}
+						value={location}
+						onChange={e => setLocation(e.target.value)}
+					/>
+				</div>
+			</div>
+			<div className='w3-container w3-margin-top'>
+				<InputField
+					label='Remarks'
+					name='remarks'
+					value={remarks}
+					setField={setRemarks}
+				/>
+			</div>
+			<div className='w3-container'>
+				<p>
+					<input
+						type='checkbox'
+						className='w3-check'
+						id='structured-name-form-save-with-reference'
+						checked={saveWithReference}
+						onChange={e => setSaveWithReference(!saveWithReference)}
+					/>
+					<label htmlFor='structured-name-form-save-with-reference'>
+						Save with reference id
+					</label>
+				</p>
+				<button
+					type='button'
+					className='w3-button w3-grey'
+					onClick={() => {
+						handleSnameAddition()
+						setFocusOnSnameButton()
+					}}
+				>
+					Save
+				</button>
+			</div>
+		</>
 	)
 }

@@ -40,7 +40,7 @@ const App = () => {
 		serverData.qualifiers.forEach(v => (map[v.id] = v))
 		serverData.structured_names.forEach(v => {
 			map[v.id] = v
-			v.formattedName = formatStructuredName(v, {map})
+			v.formattedName = formatStructuredName(v, { map })
 		})
 		serverData.references.forEach(v => (map[v.id] = v))
 		dispatch(initMapvalues(map))
@@ -74,59 +74,80 @@ const App = () => {
 	}
 
 	const locationNotify = (message, type = 'error') => {
-		setLocationNotification({ message, type})
+		setLocationNotification({ message, type })
 		setTimeout(() => {
 			setLocationNotification(null)
 		}, 14000)
 	}
 
+	const [addSnameFocus, setAddSnameFocus] = useState(0)
+
 	const addSnameRef = useRef(null)
 	const setFocusOnSnameButton = () => {
-		addSnameRef.current.focus()
+		setAddSnameFocus(addSnameFocus + 1)
 	}
+	useEffect(() => {
+		if (addSnameFocus > 0 && addSnameRef.current)
+			addSnameRef.current.focus()
+	}, [addSnameFocus])
 
 	return (
 		<>
-			<div>
-				<h2>Reference</h2>
-				{state.ref.length === 0 ? (
-					<ReferenceForm
-						{...{
-							displayRefForm,
-							showNewReferenceForm,
-							setFocusOnSnameButton
-						}}
-					/>
-				) : (
-					state.ref.map(reference =>
-						reference.edit ? (
-							<ReferenceForm
-								key={reference.id}
-								reference={reference}
-								displayRefForm={displayRefForm}
-								showNewReferenceForm={showNewReferenceForm}
-								isQueried={true}
-							/>
-						) : (
-							<Reference
-								{...{
-									key: reference.id,
-									reference,
-									showNewReferenceForm,
-									setFocusOnSnameButton
-								}}
-							/>
+			<h2>
+				<b>Data Entry</b>
+			</h2>
+			<h3>
+				<b>Reference</b>
+			</h3>
+			<div className='w3-panel w3-padding-24 w3-light-grey'>
+				<div className=' w3-container'>
+					{state.ref.length === 0 ? (
+						<ReferenceForm
+							{...{
+								displayRefForm,
+								showNewReferenceForm,
+								setFocusOnSnameButton,
+							}}
+						/>
+					) : (
+						state.ref.map(reference =>
+							reference.edit ? (
+								<ReferenceForm
+									key={reference.id}
+									reference={reference}
+									displayRefForm={displayRefForm}
+									showNewReferenceForm={showNewReferenceForm}
+									isQueried={true}
+								/>
+							) : (
+								<Reference
+									{...{
+										key: reference.id,
+										reference,
+										showNewReferenceForm,
+										setFocusOnSnameButton,
+									}}
+								/>
+							)
 						)
-					)
-				)}
+					)}
+				</div>
 			</div>
-			<div>
-				<h2>Structured Names</h2>
-				<Notification notification={canDeleteNotification}/>
-				<Notification notification={nameNotification}/>
-				<Notification notification={locationNotification}/>
+			<h3>
+				<b>Structured Names</b>
+			</h3>
+			<div className='w3-panel w3-padding-24 w3-light-grey'>
+				<Notification notification={canDeleteNotification} />
+				<Notification notification={nameNotification} />
+				<Notification notification={locationNotification} />
 				{state.sname.map(sname => (
-					<Sname {...{ key: sname.id, sname }} canDeleteNotify= {canDeleteNotify} nameNotify={nameNotify} locationNotify={locationNotify} setDeleteCreatedSname={setDeleteCreatedSname}/>
+					<Sname
+						{...{ key: sname.id, sname }}
+						canDeleteNotify={canDeleteNotify}
+						nameNotify={nameNotify}
+						locationNotify={locationNotify}
+						setDeleteCreatedSname={setDeleteCreatedSname}
+					/>
 				))}
 				<SnameForm
 					{...{
@@ -137,21 +158,26 @@ const App = () => {
 						setFocusOnSnameButton,
 						displayRefForm,
 						deleteCreatedSname,
-						setDeleteCreatedSname
+						setDeleteCreatedSname,
 					}}
 				/>
-				<button
-					type='button'
-					onClick={showNewSnameForm}
-					disabled={newSnameButtonIsDisabled}
-					id='sname-button'
-					ref={addSnameRef}
-				>
-					Add new structured name
-				</button>
-			</div>
-			<div>
-				<SelectedStructuredNames />
+				<div className='w3-container'>
+					{newSnameButtonIsDisabled ? (
+						<></>
+					) : (
+							<button
+								className='w3-button w3-grey'
+								onClick={showNewSnameForm}
+								disabled={newSnameButtonIsDisabled}
+								id='sname-button'
+								ref={addSnameRef}
+							>
+								Add new structured name
+							</button>
+					)}
+					<hr className='w3-border-top w3-border-grey' />
+					<SelectedStructuredNames />
+				</div>
 			</div>
 			<RelationSelector />
 			<Submit />

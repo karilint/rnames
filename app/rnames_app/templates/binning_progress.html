@@ -6,7 +6,7 @@
   <!DOCTYPE html>
 
 <section class="w3-section">
-  <h2>Binning progress information</h2>
+  <h1>Binning progress information</h1>
   <p id="binningProgressLabel">Binning progress:</p>
 
   <div id="binningProgressBarContainer" class="w3-light-grey">
@@ -19,6 +19,7 @@
     <div id="updateProgressBar" class="w3-container w3-green" style="height:24px; width:0%">
     </div>
   </div>
+  <p id="binningStatus"></p>
 </section>
 
 <script>
@@ -37,7 +38,34 @@ window.addEventListener('DOMContentLoaded', () => {
         updateProgressLabel.classList.remove('w3-hide')
         updateProgressBarContainer.classList.remove('w3-hide')
         updateProgressBar.style.width = `${v.update[0] / v.update[1] * 100}%`
+      } else {
+        // Hide database update progress bars if binning is started anew while the page is open
+        if (!updateProgressLabel.classList.contains('w3-hide')) {
+          updateProgressLabel.classList.add('w3-hide')
+          updateProgressBarContainer.classList.add('w3-hide')
+        }
       }
+      let statusMsg = ''
+      switch(v.status) {
+        case -1: {
+          statusMsg: 'Binning error.'
+          break
+        }
+        case 0: {
+          statusMsg = 'Binning has not been started.'
+          break
+        }
+        case 1: {
+          statusMsg = 'Binning in progress.'
+          break
+        }
+        case 2: {
+          statusMsg = 'Binning complete.'
+          break
+        }
+      }
+      document.getElementById('binningStatus').innerHTML = ''
+      document.getElementById('binningStatus').appendChild(document.createTextNode(`Status: ${statusMsg}`))
     })
   update()
   setInterval(update, 5000)

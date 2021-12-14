@@ -81,7 +81,7 @@ class BinningProgressUpdater():
 			return False
 
 	def finish_binning(self):
-		self.update(key='status', value_one=0)
+		self.update(key='status', value_one=2)
 		BinningProgress.objects.filter(name='lock').delete()
 
 	def update_stage(self, stage, current, max):

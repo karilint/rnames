@@ -324,6 +324,51 @@ describe('When reference provided, SnameForm', () => {
 			},
 		})
 	})
+
+	test('allows user to enter remarks', () => {
+		const remarksText = 'hello world'
+
+		const saveButton = screen.getByRole('button', { name: /save/i })
+		const inputFields = screen.getAllByRole('combobox')
+		const nameInput = inputFields[0]
+		const qualifierInput = inputFields[1]
+		const locationInput = inputFields[2]
+		const nameDropdown = screen.getByTestId('datalist-test-id-name')
+		const selectedNameOption = nameDropdown
+			.querySelector('option[value="1b"]')
+			.getAttribute('value')
+		const qualifierDropdown = screen.getByTestId(
+			'datalist-test-id-qualifier'
+		)
+		const selectedQualifierOption = qualifierDropdown
+			.querySelector('option[value="Bio_Brachiopoda"]')
+			.getAttribute('value')
+		const locationDropdown = screen.getByTestId('datalist-test-id-location')
+		const selectedLocationOption = locationDropdown
+			.querySelector('option[value="Alabama"]')
+			.getAttribute('value')
+		userEvent.type(nameInput, selectedNameOption)
+		userEvent.type(qualifierInput, selectedQualifierOption)
+		userEvent.type(locationInput, selectedLocationOption)
+
+		const remarksInput = screen.getAllByRole('textbox')[0]
+		userEvent.type(remarksInput, remarksText)
+
+		userEvent.click(saveButton)
+		expect(store.dispatch).toHaveBeenCalledTimes(2)
+		expect(store.dispatch).toHaveBeenNthCalledWith(1, {
+			type: 'ADD',
+			sname: {
+				id: expect.anything(),
+				name_id: '{"type":"db_name","value":241}',
+				location_id: '{"type":"db_location","value":37}',
+				qualifier_id: '{"type":"db_qualifier","value":36}',
+				reference_id: -1,
+				remarks: remarksText,
+				save_with_reference_id: false,
+			},
+		})
+	})
 })
 
 describe('When no reference provided, SnameForm', () => {

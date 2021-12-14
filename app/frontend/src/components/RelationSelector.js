@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { makeId, formatStructuredName } from '../utilities'
 import { addRel, deleteRel } from '../store/relations/actions'
+import { BelongsToSelector } from './BelongsToSelector'
+import { Relation } from './Relation'
 
 export const RelationSelector = () => {
 	const dispatch = useDispatch()
@@ -21,11 +23,7 @@ export const RelationSelector = () => {
 				return a.id < b.id ? -1 : 1
 			}),
 		state.rel.map(v => {
-			return {
-				...v,
-				formattedName1: formatStructuredName(state.map[v.name1], state),
-				formattedName2: formatStructuredName(state.map[v.name2], state),
-			}
+			return { ...v }
 		}),
 	])
 
@@ -55,6 +53,7 @@ export const RelationSelector = () => {
 					id: makeId('relation'),
 					name1: idA,
 					name2: idB,
+					belongs_to: 0,
 					reference_id: -1,
 				})
 			)
@@ -63,14 +62,19 @@ export const RelationSelector = () => {
 
 	return (
 		<>
-			<h2>Create relations</h2>
-			<div id='relation-selector'>
-				<div>
+			<h3>
+				<b>Create relations</b>
+			</h3>
+			<div id='relation-selector' className='w3-row w3-light-grey'>
+				<div
+					className='w3-container w3-col m5 w3-padding-16 w3-light-grey'
+					data-testid='relselector-left-test-id'
+				>
 					{structuredNames.map(v => (
 						<div
 							key={v.id}
-							className={`w3-btn ${
-								v.id === primaryName ? 'w3-green' : ''
+							className={`w3-button w3-bar hide-overflow ${
+								v.id === primaryName ? 'w3-grey' : ''
 							}`}
 							onClick={() => setPrimaryName(v.id)}
 						>
@@ -78,34 +82,67 @@ export const RelationSelector = () => {
 						</div>
 					))}
 				</div>
-
-				<div>
+				<div
+					className='w3-container w3-col m7 w3-padding-16 w3-light-grey'
+					data-testid='relselector-right-test-id'
+				>
 					{structuredNames
 						.filter(v => v.id !== primaryName)
 						.map(v => (
-							<div
-								key={v.id}
-								className={`w3-btn ${
-									relationExists(primaryName, v.id)
-										? 'w3-green'
-										: ''
-								}`}
-								onClick={() =>
-									toggleRelation(primaryName, v.id)
-								}
-							>
-								{v.formattedName}
+							<div className='w3-bar hide-overflow' key={v.id}>
+								<BelongsToSelector
+									idA={primaryName}
+									idB={v.id}
+									relation={relationExists(primaryName, v.id)}
+								/>
+								<div
+									className={`w3-button w3-bar hide-overflow ${
+										relationExists(primaryName, v.id)
+											? 'w3-grey'
+											: ''
+									}`}
+									style={{ width: '70%' }}
+									onClick={() =>
+										toggleRelation(primaryName, v.id)
+									}
+								>
+									{v.formattedName}
+								</div>
 							</div>
 						))}
 				</div>
 			</div>
-			<div>
-				<h3>Relations</h3>
-				{relations.map(v => (
-					<p key={v.id}>
-						{`${v.formattedName1} <===> ${v.formattedName2}`}
-					</p>
-				))}
+			<h3>
+				<b>Relations</b>
+			</h3>
+			<div className='w3-panel w3-padding-16 w3-light-grey'>
+				<div className='w3-row'>
+					<div className='w3-col s5 w3-center'>
+						<p>
+							<b>Structured Name 1</b>
+						</p>
+					</div>
+					<div className='w3-col s1 w3-center'>
+						<p>
+							<b>Swap</b>
+						</p>
+					</div>
+					<div className='w3-col s1 w3-center'>
+						<p>
+							<b>Belongs to</b>
+						</p>
+					</div>
+					<div className='w3-col s5 w3-center'>
+						<p>
+							<b>Structured Name 2</b>
+						</p>
+					</div>
+				</div>
+				<div data-testid='active-relations-list'>
+					{relations.map(v => (
+						<Relation key={v.id} relation={v} />
+					))}
+				</div>
 			</div>
 		</>
 	)

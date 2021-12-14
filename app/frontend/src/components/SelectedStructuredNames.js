@@ -52,13 +52,22 @@ export const SelectedStructuredNames = () => {
 	const handleDelete = id => {
 		if (!relations.find(v => v.name1 === id || v.name2 === id))
 			dispatch(deselectStructuredName(id))
-			document.getElementById('select-existing-name').focus()
+		document.getElementById('select-existing-name').focus()
 	}
 
 	return (
 		<>
-			<label>Select existing name</label>
-			<input list={dataListId} value={search} onChange={handleChange} id='select-existing-name'/>
+			<label>
+				<b>Select existing name</b>
+			</label>
+			<input
+				className='w3-input w3-border w3-border-dark-grey'
+				type='text'
+				list={dataListId}
+				value={search}
+				onChange={handleChange}
+				id='select-existing-name'
+			/>
 			<datalist id={dataListId}>
 				{dbNames.map(v => (
 					<option key={v.id}>{v.formattedName}</option>
@@ -66,8 +75,16 @@ export const SelectedStructuredNames = () => {
 			</datalist>
 			{selection.map(v => (
 				<div key={v.id}>
-					<button onClick={() => handleDelete(v.id)}>Deselect</button>
-					<span>{v.formattedName}</span>
+					<p>
+						{v.formattedName}
+						<button
+							className='w3-button w3-grey w3-circle w3-margin-left'
+							type='button'
+							onClick={() => handleDelete(v.id)}
+						>
+							<i title='Deselect' className='fa fa-trash'></i>
+						</button>
+					</p>
 				</div>
 			))}
 		</>

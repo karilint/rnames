@@ -37,12 +37,12 @@ export const DuplicateNameDialog = ({
 	const checkboxId = 'duplicate-name-dialog-save-with-reference'
 
 	return (
-		<div>
+		<div className='w3-card w3-container w3-padding-16 w3-white'>
 			<p>{infoMsg}</p>
 			<div>
 				<button
-					className={`w3-btn ${
-						id === structuredName.id ? 'w3-green' : ''
+					className={`w3-button ${
+						id === structuredName.id ? 'w3-grey' : ''
 					}`}
 					onClick={() => setId(structuredName.id)}
 				>
@@ -51,24 +51,31 @@ export const DuplicateNameDialog = ({
 						{ map }
 					)}"`}
 				</button>
-				<input
-					type='checkbox'
-					id={checkboxId}
-					checked={saveWithReference}
-					onChange={() => setSaveWithReference(!saveWithReference)}
-				/>
-				<label htmlFor={checkboxId}>Save with reference id</label>
+				<p>
+					<input
+						type='checkbox'
+						className='w3-check'
+						id={checkboxId}
+						checked={saveWithReference}
+						onChange={() =>
+							setSaveWithReference(!saveWithReference)
+						}
+					/>
+					<label htmlFor={checkboxId}>Save with reference id</label>
+				</p>
 				<input
 					type='text'
+					className='w3-input w3-border w3-border-dark-grey'
 					value={remarks}
 					onChange={e => setRemarks(e.target.value)}
 					placeholder='Remarks...'
 				/>
 			</div>
+			<p>Or select an existing name instead</p>
 			{duplicateNames.map(v => (
 				<div key={v.id}>
 					<button
-						className={`w3-btn ${id === v.id ? 'w3-green' : ''}`}
+						className={`w3-button ${id === v.id ? 'w3-grey' : ''}`}
 						onClick={() => setId(v.id)}
 					>
 						{`Select "${formatStructuredName(v, { map })}"`}
@@ -89,20 +96,27 @@ export const DuplicateNameDialog = ({
 					)}
 				</div>
 			))}
-			<button
-				className={`w3-btn w3-green ${
-					id !== undefined ? '' : 'w3-disabled'
-				}`}
-				onClick={() => submit()}
-			>
-				Ok
-			</button>
-			<button
-				className={'w3-btn w3-grey'}
-				onClick={() => cancelHandler()}
-			>
-				Cancel
-			</button>
+
+			<div className='w3-bar w3-margin-top'>
+				<div className='w3-quarter'>
+					<button
+						className={`w3-button w3-grey ${
+							id !== undefined ? '' : 'w3-disabled'
+						}`}
+						onClick={() => submit()}
+					>
+						Ok
+					</button>
+				</div>
+				<div className='w3-rest'>
+					<button
+						className={'w3-button w3-grey'}
+						onClick={() => cancelHandler()}
+					>
+						Cancel
+					</button>
+				</div>
+			</div>
 		</div>
 	)
 }

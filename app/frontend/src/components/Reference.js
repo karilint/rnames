@@ -6,21 +6,56 @@ export const Reference = ({ reference, showNewReferenceForm }) => {
 	const dispatch = useDispatch()
 
 	return (
-		<div>
-			<p>first_author: {reference.firstAuthor}</p>
-			<p>year: {reference.year}</p>
-			<p>title: {reference.title}</p>
-			<p>doi: {reference.doi}</p>
-			<p>link: {reference.link}</p>
+		<>
+			<div className='w3-row'>
+				<div className='w3-quarter'>
+					<p><b>First author</b></p>
+				</div>
+				<div className='w3-rest'>
+					<p><b>{reference.firstAuthor}</b></p>
+				</div>
+			</div>
+			<div className='w3-row'>
+				<div className='w3-quarter'>
+					<p><b>Year</b></p>
+				</div>
+				<div className='w3-rest'>
+					<p><b>{reference.year}</b></p>
+				</div>
+			</div>
+			<div className='w3-row'>
+				<div className='w3-quarter'>
+					<p><b>Title</b></p>
+				</div>
+				<div className='w3-rest'>
+					<p><b>{reference.title}</b></p>
+				</div>
+			</div>
+			<div className='w3-row'>
+				<div className='w3-quarter'>
+					<p><b>DOI</b></p>
+				</div>
+				<div className='w3-rest'>
+					<p><b>{reference.doi}</b></p>
+				</div>
+			</div>
+			<div className='w3-row'>
+				<div className='w3-quarter'>
+					<p><b>Link</b></p>
+				</div>
+				<div className='w3-rest'>
+					<p><b>{reference.link}</b></p>
+				</div>
+			</div>
 			<button
-				type='button'
+				className='w3-button w3-grey'
 				onClick={() => {
 					dispatch(updateRef({ ...reference, edit: true }))
 					showNewReferenceForm()
 				}}
 			>
-				edit
+				Edit
 			</button>
-		</div>
+		</>
 	)
 }
