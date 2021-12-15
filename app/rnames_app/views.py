@@ -179,6 +179,9 @@ def binning_process():
 
 @login_required
 def external(request):
+    if not request.user.groups.filter(name='data_admin').exists():
+        raise PermissionDenied
+
     db.connections.close_all()
     handle = mp.Process(target=binning_process)
     handle.start()
@@ -1042,6 +1045,10 @@ def run_binning(request):
     """
     View function for the run binning operation.
     """
+
+    if not request.user.groups.filter(name='data_admin').exists():
+        raise PermissionDenied
+
     # Generate counts of some of the main objects
     num_opinions = Relation.objects.is_active().count()
 
