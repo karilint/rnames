@@ -57,7 +57,7 @@ Once the containers are built, open the database in MySQL with root privileges:
 ```
 docker exec -it rnames_db mysql -uroot -p  
 ```
-The required password is specified by the variable DB_ROOT_PASSWORD in the .env file; the default is _rootpassword_.
+The required password is specified by the variable DB_ROOT_PASSWORD in the .env file (_rootpassword_ in the [Example .env](./.env.example)).
 
 Once MySQL is running, a list of users can be obtained by entering the following command:
 ```
