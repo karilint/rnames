@@ -18,4 +18,4 @@ See [wizard documentation](./app/frontend/README.md)
 
 ## Testing
 
-See [Running tests](./docs/testing.md)
+See [Running Tests](./docs/testing.md)
