@@ -43,7 +43,7 @@ For example, if you need to make migrations inside django, you can run `docker-c
 
 Please note that currently the django application makes migrations and migrates the database every time the django container is started. If this proves to be cumbersome the lines can be commented out in [entrypoint.sh](./../app/scripts/entrypoint.sh).
 
-## User groups and permissions
+## Setting up user groups and permissions
 
 RNames does not require user registration/login for viewing. However, adding, editing or exporting data is restricted to three _user groups_:
 - _registered users_ can export certain data as .csv files.
