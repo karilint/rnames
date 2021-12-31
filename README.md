@@ -18,4 +18,5 @@ See [wizard documentation](./app/frontend/README.md)
 
 ## Testing
 
-See [Running Tests](./docs/testing.md)
+For wizard tests, see [wizard documentation](./app/frontend/README.md).
+For other tests, see [Running Tests](./docs/testing.md).
