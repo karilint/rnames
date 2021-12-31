@@ -43,23 +43,23 @@ For example, if you need to make migrations inside django, you can run `docker-c
 
 Please note that currently the django application makes migrations and migrates the database every time the django container is started. If this proves to be cumbersome the lines can be commented out in [entrypoint.sh](./../app/scripts/entrypoint.sh).
 
-### Running tests
-Tests are run automatically when the containers are built. Note, however, that they may fail unless proper privileges for Django have been set; see the subsection on Setting Privileges (below). Once the privileges are set, tests can also be run manually with the command
+## Running tests
+Tests are run automatically when the containers are built. Note, however, that they may fail unless proper privileges for Django have been set; see the subsection on Setting privileges (below). Once the privileges are set, tests can also be run manually with the command
 ```
 docker exec rnames_web python3 manage.py test 
 ```
 
-#### Setting Privileges
+### Setting privileges
 
 Django will not run any tests unless it can construct a test database. The privileges it requires for doing this must currently be set manually.
 
-Once the containers are built, open the database in MySQL with root privileges:
+Once the containers are running, open the database in MySQL with root privileges:
 ```
 docker exec -it rnames_db mysql -uroot -p  
 ```
-The required password is specified by the variable DB_ROOT_PASSWORD in the .env file (_rootpassword_ in the [Example .env](./.env.example)).
+MySQL will ask for a password; the one required is specified by the variable DB_ROOT_PASSWORD in the .env file (_rootpassword_ in the [Example .env](./.env.example)).
 
-Once MySQL is running, a list of users can be obtained by entering the following command:
+Once in MySQL, a list of users can be obtained by entering the following command:
 ```
 SELECT User, Host, authentication_string FROM mysql.user; 
 ```
@@ -74,3 +74,29 @@ Finally, run:
 FLUSH PRIVILEGES;
 ```
 The tests should now work. Exit MySQL with the command `QUIT`.
+
+## User groups and permissions
+
+RNames does not require user registration/login for viewing. However, adding, editing or exporting data is restricted to three _user groups_:
+_registered users_ can export certain data as .csv files.
+_data contributors_ can add data to the database as well as edit or delete their own contributions.
+_data admins_ can freely add, edit or delete data in the database.
+
+These restrictions are enforced by the code, but setting up the user groups and adding new users in the database must currently be done manually.
+Once the containers are running, open Django Admin in a web browser: http://localhost:8000/admin/. The site will ask you to log in; by default the username is _admin_ and the password is _password_.
+To add a group, click on _Add_ under _Authentication and Authorization – Groups_.
+- Enter a name for the group. The name should be either _registered_, _data_contributor_ or _data_admin_, depending on which group is currently being created.
+- Grant permissions to the group. In the current implementation, groups data_contributor and data_admin have been granted all permissions (with more specific restrictions being handled by the code). This can be done simply by clicking on _Choose all_ under the _Permissions_ list. Group _registered_ has been granted all viewing permissions; type `view` into the _Filter_ field and then click on _Choose all_.
+- Save the group by clicking _Save_.
+
+To add a user, click on _Add_ under _Authentication and Authorization – Users_.
+- Enter a username, password and e-mail address for the user. Note that these must be unique for each user. Other fields are optional.
+- Select a group for the user from the group list and add it by clicking on the right-pointing arrow button between the lists. It is technically possible to add more than one group, but there is no need for it in the current implementation; e.g. the group _registered_ does not have any permissions that _data_contributor_ or _data_admin_ do not have.
+- Save the user by clicking _Save_.
+
+When signing in as a new user in RNames for the first time, the application is supposed to send a verification link to the user’s e-mail address (and will claim to have done so), but due to how the e-mail backend is currently configured, this does not actually happen.
+One way to verify a user’s e-mail address is the following:
+1. Attempt to sign in as the new user in RNames.
+2. Navigate to http://localhost:8001/
+3. Open the database table _account_emailaddress_ under _django_rnames_.
+4. Click _Edit_ on the e-mail address to be verified, and enter `1` into the columns _verified_ and _primary_.
