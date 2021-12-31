@@ -78,9 +78,9 @@ The tests should now work. Exit MySQL with the command `QUIT`.
 ## User groups and permissions
 
 RNames does not require user registration/login for viewing. However, adding, editing or exporting data is restricted to three _user groups_:
-_registered users_ can export certain data as .csv files.
-_data contributors_ can add data to the database as well as edit or delete their own contributions.
-_data admins_ can freely add, edit or delete data in the database.
+- _registered users_ can export certain data as .csv files.
+- _data contributors_ can add data to the database as well as edit or delete their own contributions.
+- _data admins_ can freely add, edit or delete data in the database.
 
 These restrictions are enforced by the code, but setting up the user groups and adding new users in the database must currently be done manually.
 Once the containers are running, open Django Admin in a web browser: http://localhost:8000/admin/. The site will ask you to log in; by default the username is _admin_ and the password is _password_.
