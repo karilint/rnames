@@ -86,7 +86,7 @@ These restrictions are enforced by the code, but setting up the user groups and 
 Once the containers are running, open Django Admin in a web browser: http://localhost:8000/admin/. The site will ask you to log in; by default the username is _admin_ and the password is _password_.
 To add a group, click on _Add_ under _Authentication and Authorization – Groups_.
 - Enter a name for the group. The name should be either _registered_, _data_contributor_ or _data_admin_, depending on which group is currently being created.
-- Grant permissions to the group. In the current implementation, groups data_contributor and data_admin have been granted all permissions (with more specific restrictions being handled by the code). This can be done simply by clicking on _Choose all_ under the _Permissions_ list. Group _registered_ has been granted all viewing permissions; type `view` into the _Filter_ field and then click on _Choose all_.
+- Grant permissions to the group. In the current implementation, groups _data_contributor_ and _data_admin_ have been granted all permissions (with more specific restrictions being handled by the code). This can be done simply by clicking on _Choose all_ under the _Permissions_ list. Group _registered_ has been granted all viewing permissions; type `view` into the _Filter_ field and then click on _Choose all_.
 - Save the group by clicking _Save_.
 
 To add a user, click on _Add_ under _Authentication and Authorization – Users_.
