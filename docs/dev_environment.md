@@ -25,7 +25,7 @@ To see logs you can run this command. You can also specify a container if you on
 ```
 docker-compose logs -f
 ```
-NOTE: The logs may show a failure to run tests the first time the containers are built in a new environment. This is normal; see **Running tests** (below) on how to resolve this issue.
+NOTE: The logs may show a failure to run tests unless proper privileges for Django have been set. This is normal; see [Running tests](./testing.md).
 
 If you want to shutdown the containers, you can run this command. 
 ```
@@ -43,7 +43,7 @@ For example, if you need to make migrations inside django, you can run `docker-c
 
 Please note that currently the django application makes migrations and migrates the database every time the django container is started. If this proves to be cumbersome the lines can be commented out in [entrypoint.sh](./../app/scripts/entrypoint.sh).
 
-## Setting up user groups and permissions
+## User groups and permissions
 
 RNames does not require user registration/login for viewing. However, adding, editing or exporting data is restricted to three _user groups_:
 - _registered users_ can export certain data as .csv files.
