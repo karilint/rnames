@@ -1,4 +1,7 @@
+Note: This document excludes wizard tests; see [wizard documentation](../app/frontend/README.md) on those.
+
 ## Running tests
+
 Tests are run automatically when the containers are built. Note, however, that they may fail unless proper privileges for Django have been set; see the subsection on Setting privileges (below). Once the privileges are set, tests can also be run manually with the command
 ```
 docker exec rnames_web python3 manage.py test 
