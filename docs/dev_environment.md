@@ -25,6 +25,8 @@ To see logs you can run this command. You can also specify a container if you on
 ```
 docker-compose logs -f
 ```
+NOTE: The logs may show a failure to run tests the first time the containers are built in a new environment. This is normal; see **Running tests** (below) on how to resolve this issue.
+
 If you want to shutdown the containers, you can run this command. 
 ```
 docker-compose down
@@ -39,4 +41,36 @@ docker-compose exec <container> <command>
 ```
 For example, if you need to make migrations inside django, you can run `docker-compose exec web python manage.py makemigrations`. Then to migrate the database you can run `docker-compose exec web python manage.py migrate`. These commands should usually been run when the developer has made changes to the models or created a new app inside django. See more in [Django docs](https://docs.djangoproject.com/en/3.2/).
 
-Please note, that currently the django application makes migrations and migrates the database every time the django container is started. If this proves to be cumbersome the lines can be commented out in [entrypoint.sh](./../app/scripts/entrypoint.sh).
+Please note that currently the django application makes migrations and migrates the database every time the django container is started. If this proves to be cumbersome the lines can be commented out in [entrypoint.sh](./../app/scripts/entrypoint.sh).
+
+### Running tests
+Tests are run automatically when the containers are built. Note, however, that they may fail unless proper privileges for Django have been set; see the subsection on Setting Privileges (below). Once the privileges are set, tests can also be run manually with the command
+```
+docker exec rnames_web python3 manage.py test 
+```
+
+#### Setting Privileges
+
+Django will not run any tests unless it can construct a test database. The privileges it requires for doing this must currently be set manually.
+
+Once the containers are built, open the database in MySQL with root privileges:
+```
+docker exec -it rnames_db mysql -uroot -p  
+```
+The required password is specified by the variable DB_ROOT_PASSWORD in the .env file; the default is _rootpassword_.
+
+Once MySQL is running, a list of users can be obtained by entering the following command:
+```
+SELECT User, Host, authentication_string FROM mysql.user; 
+```
+By default, Django should have its username listed as _django_rnames_ and its host as _%_. (If this is not the case, then substitute these values with the listed username and host, respectively, in the following command below.)
+
+Grant all privileges to Django:
+```
+GRANT ALL PRIVILEGES ON *.* TO 'django_rnames'@'%';
+```
+Finally, run:
+```
+FLUSH PRIVILEGES;
+```
+The tests should now work. Exit MySQL with the command `QUIT`.
