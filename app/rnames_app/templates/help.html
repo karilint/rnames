@@ -5,15 +5,15 @@
 <!-- This is the landing page for RNames help -->
 <article>
     <div class="help">
-        <p><a href="{{request.META.HTTP_REFERER}}">Go back</a></p>
         <header class="w3-hide">
             <h2>RNames - Help</h2>
          </header>
         <table class="w3-table-all">
-          <caption>Help</caption>
+          <h1>Help</h1>
           <tr><td><a href="{% url 'help-faq' %}">FAQ</a></td></th></tr>
           <tr><td><a href="{% url 'help-database-structure' %}">Database Structure</a></th></tr>
           {% if user.is_authenticated %}
+            <tr><td><a href="{% url 'help-wizard' %}">Data entry with Wizard</a></th></tr>
             <tr><td><a href="{% url 'help-instruction' %}">Data entry in Three Steps</a></th></tr>
           {% endif %}
           <tr><td><a href="{% url 'help-structure-of-binning-algorithm' %}">Binning algorithm</a></th></tr>

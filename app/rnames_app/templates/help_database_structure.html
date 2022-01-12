@@ -6,13 +6,12 @@
   <!-- Beginning of RNames help Database Structure-->
   <article>
     <div class="help">
-      <p><a href="{{request.META.HTTP_REFERER}}">Go back</a></p>
       <header class="w3-hide">
         <h2>RNames - Help - Database Structure</h2>
       </header>
-      <h2><a name="C4">Database Structure</a></h2>
+      <h1><a name="C4">Database Structure</a></h1>
       <p>Simplified structure of the RNames Database (rnames.luomus.fi/). The database contains eight related tables (blue and red objects) of which the object “Relations” is central. In “Relations” correlated stratigraphic units are listed by reference. Three output tables (yellow objects) list time binned stratigraphic units based on a search algorithm that uses “Relations” via R-Package RMySQL (the scripts are available under github.com/bjoekroe/RNames). Global Stages after Cooper et al. (2012). Abbreviations: ID, identifier; StS, Stage Slice (Bergström et al., 2009); TS, Time Slice (Webby et al., 2004)</p>
-      <img src="{% static "images/datascheme.png" %}" alt="Graph of Database Structure" align="middle">
+      <img class="w3-image" src="{% static "images/datascheme.png" %}" alt="Graph of Database Structure" align="middle">
     </div>
   </article>
   <!-- End of RNames help Database Structure-->

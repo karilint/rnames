@@ -4,6 +4,12 @@ import time
 import pandas as pd
 import numpy as np
 
+def data_frames_equal(df1, df2):
+    cols = list(df1.columns.values)
+    df1.sort_values(by=cols, inplace=True, ignore_index=True)
+    df2.sort_values(by=cols, inplace=True, ignore_index=True)
+    pd.testing.assert_frame_equal(df1, df2)
+
 def binning_outputs_equal(a, b):
     fa = pd.read_csv(a)
     fb = pd.read_csv(b)

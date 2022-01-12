@@ -15,3 +15,9 @@ Not ready yet.
 ## Running wizard in development and production environment
 
 See [wizard documentation](./app/frontend/README.md)
+
+## Testing
+
+For wizard tests, see [wizard documentation](./app/frontend/README.md).
+
+For other tests, see [Running tests](./docs/testing.md).

@@ -32,7 +32,7 @@ export const initServer = () => {
 		.map(v => {
 			return {
 				...v,
-				id: makeId('db_structured_name'),
+				id: makeId('db_structured_name', v.id),
 				name_id: makeId('db_name', v.name_id),
 				qualifier_id: makeId('db_qualifier', v.qualifier_id),
 				reference_id: makeId('db_reference', v.reference_id),

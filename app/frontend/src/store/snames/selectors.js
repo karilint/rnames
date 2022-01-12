@@ -45,3 +45,31 @@ export const selectRefence = state => {
 
 export const selectMap = state => state.map
 export const selectRelations = state => state.rel
+
+export const selectSnames = state => state.sname
+
+export const selectNamesAddedByUser = createSelector(
+	[selectSnames, (state, snameId) => snameId],
+	(snames, snameId) => {
+		return snames
+			.filter(v => {
+				if (v.id === snameId) return false
+				if (parseId(v.name_id).type === 'db_name') return false
+				return true
+			})
+			.map(v => v.name_id)
+	}
+)
+
+export const selectLocationsAddedByUser = createSelector(
+	[selectSnames, (state, snameId) => snameId],
+	(snames, snameId) => {
+		return snames
+			.filter(v => {
+				if (v.id === snameId) return false
+				if (parseId(v.location_id).type === 'db_location') return false
+				return true
+			})
+			.map(v => v.location_id)
+	}
+)

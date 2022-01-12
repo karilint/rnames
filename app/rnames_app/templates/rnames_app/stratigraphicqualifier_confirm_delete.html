@@ -9,7 +9,7 @@
       {% csrf_token %}
       <input type="submit" action="" value="Yes, delete." />
   </form>
-  <p><a href="{{request.META.HTTP_REFERER}}">Go back</a></p>
-{% else %}
+  <button type="button" class="w3-button w3-border w3-light-grey" onClick="javascript:history.back();" style="width:120px">Cancel</button>
+  {% else %}
   <p><a href="{% url 'account_login'%}?next={{request.path}}">Please login first</a></p>
 {% endif %} {% endblock %}

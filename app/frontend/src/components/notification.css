@@ -1,4 +1,9 @@
 .error {
     color: red;
-    background: lightgrey;
+    background: lightgray;
 } 
+
+.information {
+    color: darkgoldenrod;
+    background: lightgray;
+}

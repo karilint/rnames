@@ -6,6 +6,7 @@ import { snameReducer } from './snames/reducers'
 import { relReducer } from './relations/reducers'
 import { mapReducer } from './map/reducers'
 import { nameReducer } from './names/reducers'
+import { selectedStructuredNamesReducer } from './selected_structured_names/reducers'
 
 const devTools =
 	process.env.NODE_ENV === 'production'
@@ -19,6 +20,7 @@ export const store = createStore(
 		rel: relReducer,
 		map: mapReducer,
 		names: nameReducer,
+		selectedStructuredNames: selectedStructuredNamesReducer
 	}),
 	devTools
 )

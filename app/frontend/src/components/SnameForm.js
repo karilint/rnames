@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { parseId, makeId } from '../utilities'
 import { addName } from '../store/names/actions'
@@ -10,13 +10,35 @@ import {
 	selectMap,
 	selectRefence,
 } from '../store/snames/selectors'
+import { selectStructuredName } from '../store/selected_structured_names/actions'
 import { Notification } from './Notification'
+import { DuplicateNameDialog } from './DuplicateNameDialog'
+import { findDuplicateStructuredNames } from '../utilities'
+import { InputField } from './InputField'
+
+const NameDataList = React.forwardRef(
+	({ name, names, onChangeHandler }, ref) => {
+		return (
+			<Datalist
+				name='name'
+				options={names}
+				value={name}
+				onChange={onChangeHandler}
+				innerRef={ref}
+			/>
+		)
+	}
+)
 
 export const SnameForm = ({
 	displaySnameForm,
 	showNewSnameForm,
 	newSnameButtonIsDisabled,
 	setNewSnameButtonIsDisabled,
+	setFocusOnSnameButton,
+	displayRefForm,
+	deleteCreatedSname,
+	setDeleteCreatedSname,
 }) => {
 	const dispatch = useDispatch()
 	const reference = useSelector(selectRefence)
@@ -24,9 +46,13 @@ export const SnameForm = ({
 	const [location, setLocation] = useState('')
 	const [qualifier, setQualifier] = useState('')
 	const [notification, setNotification] = useState(null)
+	const [saveWithReference, setSaveWithReference] = useState(false)
+	const [structuredName, setStructuredName] = useState(undefined)
+	const [remarks, setRemarks] = useState('')
 
 	const map = useSelector(selectMap)
 	const names = useSelector(selectAllNames)
+	const structuredNames = useSelector(v => v.sname)
 
 	const qualifiers = useSelector(v => {
 		return Object.entries(v.map)
@@ -34,10 +60,10 @@ export const SnameForm = ({
 			.map(v => [v[1].id, map[v[1].qualifier_name_id].name])
 	})
 
-	const notify = (message, type='error') => {
+	const notify = (message, type = 'error') => {
 		setNotification({ message, type })
 		setTimeout(() => {
-		setNotification(null)
+			setNotification(null)
 		}, 7000)
 	}
 
@@ -52,9 +78,10 @@ export const SnameForm = ({
 		const qualifierFromDb = qualifiers.find(
 			dbQualifier => dbQualifier[1] === qualifier
 		)
-		
+
 		if (!qualifierFromDb) {
 			notify('Choose a qualifier from the dropdown menu.')
+			setQualifier('')
 			return
 		}
 		let nameId, locationId
@@ -77,47 +104,166 @@ export const SnameForm = ({
 				locationId ||
 				locations.find(dbLocation => dbLocation[1] === location)[0],
 			qualifier_id: qualifierFromDb[0],
-			reference_id: reference.id,
-			remarks: '',
+			reference_id: -1,
+			remarks,
+			save_with_reference_id: saveWithReference,
 		}
+
+		if (
+			findDuplicateStructuredNames(newSname, structuredNames).length === 0
+		)
+			submitSname(newSname)
+		else setStructuredName(newSname)
+	}
+
+	const submitSname = newSname => {
 		dispatch(addSname(newSname))
+		dispatch(selectStructuredName(newSname.id))
+		hideForm()
+	}
+
+	const hideForm = () => {
 		setName('')
 		setQualifier('')
 		setLocation('')
+		setStructuredName(undefined)
 		showNewSnameForm()
 		setNewSnameButtonIsDisabled(!newSnameButtonIsDisabled)
+		setFocusOnSnameButton()
 	}
 
+	const nameRef = useRef(null)
+	useEffect(() => {
+		if (newSnameButtonIsDisabled) {
+			nameRef.current.focus()
+		}
+
+		if (displayRefForm === 'none') {
+			setFocusOnSnameButton()
+		}
+
+		if (displaySnameForm === 'block' && newSnameButtonIsDisabled) {
+			nameRef.current.focus()
+		}
+	}, [newSnameButtonIsDisabled])
+
+	useEffect(() => {
+		if (displayRefForm === 'none' && newSnameButtonIsDisabled) {
+			nameRef.current.focus()
+		}
+	}, [displayRefForm])
+
+	useEffect(() => {
+		if (displaySnameForm === 'block' && newSnameButtonIsDisabled) {
+			nameRef.current.focus()
+		}
+	}, [displaySnameForm])
+
+	useEffect(() => {
+		if (deleteCreatedSname) {
+			nameRef.current && nameRef.current.focus()
+			setDeleteCreatedSname(false)
+		}
+	}, [deleteCreatedSname])
+
+	if (structuredName !== undefined) {
+		const duplicateNames = findDuplicateStructuredNames(
+			structuredName,
+			structuredNames
+		)
+		const selectHandler = sname => {
+			if (sname.id === structuredName.id) {
+				submitSname(sname)
+			} else {
+				dispatch(selectStructuredName(sname.id))
+			}
+			hideForm()
+		}
+
+		return (
+			<DuplicateNameDialog
+				{...{
+					structuredName,
+					duplicateNames,
+					selectHandler,
+					cancelHandler: hideForm,
+				}}
+			/>
+		)
+	}
+
+	if (displaySnameForm == 'none') return <></>
+
 	return (
-		<div style={{ display: displaySnameForm }}>
-			<Notification notification={notification}/>
-			<label htmlFor='name'>Name</label>
-			<Datalist
-				name='name'
-				options={names}
-				value={name}
-				onChange={e => setName(e.target.value)}
-			/>
-			<br />
-			<label htmlFor='qualifier'>Qualifier</label>
-			<Datalist
-				name='qualifier'
-				options={qualifiers}
-				value={qualifier}
-				onChange={e => setQualifier(e.target.value)}
-			/>
-			<br />
-			<label htmlFor='location'>Location</label>
-			<Datalist
-				name='location'
-				options={locations}
-				value={location}
-				onChange={e => setLocation(e.target.value)}
-			/>
-			<br />
-			<button type='button' onClick={handleSnameAddition}>
-				Save
-			</button>
-		</div>
+		<>
+			<div className='w3-row'>
+				<Notification notification={notification} />
+				<div className='w3-third w3-container'>
+					<label htmlFor='name'>
+						<b>Name</b>
+					</label>
+					<NameDataList
+						ref={nameRef}
+						name={name}
+						names={names}
+						onChangeHandler={e => setName(e.target.value)}
+					/>
+				</div>
+				<div className='w3-third w3-container'>
+					<label htmlFor='qualifier'>
+						<b>Qualifier</b>
+					</label>
+					<Datalist
+						name='qualifier'
+						options={qualifiers}
+						value={qualifier}
+						onChange={e => setQualifier(e.target.value)}
+					/>
+				</div>
+				<div className='w3-third w3-container'>
+					<label htmlFor='location'>
+						<b>Location</b>
+					</label>
+					<Datalist
+						name='location'
+						options={locations}
+						value={location}
+						onChange={e => setLocation(e.target.value)}
+					/>
+				</div>
+			</div>
+			<div className='w3-container w3-margin-top'>
+				<InputField
+					label='Remarks'
+					name='remarks'
+					value={remarks}
+					setField={setRemarks}
+				/>
+			</div>
+			<div className='w3-container'>
+				<p>
+					<input
+						type='checkbox'
+						className='w3-check'
+						id='structured-name-form-save-with-reference'
+						checked={saveWithReference}
+						onChange={e => setSaveWithReference(!saveWithReference)}
+					/>
+					<label htmlFor='structured-name-form-save-with-reference'>
+						Save with reference id
+					</label>
+				</p>
+				<button
+					type='button'
+					className='w3-button w3-grey'
+					onClick={() => {
+						handleSnameAddition()
+						setFocusOnSnameButton()
+					}}
+				>
+					Save
+				</button>
+			</div>
+		</>
 	)
 }

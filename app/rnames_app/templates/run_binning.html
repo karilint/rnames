@@ -6,49 +6,14 @@
   <!DOCTYPE html>
 
 <section class="w3-section">
-  <h2>Dynamic Progress Bar with Labels</h2>
-  <p>Label outside of the progress bar:</p>
-
-  <div class="w3-light-grey">
-    <div id="myBar" class="w3-container w3-green" style="height:24px;width:0%">
-    </div>
-  </div>
-
-  <p id="myP">Added <span id="demo">0</span> of <span id="n">0</span> Names</p>
-
-  <button class="w3-button w3-light-grey" onclick="move();this.disabled='true'">Bin Names</button>
-  <form action="/rnames/admin/binning_done" method="post">
+  <h1>Run binning</h1>
+  <form id='binningForm' action="/rnames/admin/binning_done" method="post">
     {% csrf_token %}
-    Text:
-    <input type="text" name="param" required><br><br>
-    {{ data1 }}<br><br>
-    <input type="submit" value="Execute">
+    <input class="w3-button w3-light-grey" type="submit" value="Start">
   </form>
 
 </section>
 
-<script>
-function move() {
-  var elem = document.getElementById("myBar");
-  var width = 0;
-  var n = 123;
-  document.getElementById("n").innerHTML = n;
-  var id = setInterval(frame, 50);
-  function frame() {
-    if (width >= n) {
-      clearInterval(id);
-      document.getElementById("myP").className = "w3-text-green w3-animate-opacity";
-      document.getElementById("myP").innerHTML = "Successfully processed 1000 Names!";
-    } else {
-      width++;
-      elem.style.width = width/n * 100 + '%';
-      var num = width;
-      num = num.toFixed(0)
-      document.getElementById("demo").innerHTML = num;
-    }
-  }
-}
-</script>
   <!-- End of binning -->
 
 {% endblock %}

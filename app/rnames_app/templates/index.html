@@ -5,11 +5,11 @@
   {% load static %}
   <!-- Beginning of homepage content -->
   <section class="w3-content">
-    <h2><a name="C4">Welcome to RNames</a></h2>
+    <h1><a name="C4">Welcome to RNames</a></h1>
     <p>RNames is a relational database linking stratigraphic names with each other that are considered to be time-equivalent or time-overlapping.</p>
     <p>Each link in the database is drawn from a published reference and is considered as an expressed opinion. The sum of published opinions can be used to correlate a certain name with another name and ultimately to bin within a certain time frame. This is what this database is for. (<a href="{% url 'rnames-detail'%}" target="_blank">more</a>)</p>
     <p>Currently RNames contains {{ num_names }} Stratigraphic names, {{ num_opinions }} Opinions, and {{ num_references }} References.</p>
-    <img src="{% static "images/argentine.jpg" %}" alt="Geologists at work" align="middle" height="275" width="900">
+    <img class="w3-image" src="{% static "images/argentine.jpg" %}" alt="Geologists at work" align="middle" height="275" width="900">
     <p></p>
     <table width="100%">
       <tr>

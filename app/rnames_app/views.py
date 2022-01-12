@@ -11,14 +11,18 @@ import matplotlib.pyplot as plt
 import urllib
 import base64
 import mpltern
+import traceback
 from mpltern.ternary.datasets import get_scatter_points
 import numpy as np
 # end
 import json
 
+from django import db
 from django.db import connection
 from django.db.models import Q
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import (HttpResponse, JsonResponse, HttpResponseBadRequest)
 from django.shortcuts import render, get_object_or_404, redirect
@@ -29,7 +33,7 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from rest_framework.response import Response
 #from .utils.utils import YourClassOrFunction
 from rest_framework import status, generics
-from .models import (Binning, Location, Name, Qualifier, QualifierName,
+from .models import (Binning, Location, Name, Qualifier, QualifierName, BinningProgress,
                      Relation, Reference, StratigraphicQualifier, StructuredName, TimeSlice)
 from .filters import (BinningSchemeFilter, LocationFilter, NameFilter, QualifierFilter, QualifierNameFilter,
                       ReferenceFilter, RelationFilter, StratigraphicQualifierFilter, StructuredNameFilter, TimeSliceFilter)
@@ -41,9 +45,11 @@ from .filters import UserFilter
 import sys
 from subprocess import run, PIPE
 from .utils.root_binning import main_binning_fun
+from .utils.info import BinningProgressUpdater
 from io import StringIO
 from contextlib import redirect_stdout
 from types import SimpleNamespace
+import multiprocessing as mp
 import time
 # , APINameFilter
 
@@ -53,7 +59,22 @@ import time
 #    names = Name.objects.order_by('name')
 #    return render(request, 'name_list.html', {'names': names})
 
-def external(request):
+def user_is_data_admin_or_owner(user, data):
+    if user.groups.filter(name='data_admin').exists():
+        return True
+
+    if user.groups.filter(name='data_contributor').exists() and data.created_by == user:
+        return True
+
+    return False
+
+def binning_process():
+    connection.connect()
+    info = BinningProgressUpdater()
+
+    if not info.start_binning():
+        return
+
     def time_slices(scheme):
         return list(TimeSlice.objects.is_active().filter(scheme=scheme).order_by('order').values_list('name', flat=True))
 
@@ -96,16 +117,31 @@ def external(request):
         'strat_qualifier_2',
     ]
 
-    result = main_binning_fun(queryset_list, cols, {
-        'rassm': time_slices('rasmussen'),
-        'berg': time_slices('bergstrom'),
-        'webby': time_slices('webby'),
-        'stages': time_slices('stages'),
-        'periods': time_slices('periods'),
-        'epochs': time_slices('epochs'),
-        'eras': time_slices('eras'),
-        'eons': time_slices('eons')
-    })
+    try:
+        result = main_binning_fun(queryset_list, cols, {
+            'rassm': time_slices('rasmussen'),
+            'berg': time_slices('bergstrom'),
+            'webby': time_slices('webby'),
+            'stages': time_slices('stages'),
+            'periods': time_slices('periods'),
+            'epochs': time_slices('epochs'),
+            'eras': time_slices('eras'),
+            'eons': time_slices('eons')
+        }, info)
+    except Exception as e:
+        info.set_error(str(e))
+        traceback.print_exc()
+        return
+
+    update_progress = info.db_update_progress_updater(
+        len(result['berg'])
+        + len(result['webby'])
+        + len(result['stages'])
+        + len(result['periods'])
+    )
+
+    create_objects = []
+    update_objects = []
 
     def update(obj, oldest, youngest, ts_count, refs, rule):
         obj.oldest = oldest
@@ -113,11 +149,11 @@ def external(request):
         obj.ts_count = ts_count
         obj.refs = refs
         obj.rule = rule
-        obj.save()
+        update_objects.append(obj)
 
     def create(name, scheme, oldest, youngest, ts_count, refs, rule):
         obj = Binning(name=name, binning_scheme=scheme, oldest=oldest, youngest=youngest, ts_count=ts_count, refs=refs, rule=rule)
-        obj.save()
+        create_objects.append(obj)
 
     def process_result(df, scheme):
         col = SimpleNamespace(**{k: v for v, k in enumerate(df.columns)})
@@ -129,26 +165,27 @@ def external(request):
                 create(name, scheme, row[col.oldest], row[col.youngest], row[col.ts_count], row[col.refs], row[col.rule])
             else:
                 update(data[0], row[col.oldest], row[col.youngest], row[col.ts_count], row[col.refs], row[col.rule])
+            update_progress.update()
 
-    start = time.time()
     process_result(result['berg'], 'x_robinb')
     process_result(result['webby'], 'x_robinw')
     process_result(result['stages'], 'x_robins')
     process_result(result['periods'], 'x_robinp')
-    end = time.time()
 
-    return render(
-        request,
-        'binning_done.html',
-        context={
-            'duration': round(result['duration']),
-            'update_duration': round(end - start),
-            'berg': result['berg'].to_html(classes='w3-table'),
-            'webby': result['webby'].to_html(classes='w3-table'),
-            'periods': result['periods'].to_html(classes='w3-table'),
-            'stages': result['stages'].to_html(classes='w3-table')
-        },
-    )
+    Binning.objects.bulk_create(create_objects, 100)
+    Binning.objects.bulk_update(update_objects, ['oldest', 'youngest', 'ts_count', 'refs', 'rule'], 100)
+
+    info.finish_binning()
+
+@login_required
+def external(request):
+    if not request.user.groups.filter(name='data_admin').exists():
+        raise PermissionDenied
+
+    db.connections.close_all()
+    handle = mp.Process(target=binning_process)
+    handle.start()
+    return redirect('/rnames/admin/binning_progress')
 
 
 def binning(request):
@@ -158,6 +195,33 @@ def binning(request):
         'binning.html',
     )
 
+@login_required
+def binning_info(request):
+    data = {}
+
+    data['binning'] = [0, 0]
+    data['update'] = [0, 0]
+
+    for entry in BinningProgress.objects.all():
+        if entry.name == 'status':
+            data['status'] = entry.value_one
+            continue
+
+        if entry.name == 'error' or entry.name == 'lock' or entry.name == 'status':
+            continue
+
+        if entry.name == 'db_update':
+            data['update'] = [entry.value_one, entry.value_two]
+            continue
+
+        data['binning'][0] += entry.value_one
+        data['binning'][1] += entry.value_two
+
+    return JsonResponse(data)
+
+@login_required
+def binning_progress(request):
+    return render(request, 'binning_progress.html')
 
 def binning_scheme_list(request):
     f = BinningSchemeFilter(
@@ -182,6 +246,7 @@ def binning_scheme_list(request):
     )
 
 
+@login_required
 def export_csv_binnings(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="rnames_binnings.csv"'
@@ -208,6 +273,7 @@ def export_csv_binnings(request):
     return response
 
 
+@login_required
 def export_csv_references(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="rnames_references.csv"'
@@ -250,6 +316,16 @@ def help_faq(request):
     return render(
         request,
         'help_faq.html',
+    )
+
+
+def help_wizard(request):
+    """
+    View function for the wizard help page of site.
+    """
+    return render(
+        request,
+        'help_wizard.html',
     )
 
 
@@ -351,7 +427,10 @@ def child(request):
     )
 
 
-class location_delete(DeleteView):
+class location_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = Location
     success_url = reverse_lazy('location-list')
 
@@ -362,8 +441,13 @@ def location_detail(request, pk):
 
 
 @login_required
+@permission_required('rnames_app.change_location', raise_exception=True)
 def location_edit(request, pk):
     location = get_object_or_404(Location, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, location):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = LocationForm(request.POST, instance=location)
         if form.is_valid():
@@ -397,6 +481,7 @@ def location_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_location', raise_exception=True)
 def location_new(request):
     if request.method == "POST":
         form = LocationForm(request.POST)
@@ -411,7 +496,10 @@ def location_new(request):
     return render(request, 'location_edit.html', {'form': form})
 
 
-class name_delete(DeleteView):
+class name_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = Name
     success_url = reverse_lazy('name-list')
 
@@ -422,8 +510,13 @@ def name_detail(request, pk):
 
 
 @login_required
+@permission_required('rnames_app.change_name', raise_exception=True)
 def name_edit(request, pk):
     name = get_object_or_404(Name, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, name):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = NameForm(request.POST, instance=name)
         if form.is_valid():
@@ -459,6 +552,7 @@ def name_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_name', raise_exception=True)
 def name_new(request):
     if request.method == "POST":
         form = NameForm(request.POST)
@@ -473,7 +567,10 @@ def name_new(request):
     return render(request, 'name_edit.html', {'form': form})
 
 
-class qualifier_delete(DeleteView):
+class qualifier_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = Qualifier
     success_url = reverse_lazy('qualifier-list')
 
@@ -504,6 +601,7 @@ def qualifier_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_qualifier', raise_exception=True)
 def qualifier_new(request):
     if request.method == "POST":
         form = QualifierForm(request.POST)
@@ -517,8 +615,13 @@ def qualifier_new(request):
 
 
 @login_required
+@permission_required('rnames_app.change_qualifier', raise_exception=True)
 def qualifier_edit(request, pk):
     qualifier = get_object_or_404(Qualifier, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, qualifier):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = QualifierForm(request.POST, instance=qualifier)
         if form.is_valid():
@@ -530,7 +633,10 @@ def qualifier_edit(request, pk):
     return render(request, 'qualifier_edit.html', {'form': form})
 
 
-class qualifiername_delete(DeleteView):
+class qualifiername_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = QualifierName
     success_url = reverse_lazy('qualifiername-list')
 
@@ -541,8 +647,13 @@ def qualifiername_detail(request, pk):
 
 
 @login_required
+@permission_required('rnames_app.change_qualifiername', raise_exception=True)
 def qualifiername_edit(request, pk):
     qualifiername = get_object_or_404(QualifierName, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, qualifiername):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = QualifierNameForm(request.POST, instance=qualifiername)
         if form.is_valid():
@@ -578,6 +689,7 @@ def qualifiername_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_qualifiername', raise_exception=True)
 def qualifiername_new(request):
     if request.method == "POST":
         form = QualifierNameForm(request.POST)
@@ -590,7 +702,10 @@ def qualifiername_new(request):
     return render(request, 'qualifiername_edit.html', {'form': form})
 
 
-class reference_delete(DeleteView):
+class reference_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = Reference
     success_url = reverse_lazy('reference-list')
 
@@ -624,8 +739,13 @@ def reference_detail(request, pk):
 
 
 @login_required
+@permission_required('rnames_app.change_reference', raise_exception=True)
 def reference_edit(request, pk):
     reference = get_object_or_404(Reference, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, reference):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = ReferenceForm(request.POST, instance=reference)
         if form.is_valid():
@@ -674,6 +794,7 @@ def reference_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_reference', raise_exception=True)
 def reference_new(request):
     if request.method == "POST":
         form = ReferenceForm(request.POST)
@@ -810,7 +931,10 @@ def reference_relation_new(request, name_one, reference):
     return render(request, 'reference_relation_edit.html', {'name_one': name_one, 'reference': reference, 'current_relations': current_relations, 'available_relations': available_relations, 'form': form},)
 
 
-class relation_delete(DeleteView):
+class relation_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = Relation
     success_url = reverse_lazy('relation-list')
 
@@ -854,8 +978,13 @@ def relation_sql_detail(request, name_one, name_two):
 
 
 @login_required
+@permission_required('rnames_app.change_relation', raise_exception=True)
 def relation_edit(request, pk):
     relation = get_object_or_404(Relation, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, relation):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = RelationForm(request.POST, instance=relation)
         if form.is_valid():
@@ -894,6 +1023,7 @@ def relation_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_relation', raise_exception=True)
 def relation_new(request, reference_id):
     if request.method == "POST":
         form = RelationForm(request.POST)
@@ -915,6 +1045,10 @@ def run_binning(request):
     """
     View function for the run binning operation.
     """
+
+    if not request.user.groups.filter(name='data_admin').exists():
+        raise PermissionDenied
+
     # Generate counts of some of the main objects
     num_opinions = Relation.objects.is_active().count()
 
@@ -926,7 +1060,10 @@ def run_binning(request):
     )
 
 
-class stratigraphic_qualifier_delete(DeleteView):
+class stratigraphic_qualifier_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = StratigraphicQualifier
     success_url = reverse_lazy('stratigraphic-qualifier-list')
 
@@ -938,9 +1075,14 @@ def stratigraphic_qualifier_detail(request, pk):
 
 
 @login_required
+@permission_required('rnames_app.change_stratigraphicqualifier', raise_exception=True)
 def stratigraphic_qualifier_edit(request, pk):
     stratigraphicqualifier = get_object_or_404(
         StratigraphicQualifier, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, stratigraphicqualifier):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = StratigraphicQualifierForm(
             request.POST, instance=stratigraphicqualifier)
@@ -977,6 +1119,7 @@ def stratigraphic_qualifier_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_stratigraphicqualifier', raise_exception=True)
 def stratigraphic_qualifier_new(request):
     if request.method == "POST":
         form = StratigraphicQualifierForm(request.POST)
@@ -989,7 +1132,10 @@ def stratigraphic_qualifier_new(request):
     return render(request, 'stratigraphic_qualifier_edit.html', {'form': form})
 
 
-class structuredname_delete(DeleteView):
+class structuredname_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = StructuredName
     success_url = reverse_lazy('structuredname-list')
 
@@ -1116,6 +1262,7 @@ def structuredname_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_structuredname', raise_exception=True)
 def structuredname_new(request):
     if request.method == "POST":
         form = StructuredNameForm(request.POST)
@@ -1129,8 +1276,13 @@ def structuredname_new(request):
 
 
 @login_required
+@permission_required('rnames_app.change_structuredname', raise_exception=True)
 def structuredname_edit(request, pk):
     structuredname = get_object_or_404(StructuredName, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, structuredname):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = StructuredNameForm(request.POST, instance=structuredname)
         if form.is_valid():
@@ -1180,7 +1332,11 @@ def user_search(request):
     user_filter = UserFilter(request.GET, queryset=user_list)
     return render(request, 'user_list.html', {'filter': user_filter})
 
-class timeslice_delete(DeleteView):
+
+class timeslice_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
     model = TimeSlice
     success_url = reverse_lazy('timeslice-list')
 
@@ -1191,8 +1347,13 @@ def timeslice_detail(request, pk):
 
 
 @login_required
+@permission_required('rnames_app.change_timeslice', raise_exception=True)
 def timeslice_edit(request, pk):
     timeslice = get_object_or_404(TimeSlice, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, timeslice):
+        raise PermissionDenied
+
     if request.method == "POST":
         form = TimeSliceForm(request.POST, instance=timeslice)
         if form.is_valid():
@@ -1226,6 +1387,7 @@ def timeslice_list(request):
 
 
 @login_required
+@permission_required('rnames_app.add_timeslice', raise_exception=True)
 def timeslice_new(request):
     if request.method == "POST":
         form = TimeSliceForm(request.POST)
@@ -1296,12 +1458,17 @@ def submit(request):
         # in the database
         qualifier = Qualifier.objects.is_active().get(pk=structured_name_data['qualifier_id']['value'])
 
+        if structured_name_data['save_with_reference_id']:
+            structured_name_reference = reference
+        else:
+            structured_name_reference = None
+
         structured_names[id] = StructuredName(
             name=name,
             qualifier=qualifier,
             location=location,
-            reference=reference
-            # remarks = ''
+            reference=structured_name_reference,
+            remarks=structured_name_data['remarks'],
         )
 
     for relation_data in data['relations']:
@@ -1328,7 +1495,7 @@ def submit(request):
         if name_one == None or name_two == None:
             return HttpResponseBadRequest()
 
-        belongs_to = 0 # Todo
+        belongs_to = relation_data['belongs_to']
 
         relation = Relation(
             name_one=name_one,

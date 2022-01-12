@@ -3,6 +3,7 @@
 
 {% block content %}
 
+<h1>Data Entry Result</h1>
 <h3>Reference</h3>
 <table class="w3-table-all">
   <tr>
@@ -55,12 +56,13 @@
 
 {% if structured_names|length > 0 %}
   <h3>Added Structured Names</h3>
-  <table class="w3-table-all">
+  <table class="w3-table-all" style="table-layout: fixed; width: 100%">
     <tr>
       <th>id</th>
       <th>Name</th>
       <th>Qualifier</th>
       <th>Location</th>
+      <th>Remarks</th>
     </tr>
     {% for name in structured_names %}
       <tr>
@@ -68,6 +70,7 @@
         <td>{{name.name}}</td>
         <td>{{name.qualifier}}</td>
         <td>{{name.location}}</td>
+        <td style="word-wrap: break-word;">{{name.remarks}}</td>
       </tr>
     {% endfor %}
   </table>

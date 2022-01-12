@@ -1,0 +1,58 @@
+{% extends 'base_generic.html' %}
+{% block title %}RNames - Help - Wizard{% endblock %}
+
+{% block content %}
+{% load static %}
+<article>
+    <div>
+        <header class="w3-hide">
+            <h2>RNames - Help - Wizard</h2>
+        </header>
+        <h1>Single page data entry</h1>
+        <h4>Enter all data related to one reference on single page</h4>
+        <article>
+            <h3>Add a REFERENCE</h3>
+            <b>Add using DOI</b>
+            <ul>
+                <li>Insert reference’s DOI to the field and press ’get’</li>
+                <li>Save the reference</li>
+            </ul>
+            <b>Manual entry</b>
+            <ul>
+                <li>Press ’manual entry’</li>
+                <li>Fill in the fields and save the reference</li>
+            </ul>
+        </article>
+        <article>
+            <h3>Select and Add STRUCTURED NAMES</h3>
+            <p>Select all the structured names mentioned in the reference using the search bar. Create new structured names if they don’t exist already.</p>
+            <b>Select existing name</b>
+            <ul>
+                <li>Search structured names by their name, qualifier or location</li>
+            </ul>
+            <b>Add new structured name</b>
+                <ul>
+                    <li>Fill in the fields by writing or selecting from the list</li>
+                    <li>Save the structured name</li>
+                </ul>
+        </article>
+        <article>
+            <h3>Create RELATIONS</h3>
+            <p>Create relations between the structured names that were selected or created in the previous step</p>
+            <b>Create relation between two structured names</b>
+            <ul>
+                <Li>Select one structured name from the left field</Li>
+                <li>Select another structured name from the right field</li>
+            </ul>
+            <b>Delete relation</b>
+            <ul>
+                <li>Similar to creating, select the structured names in the relation from the left and right fields</li>
+            </ul>
+        </article>
+        <p>Once all the data has been added, press 'submit'</p>
+        <div>
+            <p>If you forgot to add a structured name or a relation but have already submitted the form, check instructions for ’Data entry with three steps’.</p>
+        </div>
+    </div>
+</article>
+{% endblock %}
