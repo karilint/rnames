@@ -1,8 +1,10 @@
 from django.shortcuts import render
 from rnames_app.models import (Location, Name, Qualifier, QualifierName, Reference, StructuredName)
-
+from django.contrib.auth.decorators import login_required, permission_required
 
 # Create your views here.
+@login_required
+@permission_required('rnames_app.add_reference', raise_exception=True)
 def index(request, *args, **kwargs):
     names = list(Name.objects.filter(is_active=True).values('id', 'name'))
     locations = list(Location.objects.filter(is_active=True).values('id', 'name'))
