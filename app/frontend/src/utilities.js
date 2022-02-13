@@ -13,6 +13,7 @@ const idTypes = [
 	'db_qualifier',
 	'db_structured_name',
 	'db_reference',
+	'db_relation'
 ]
 
 let ID = 0

@@ -44,6 +44,14 @@ export const initServer = () => {
 		.map(v => {
 			return { ...v, id: makeId('db_reference', v.id) }
 		})
+
+	SERVER_DATA.amendInfo = load('AMEND_INFO')
+	if (SERVER_DATA.amendInfo.amend === true) {
+		SERVER_DATA.amendInfo.relations = SERVER_DATA.amendInfo.relations.map(v => ({
+			...v, id: makeId('db_relation', v.id)
+		}))
+		SERVER_DATA.amendInfo.referenceId = makeId('db_reference', SERVER_DATA.amendInfo.referenceId)
+	}
 }
 
 export const loadServerData = (k) => k === undefined ? SERVER_DATA : SERVER_DATA[k]
