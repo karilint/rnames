@@ -47,10 +47,14 @@ export const initServer = () => {
 
 	SERVER_DATA.amendInfo = load('AMEND_INFO')
 	if (SERVER_DATA.amendInfo.amend === true) {
+		const referenceId = makeId('db_reference', SERVER_DATA.amendInfo.referenceId)
 		SERVER_DATA.amendInfo.relations = SERVER_DATA.amendInfo.relations.map(v => ({
-			...v, id: makeId('db_relation', v.id)
+			id: makeId('db_relation', v.id),
+			belongs_to: v.belongs_to,
+			name1: makeId('db_structured_name', v.name_one_id),
+			name2: makeId('db_structured_name', v.name_two_id)
 		}))
-		SERVER_DATA.amendInfo.referenceId = makeId('db_reference', SERVER_DATA.amendInfo.referenceId)
+		SERVER_DATA.amendInfo.referenceId = referenceId
 	}
 }
 
