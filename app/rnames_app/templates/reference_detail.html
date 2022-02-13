@@ -11,6 +11,7 @@
       <h1 class="w3-left">Reference #{{ reference.id }}</h1>
       <p class="w3-right icons">
         {% if user.is_authenticated %}
+          <a href="/wizard?amendId={{ reference.id }}"><span class="fa fa-plus"></span></a></span></a>
           <a href="{% url 'reference-edit' pk=reference.pk %}"><span class="fa fa-pencil-square-o"></span></a>
           <a href="{% url 'reference-delete' pk=reference.pk %}"><span class="fa  fa-trash-o"></span></a>
         {% endif %}
