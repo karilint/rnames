@@ -29,6 +29,9 @@ export const makeId = (ty, value) => {
 	return idString
 }
 
+const dbIdRegex = /^db_/
+export const isDbId = id => dbIdRegex.test(JSON.parse(id).type)
+
 const findRef = (refs, ids) =>
 	refs.find(ref => ref.names.find(v => ids.includes(v.id)))
 

@@ -52,7 +52,8 @@ export const initServer = () => {
 			id: makeId('db_relation', v.id),
 			belongs_to: v.belongs_to,
 			name1: makeId('db_structured_name', v.name_one_id),
-			name2: makeId('db_structured_name', v.name_two_id)
+			name2: makeId('db_structured_name', v.name_two_id),
+			reference_id: referenceId
 		}))
 		SERVER_DATA.amendInfo.referenceId = referenceId
 	}
