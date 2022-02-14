@@ -58,6 +58,15 @@ export const Submit = () => {
 
 			const serverData = loadServerData()
 			const compare = serverData.amendInfo.relations.find(v => v.id === relation.id)
+
+			// If names are flipped but neither name belongs to the other
+			// there is no need to update
+			if (relation.belongs_to === compare.belongs_to
+				&& relation.belongs_to === 0
+				&& relation.name1 === compare.name2
+				&& relation.name2 === compare.name1)
+				return false
+
 			return relation.name1 !== compare.name1
 				|| relation.name2 !== compare.name2
 				|| relation.belongs_to !== compare.belongs_to

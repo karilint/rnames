@@ -1410,13 +1410,18 @@ def submit(request):
 
     data = json.loads(request.body)
 
-    reference = Reference(
-        first_author=data['reference']['firstAuthor'],
-        year=data['reference']['year'],
-        title=data['reference']['title'],
-        doi=data['reference']['doi'],
-        link=data['reference']['link']
-    )
+    amend = data['reference']['id']['type'] == 'db_reference'
+
+    if amend:
+        reference = Reference.objects.get(pk=data['reference']['id']['value'])
+    else:
+        reference = Reference(
+            first_author=data['reference']['firstAuthor'],
+            year=data['reference']['year'],
+            title=data['reference']['title'],
+            doi=data['reference']['doi'],
+            link=data['reference']['link']
+        )
 
     for name_data in data['names']:
         ty = name_data['id']['type']
@@ -1506,7 +1511,9 @@ def submit(request):
 
         relations.append(relation)
 
-    reference.full_clean()
+    # Ignore existing reference
+    if amend == False:
+        reference.full_clean()
 
     for name in names.values():
         name.full_clean()
@@ -1520,7 +1527,9 @@ def submit(request):
     for relation in relations:
         relation.full_clean(exclude=['name_one', 'name_two', 'reference'])
 
-    reference.save()
+    # Ignore existing reference
+    if amend == False:
+        reference.save()
 
     for name in names.values():
         name.save()
