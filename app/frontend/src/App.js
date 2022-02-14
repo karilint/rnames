@@ -56,7 +56,11 @@ const App = () => {
 		dispatch(initMapvalues(map))
 
 		if (serverData.amendInfo.amend) {
-			dispatch(addRef(map[serverData.amendInfo.referenceId]))
+			const reference = map[serverData.amendInfo.referenceId]
+			dispatch(addRef({
+				...reference,
+				firstAuthor: reference.first_author
+			}))
 			serverData.amendInfo.relations.forEach(v => {
 				dispatch(selectStructuredName(v.name1))
 				dispatch(selectStructuredName(v.name2))
