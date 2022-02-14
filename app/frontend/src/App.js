@@ -7,6 +7,7 @@ import { initMapvalues } from './store/map/actions'
 import { addRel } from './store/relations/actions'
 import { addSname } from './store/snames/actions'
 import { Reference } from './components/Reference'
+import { ReferenceDisplay } from './components/ReferenceDisplay'
 import { Sname } from './components/Sname'
 import { Relation } from './components/Relation'
 import { Submit } from './components/Submit'
@@ -129,24 +130,25 @@ const App = () => {
 						/>
 					) : (
 						state.ref.map(reference =>
-							reference.edit ? (
-								<ReferenceForm
-									key={reference.id}
-									reference={reference}
-									displayRefForm={displayRefForm}
-									showNewReferenceForm={showNewReferenceForm}
-									isQueried={true}
-								/>
-							) : (
-								<Reference
-									{...{
-										key: reference.id,
-										reference,
-										showNewReferenceForm,
-										setFocusOnSnameButton,
-									}}
-								/>
-							)
+							amendMode
+								? <ReferenceDisplay reference={reference} />
+								: (reference.edit
+									? <ReferenceForm
+										key={reference.id}
+										reference={reference}
+										displayRefForm={displayRefForm}
+										showNewReferenceForm={showNewReferenceForm}
+										isQueried={true}
+									/>
+									: <Reference
+										{...{
+											key: reference.id,
+											reference,
+											showNewReferenceForm,
+											setFocusOnSnameButton,
+										}}
+									/>
+								)
 						)
 					)}
 				</div>
