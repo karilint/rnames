@@ -131,7 +131,10 @@ const App = () => {
 					) : (
 						state.ref.map(reference =>
 							amendMode
-								? <ReferenceDisplay reference={reference} />
+								? <ReferenceDisplay
+									key={reference.id}
+									reference={reference}
+								/>
 								: (reference.edit
 									? <ReferenceForm
 										key={reference.id}
