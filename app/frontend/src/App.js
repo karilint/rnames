@@ -113,7 +113,7 @@ const App = () => {
 	return (
 		<>
 			<h2>
-				<b>Data Entry</b>
+				<b>{amendMode ? 'Amend Reference' : 'Data Entry'}</b>
 			</h2>
 			<h3>
 				<b>Reference</b>
