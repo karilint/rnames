@@ -13,8 +13,8 @@ def index(request, *args, **kwargs):
     references = list(Reference.objects.filter(is_active=True).values('id', 'title', 'first_author', 'link', 'year', 'doi'))
     structured_names = list(StructuredName.objects.filter(is_active=True).values('id', 'location_id', 'name_id', 'qualifier_id', 'reference_id', 'remarks'))
 
-    amend_info = {'amend': True}
     reference_id = request.GET.get('amendId', None)
+    amend_info = {'amend': reference_id != None}
 
     if reference_id:
         ref = Reference.objects.filter(is_active=True).get(pk=reference_id)
