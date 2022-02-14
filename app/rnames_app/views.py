@@ -1407,16 +1407,22 @@ def submit(request):
     locations = {}
     structured_names = {}
     relations = []
+    updated_relations = []
 
     data = json.loads(request.body)
 
-    reference = Reference(
-        first_author=data['reference']['firstAuthor'],
-        year=data['reference']['year'],
-        title=data['reference']['title'],
-        doi=data['reference']['doi'],
-        link=data['reference']['link']
-    )
+    amend = data['reference']['id']['type'] == 'db_reference'
+
+    if amend:
+        reference = Reference.objects.get(pk=data['reference']['id']['value'])
+    else:
+        reference = Reference(
+            first_author=data['reference']['firstAuthor'],
+            year=data['reference']['year'],
+            title=data['reference']['title'],
+            doi=data['reference']['doi'],
+            link=data['reference']['link']
+        )
 
     for name_data in data['names']:
         ty = name_data['id']['type']
@@ -1497,16 +1503,37 @@ def submit(request):
 
         belongs_to = relation_data['belongs_to']
 
-        relation = Relation(
-            name_one=name_one,
-            name_two=name_two,
-            belongs_to=belongs_to,
-            reference=reference
-        )
+        if relation_data['id']['type'] == 'db_relation':
+            # Handle updating existing relation
+            relation_id = relation_data['id']['value']
+            relation = Relation.objects.get(pk=relation_id)
 
-        relations.append(relation)
+            # Names must match but they can be changed in case inclusion is inverted
+            if not (
+                (relation.name_one == name_one and relation.name_two == name_two) or
+                (relation.name_one == name_two and relation.name_two == name_one)
+                ):
+                return HttpResponseBadRequest()
 
-    reference.full_clean()
+            relation.name_one = name_one
+            relation.name_two = name_two
+            relation.belongs_to = belongs_to
+
+            updated_relations.append(relation)
+
+        else:
+            relation = Relation(
+                name_one=name_one,
+                name_two=name_two,
+                belongs_to=belongs_to,
+                reference=reference
+            )
+
+            relations.append(relation)
+
+    # Ignore existing reference
+    if amend == False:
+        reference.full_clean()
 
     for name in names.values():
         name.full_clean()
@@ -1520,7 +1547,12 @@ def submit(request):
     for relation in relations:
         relation.full_clean(exclude=['name_one', 'name_two', 'reference'])
 
-    reference.save()
+    for relation in updated_relations:
+        relation.full_clean()
+
+    # Ignore existing reference
+    if amend == False:
+        reference.save()
 
     for name in names.values():
         name.save()
@@ -1534,6 +1566,9 @@ def submit(request):
     for relation in relations:
         relation.save()
 
+    for relation in updated_relations:
+        relation.save()
+
     return render(
         request,
         'wizard_result.html', {
@@ -1541,6 +1576,7 @@ def submit(request):
             'names': names.values(),
             'locations': locations.values(),
             'structured_names': structured_names.values(),
-            'relations': relations
+            'relations': relations,
+            'updated_relations': updated_relations
         }
     )

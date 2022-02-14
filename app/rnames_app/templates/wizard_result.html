@@ -98,5 +98,26 @@
 {% endif %}
 
 
+{% if updated_relations|length > 0 %}
+  <h3>Updated Relations</h3>
+  <table class="w3-table-all">
+    <tr>
+      <th>id</th>
+      <th>Name 1</th>
+      <th>Name 2</th>
+      <th>Belongs to</th>
+    </tr>
+    {% for relation in updated_relations %}
+      <tr>
+        <td>{{relation.id}}</td>
+        <td>{{relation.name_one}}</td>
+        <td>{{relation.name_two}}</td>
+        <td>{{relation.belongs_to}}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
+
 
 {% endblock %}

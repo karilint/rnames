@@ -3,6 +3,8 @@ import { useSelector } from 'react-redux'
 import axios from 'axios'
 import { updateRefForSubmission } from '../validations'
 import { Notification } from './Notification'
+import { loadServerData } from '../services/server'
+import { isDbId } from '../utilities'
 
 export const Submit = () => {
 	const data = useSelector(v => {
@@ -50,14 +52,35 @@ export const Submit = () => {
 			return ret
 		}
 
+		const relationChanged = (relation) => {
+			if (!isDbId(relation.id))
+				return true
+
+			const serverData = loadServerData()
+			const compare = serverData.amendInfo.relations.find(v => v.id === relation.id)
+
+			// If names are flipped but neither name belongs to the other
+			// there is no need to update
+			if (relation.belongs_to === compare.belongs_to
+				&& relation.belongs_to === 0
+				&& relation.name1 === compare.name2
+				&& relation.name2 === compare.name1)
+				return false
+
+			return relation.name1 !== compare.name1
+				|| relation.name2 !== compare.name2
+				|| relation.belongs_to !== compare.belongs_to
+		}
+
 		const refWithNullValues = updateRefForSubmission(data.reference)
 
 		const submit_data = {
 			names: data.names.map(v => parseIds(v, ['id'])),
 			reference: parseIds(refWithNullValues, ['id']),
-			relations: data.relations.map(v =>
-				parseIds(v, ['id', 'name1', 'name2'])
-			),
+			relations: data.relations.filter(v => relationChanged(v))
+				.map(v =>
+					parseIds(v, ['id', 'name1', 'name2'])
+				),
 			structured_names: data.structured_names.map(v =>
 				parseIds(v, [
 					'id',
