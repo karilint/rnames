@@ -15,6 +15,8 @@ import { SnameForm } from './components/SnameForm'
 import { SelectedStructuredNames } from './components/SelectedStructuredNames'
 import { RelationSelector } from './components/RelationSelector'
 import { Notification } from './components/Notification'
+import { addRef } from './store/references/actions'
+import { selectStructuredName } from './store/selected_structured_names/actions'
 
 const App = () => {
 	const state = useSelector(v => v)
@@ -29,6 +31,7 @@ const App = () => {
 	const [nameNotification, setNameNotification] = useState(null)
 	const [locationNotification, setLocationNotification] = useState(null)
 	const [deleteCreatedSname, setDeleteCreatedSname] = useState(false)
+	const [amendMode, setAmendMode] = useState(false)
 
 	useEffect(() => {
 		initServer()
@@ -43,7 +46,22 @@ const App = () => {
 			v.formattedName = formatStructuredName(v, { map })
 		})
 		serverData.references.forEach(v => (map[v.id] = v))
+
+		if (serverData.amendInfo.amend) {
+			setAmendMode(true)
+			serverData.amendInfo.relations.forEach(v => map[v.id] = v)
+		}
+
 		dispatch(initMapvalues(map))
+
+		if (serverData.amendInfo.amend) {
+			dispatch(addRef(map[serverData.amendInfo.referenceId]))
+			serverData.amendInfo.relations.forEach(v => {
+				dispatch(selectStructuredName(v.name1))
+				dispatch(selectStructuredName(v.name2))
+			})
+			serverData.amendInfo.relations.forEach(v => dispatch(addRel(v)))
+		}
 	}, [])
 
 	const addRelHandler = e => {
