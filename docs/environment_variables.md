@@ -18,6 +18,7 @@
 - DJANGO_SUPERUSER_EMAIL is the email the django container uses to create a superuser at startup.
 - SITE_NAME is the name for the website. You can set it as RNames.
 - SITE_DOMAIN is the domain for the website. In development set is as localhost:8000.
+- DJANGO_LOGGING_EMAIL is the email to which detailed debug information is sent when an error occurs with debugging off.
 
 ### Other variables (these don't need to be defined)
 

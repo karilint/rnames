@@ -32,6 +32,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'development_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DEBUG', 1)))
+ADMINS = [('admin', os.environ.get('DJANGO_LOGGING_EMAIL'))]
 
 ALLOWED_HOSTS = []
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
