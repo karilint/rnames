@@ -4,9 +4,10 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update && \
-    apt-get install -y build-essential gcc default-libmysqlclient-dev nodejs npm && \
+    apt-get install -y build-essential gcc default-libmysqlclient-dev npm curl && \
     useradd -m user
 
+RUN npm install -g n && n 16
 USER user
 
 COPY requirements.txt .
