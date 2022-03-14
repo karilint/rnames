@@ -44,8 +44,6 @@
   </table>
   {% if user.is_authenticated %}
     <br>
-    <a href="{% url 'reference-structured_name-new' reference.id%}"><span class="fa  fa-plus"></span> Add Structured Name</a>
-    <br>
     {% if sn_list %}
       <table class="w3-table-all">
         <caption><h2>Reference #{{ reference.id }}: List of Structured Names</h2></caption>
