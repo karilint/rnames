@@ -39,4 +39,3 @@ six==1.16.0
 sqlparse==0.4.2
 toml==0.10.2
 urllib3==1.26.6
-django-livereload-server==0.3.2

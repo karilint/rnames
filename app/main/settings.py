@@ -66,12 +66,8 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.orcid',
-    'frontend.apps.FrontendConfig',
-    'livereload'
+    'frontend.apps.FrontendConfig'
 ]
-
-LIVERELOAD_HOST="0.0.0.0"
-LIVERELOAD_PORT="8002"
 
 SITE_ID = 1
 
@@ -98,7 +94,6 @@ MIDDLEWARE = [
     'django_userforeignkey.middleware.UserForeignKeyMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
-    'livereload.middleware.LiveReloadScript',
 ]
 
 ROOT_URLCONF = 'main.urls'

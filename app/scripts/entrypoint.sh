@@ -19,5 +19,4 @@ python -u manage.py test -v2
 
 echo
 echo "STARTING DEVELOPMENT SERVER"
-python manage.py livereload & disown
 python manage.py runserver 0.0.0.0:8000
