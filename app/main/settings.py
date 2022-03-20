@@ -220,3 +220,18 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER', config.get('EMAIL_USER'))
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS', config.get('EMAIL_PASS'))
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    },
+    'select2': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://redis:6379',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+SELECT2_CACHE_BACKEND = 'select2'

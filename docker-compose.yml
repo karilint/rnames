@@ -11,6 +11,7 @@ services:
       - ./.env
     depends_on: 
       - db
+      - redis
     container_name: rnames_web
 
   db:
@@ -56,6 +57,11 @@ services:
       - web
       - db
     container_name: rnames_nginx
+
+  redis:
+    image: redis
+    restart: always
+    container_name: rnames_redis
 
 volumes:
   db:
