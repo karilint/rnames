@@ -12,6 +12,8 @@ services:
       - static:/vol/web
     env_file: 
       - ./.env
+    depends-on:
+      - redis
     container_name: rnames_web_staging
 
   nginx:
@@ -49,6 +51,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --interval 30
     container_name: rnames_watchtower
+
+  redis:
+    image: redis
+    restart: always
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    container_name: rnames_redis_staging
 
 volumes:
   static:
