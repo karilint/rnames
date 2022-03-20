@@ -12,7 +12,7 @@ services:
       - static:/vol/web
     env_file: 
       - ./.env
-    depends-on:
+    depends_on:
       - redis
     container_name: rnames_web_staging
 
