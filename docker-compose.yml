@@ -3,22 +3,18 @@ version: '3.8'
 services:
   web:
     build: ./app
-    ports:
-      - 8000:8000
-      - 8002:8002
     volumes:
       - ./app:/src/app
     env_file:
       - ./.env
     depends_on: 
       - db
+      - redis
     container_name: rnames_web
 
   db:
     image: mariadb
     restart: always
-    ports: 
-      - ${DB_PORT}:3306
     environment:
       - MYSQL_DATABASE=${DB_NAME}
       - MYSQL_USER=${DB_USER}
@@ -33,13 +29,33 @@ services:
   phpmyadmin:
     image: phpmyadmin
     restart: always
-    ports:
-      - 8001:80
     environment:
       - PMA_HOST=${DB_HOST}
       - PMA_USER=${DB_USER}
       - PMA_PASSWORD=${DB_PASSWORD}
     container_name: rnames_phpmyadmin
+
+  nginx:
+    build: ./nginx
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./app/static:/vol/web/static
+      - ./certs/:/certs/
+    environment:
+      - RNAMES_DOMAIN=${RNAMES_DOMAIN}
+      - PMA_DOMAIN=${PMA_DOMAIN}
+    depends_on:
+      - web
+      - db
+    container_name: rnames_nginx
+
+  redis:
+    image: redis
+    restart: always
+    container_name: rnames_redis
 
 volumes:
   db:

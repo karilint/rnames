@@ -11,6 +11,17 @@ First, you need to have Docker and Docker Compose installed on your system.
 
 Create a `.env` file in the root of the repository and write needed environment variables to it. You can take the [Example .env](./.env.example) and fill in couple of the variables according to the [Environment variable docs](./environment_variables.md).
 
+## Creating self-signed certificates
+
+Using openssl on linux, run in project root folder:
+
+```
+mkdir certs
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./certs/key.pem -out ./certs/cert.pem
+```
+
+[More details here](https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-nginx-in-ubuntu-16-04)
+
 ## Running the environment
 
 To start the environment, you have to run this command in the root the repository. 

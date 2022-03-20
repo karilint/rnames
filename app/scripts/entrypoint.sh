@@ -8,6 +8,7 @@ echo
 echo "RUNNING: MAKEMIGRATIONS & MIGRATE"
 python manage.py makemigrations
 python manage.py migrate
+python manage.py collectstatic --no-input
 
 echo
 echo "INITIALIZING DATABASE"
@@ -19,5 +20,4 @@ python -u manage.py test -v2
 
 echo
 echo "STARTING DEVELOPMENT SERVER"
-python manage.py livereload & disown
-python manage.py runserver 0.0.0.0:8000
+gunicorn main.wsgi:application --bind 0.0.0.0:8000 --reload

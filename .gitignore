@@ -1,3 +1,4 @@
 .env
 nginx/certs/cert.pem
 nginx/certs/key.pem
+certs

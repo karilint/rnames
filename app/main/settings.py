@@ -33,7 +33,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'development_key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DEBUG', 1)))
 ADMINS = [('admin', os.environ.get('DJANGO_LOGGING_EMAIL'))]
-SERVER_EMAIL = os.environ.get('SERVER_EMAIL', None)
 
 ALLOWED_HOSTS = []
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
@@ -66,12 +65,8 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.orcid',
-    'frontend.apps.FrontendConfig',
-    'livereload'
+    'frontend.apps.FrontendConfig'
 ]
-
-LIVERELOAD_HOST="0.0.0.0"
-LIVERELOAD_PORT="8002"
 
 SITE_ID = 1
 
@@ -98,7 +93,6 @@ MIDDLEWARE = [
     'django_userforeignkey.middleware.UserForeignKeyMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
-    'livereload.middleware.LiveReloadScript',
 ]
 
 ROOT_URLCONF = 'main.urls'
@@ -226,3 +220,18 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER', config.get('EMAIL_USER'))
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS', config.get('EMAIL_PASS'))
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    },
+    'select2': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://redis:6379',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+SELECT2_CACHE_BACKEND = 'select2'
