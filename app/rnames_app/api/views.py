@@ -49,7 +49,7 @@ class TimeSliceViewSet(viewsets.ModelViewSet):
 	serializer_class = serializers.TimeSliceSerializer
 	permission_classes = []
 
-class BinningViewSet(viewsets.ModelViewSet):
+class BinningViewSet(viewsets.ReadOnlyModelViewSet):
 	queryset = models.Binning.objects.all()
 	serializer_class = serializers.BinningSerializer
 	permission_classes = []
