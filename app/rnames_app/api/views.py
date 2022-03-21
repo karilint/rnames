@@ -44,6 +44,7 @@ class ReferenceViewSet(viewsets.ModelViewSet):
 	queryset = models.Reference.objects.all()
 	serializer_class = serializers.ReferenceSerializer
 	permission_classes = []
+	filterset_class = filters.ReferenceFilter
 
 class RelationViewSet(viewsets.ModelViewSet):
 	queryset = models.Relation.objects.all()

@@ -56,10 +56,12 @@ class RelationFilter(filters.FilterSet):
 
     name_one__name__name = filters.CharFilter(lookup_expr='icontains')
     name_two__name__name = filters.CharFilter(lookup_expr='icontains')
+    reference__doi = filters.CharFilter(lookup_expr='icontains')
+    reference__title = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = Relation
-        fields = ['name_one__name__name', 'name_two__name__name', ]
+        fields = ['name_one__name__name', 'name_two__name__name', 'belongs_to', 'reference__doi', 'reference__title' ]
 
 class ReferenceFilter(filters.FilterSet):
     first_author = filters.CharFilter(lookup_expr='icontains')
@@ -81,10 +83,12 @@ class StructuredNameFilter(filters.FilterSet):
     qualifier__stratigraphic_qualifier__name = filters.CharFilter(lookup_expr='icontains')
     name__name = filters.CharFilter(lookup_expr='icontains')
     location__name = filters.CharFilter(lookup_expr='icontains')
+    reference__doi = filters.CharFilter(lookup_expr='icontains')
+    reference__title = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = StructuredName
-        fields = ['name__name','qualifier__qualifier_name__name','qualifier__stratigraphic_qualifier__name','location__name', ]
+        fields = ['name__name','qualifier__qualifier_name__name','qualifier__stratigraphic_qualifier__name','location__name', 'reference__doi', 'reference__title' ]
 
 class UserFilter(filters.FilterSet):
     class Meta:
