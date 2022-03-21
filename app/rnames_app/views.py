@@ -842,31 +842,6 @@ def reference_structured_name_detail(request, pk, reference):
 
 #    f = StructuredNameFilter(request.GET, queryset=StructuredName.objects.is_active().select_related().order_by('name', 'qualifier', 'location'))
 
-
-@login_required
-def reference_structured_name_new(request, reference):
-    reference = get_object_or_404(Reference, pk=reference, is_active=1)
-
-    if request.method == "POST":
-        form = ReferenceStructuredNameForm(request.POST)
-        if form.is_valid():
-            name_id = request.POST.get('name_id', 1)
-            name_one = get_object_or_404(
-                StructuredName, pk=name_id, is_active=1)
-            relation = form.save(commit=False)
-            relation.reference = reference
-            relation.name_one = name_one
-            relation.name_two = name_one
-            relation.save()
-            return redirect('reference-detail', pk=relation.reference.id)
-    else:
-        # Set default for names, set them later to same as name_one.
-        name_one = get_object_or_404(StructuredName, pk=1, is_active=1)
-        name_two = get_object_or_404(StructuredName, pk=1, is_active=1)
-
-        form = ReferenceStructuredNameForm()
-    return render(request, 'reference_sturctured_name_edit.html', {'reference': reference, 'form': form})
-
 # https://stackoverflow.com/questions/52065046/django-deleteview-pass-argument-from-foreignkeys-model-to-get-success-url
 
 

@@ -2,7 +2,8 @@
 # If you want to access the filtered objects in your views,
 # for example if you want to paginate them, you can do that.
 # They are in f.qs
-import django_filters
+import rest_framework_filters as filters
+
 from .models import (Binning
     , Location
     , Name
@@ -11,96 +12,100 @@ from .models import (Binning
     , Reference
     , Relation
     , StratigraphicQualifier
+    , StructuredName
     , TimeSlice)
 from django.contrib.auth.models import User
-from django_filters import rest_framework as filters
 
-class BinningSchemeFilter(django_filters.FilterSet):
-    name = django_filters.CharFilter(lookup_expr='icontains')
+class BinningSchemeFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = Binning
         fields = ['binning_scheme', 'name', ]
 
-class LocationFilter(django_filters.FilterSet):
-    name = django_filters.CharFilter(lookup_expr='icontains')
+class LocationFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = Location
         fields = ['name', ]
 
-class NameFilter(django_filters.FilterSet):
-    name = django_filters.CharFilter(lookup_expr='icontains')
+class NameFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = Name
         fields = ['name', ]
 
-class QualifierFilter(django_filters.FilterSet):
-    qualifier_name__name = django_filters.CharFilter(lookup_expr='icontains')
-    stratigraphic_qualifier__name = django_filters.CharFilter(lookup_expr='icontains')
+class QualifierFilter(filters.FilterSet):
+    qualifier_name__name = filters.CharFilter(lookup_expr='icontains')
+    stratigraphic_qualifier__name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = Qualifier
         fields = ['qualifier_name__name','stratigraphic_qualifier__name', ]
 
-class QualifierNameFilter(django_filters.FilterSet):
-    name = django_filters.CharFilter(lookup_expr='icontains')
+class QualifierNameFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = QualifierName
         fields = ['name', ]
 
-class RelationFilter(django_filters.FilterSet):
+class RelationFilter(filters.FilterSet):
 
-    name_one__name__name = django_filters.CharFilter(lookup_expr='icontains')
-    name_two__name__name = django_filters.CharFilter(lookup_expr='icontains')
+    name_one__name__name = filters.CharFilter(lookup_expr='icontains')
+    name_two__name__name = filters.CharFilter(lookup_expr='icontains')
+    reference__doi = filters.CharFilter(lookup_expr='icontains')
+    reference__title = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = Relation
-        fields = ['name_one__name__name', 'name_two__name__name', ]
+        fields = ['name_one__name__name', 'name_two__name__name', 'belongs_to', 'reference__doi', 'reference__title' ]
 
-class ReferenceFilter(django_filters.FilterSet):
-    first_author = django_filters.CharFilter(lookup_expr='icontains')
-    title = django_filters.CharFilter(lookup_expr='icontains')
+class ReferenceFilter(filters.FilterSet):
+    first_author = filters.CharFilter(lookup_expr='icontains')
+    title = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = Reference
         fields = ['first_author', 'year', 'title', ]
 
-class StratigraphicQualifierFilter(django_filters.FilterSet):
-    name = django_filters.CharFilter(lookup_expr='icontains')
+class StratigraphicQualifierFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = StratigraphicQualifier
         fields = ['name', ]
 
-class StructuredNameFilter(django_filters.FilterSet):
-    qualifier__qualifier_name__name = django_filters.CharFilter(lookup_expr='icontains')
-    qualifier__stratigraphic_qualifier__name = django_filters.CharFilter(lookup_expr='icontains')
-    name__name = django_filters.CharFilter(lookup_expr='icontains')
-    location__name = django_filters.CharFilter(lookup_expr='icontains')
+class StructuredNameFilter(filters.FilterSet):
+    qualifier__qualifier_name__name = filters.CharFilter(lookup_expr='icontains')
+    qualifier__stratigraphic_qualifier__name = filters.CharFilter(lookup_expr='icontains')
+    name__name = filters.CharFilter(lookup_expr='icontains')
+    location__name = filters.CharFilter(lookup_expr='icontains')
+    reference__doi = filters.CharFilter(lookup_expr='icontains')
+    reference__title = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
-        model = Name
-        fields = ['name__name','qualifier__qualifier_name__name','qualifier__stratigraphic_qualifier__name','location__name', ]
+        model = StructuredName
+        fields = ['name__name','qualifier__qualifier_name__name','qualifier__stratigraphic_qualifier__name','location__name', 'reference__doi', 'reference__title' ]
 
-class UserFilter(django_filters.FilterSet):
+class UserFilter(filters.FilterSet):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', ]
 
 
 class APINameFilter(filters.FilterSet):
-#    name = django_filters.CharFilter(lookup_expr='iexact')
+#    name = filters.CharFilter(lookup_expr='iexact')
 
     class Meta:
         model = Name
         fields = ['name', 'created_by__first_name', ]
 
-class TimeSliceFilter(django_filters.FilterSet):
-    scheme = django_filters.CharFilter(lookup_expr='icontains')
-    name = django_filters.CharFilter(lookup_expr='icontains')
+class TimeSliceFilter(filters.FilterSet):
+    scheme = filters.CharFilter(lookup_expr='icontains')
+    name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = TimeSlice
