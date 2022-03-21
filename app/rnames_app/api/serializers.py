@@ -6,10 +6,6 @@ class LocationSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = models.Location
 		fields = ['id', 'name']
-		# fields = ['url', 'id', 'name']
-		# extra_kwargs = {
-		# 	'url': {'view_name': 'api:location-detail'},
-		# }
 
 class NameSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -27,17 +23,14 @@ class StratigraphicQualifierSerializer(serializers.ModelSerializer):
 		fields = ['id', 'name']
 
 class QualifierSerializer(serializers.HyperlinkedModelSerializer):
-	# qualifier_name_id = serializers.HyperlinkedIdentityField(view_name='api:qualifier-name-detail', lookup_field='id')
-	# stratigraphic_qualifier_id = serializers.HyperlinkedIdentityField(view_name='api:stratigraphic-qualifier-detail')
-
 	class Meta:
 		model = models.Qualifier
-		fields = ['id', 'level', 'qualifier_name_id', 'stratigraphic_qualifier_id']
+		fields = ['id', 'level', 'qualifier_name', 'stratigraphic_qualifier']
 
 class StructuredNameSerializer(serializers.HyperlinkedModelSerializer):
 	class Meta:
 		model = models.StructuredName
-		fields = ['id', 'location_id', 'name_id', 'qualifier_id', 'reference_id']
+		fields = ['id', 'location', 'name', 'qualifier', 'reference', 'remarks']
 
 class ReferenceSerializer(serializers.HyperlinkedModelSerializer):
 	class Meta:
@@ -47,7 +40,7 @@ class ReferenceSerializer(serializers.HyperlinkedModelSerializer):
 class RelationSerializer(serializers.HyperlinkedModelSerializer):
 	class Meta:
 		model = models.Relation
-		fields = ['id', 'belongs_to', 'name_one_id', 'name_two_id', 'reference_id']
+		fields = ['id', 'belongs_to', 'name_one', 'name_two', 'reference']
 
 class TimeSliceSerializer(serializers.ModelSerializer):
 	class Meta:

@@ -12,6 +12,7 @@ from .models import (Binning
     , Reference
     , Relation
     , StratigraphicQualifier
+    , StructuredName
     , TimeSlice)
 from django.contrib.auth.models import User
 
@@ -82,7 +83,7 @@ class StructuredNameFilter(filters.FilterSet):
     location__name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
-        model = Name
+        model = StructuredName
         fields = ['name__name','qualifier__qualifier_name__name','qualifier__stratigraphic_qualifier__name','location__name', ]
 
 class UserFilter(filters.FilterSet):
