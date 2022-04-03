@@ -1,8 +1,7 @@
 from rest_framework import viewsets, permissions
 
-from rnames_app.api import serializers
-from rnames_app import filters
-from rnames_app import models
+from rnames_api import serializers
+from rnames_app import filters, models
 
 class LocationViewSet(viewsets.ModelViewSet):
 	queryset = models.Location.objects.all()

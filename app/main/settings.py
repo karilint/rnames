@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework_filters',
     'rnames_app',
+    'rnames_api',
     'simple_history',
     'debug_toolbar',
     'allauth',

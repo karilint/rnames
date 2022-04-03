@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from rnames_app.api import views
+from rnames_api import views
 
 router = routers.DefaultRouter()
 router.register(r'locations', views.LocationViewSet, basename='api-location')
