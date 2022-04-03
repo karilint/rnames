@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'django_userforeignkey',
     'django_select2',
     'rest_framework',
+    'rest_framework_api_key',
     'django_filters',
     'rest_framework_filters',
     'rnames_app',
