@@ -23,18 +23,18 @@ class StratigraphicQualifierSerializer(serializers.ModelSerializer):
 		fields = ['id', 'name']
 
 class QualifierSerializer(serializers.HyperlinkedModelSerializer):
-	qualifier_name = serializers.HyperlinkedRelatedField(view_name='api-qualifier-name-detail', read_only=True)
-	stratigraphic_qualifier = serializers.HyperlinkedRelatedField(view_name='api-stratigraphic-qualifier-detail', read_only=True)
+	qualifier_name = serializers.HyperlinkedRelatedField(view_name='api-qualifier-name-detail', queryset=models.Qualifier.objects.all())
+	stratigraphic_qualifier = serializers.HyperlinkedRelatedField(view_name='api-stratigraphic-qualifier-detail', queryset=models.StratigraphicQualifier.objects.all())
 
 	class Meta:
 		model = models.Qualifier
 		fields = ['id', 'level', 'qualifier_name', 'stratigraphic_qualifier']
 
 class StructuredNameSerializer(serializers.HyperlinkedModelSerializer):
-	location = serializers.HyperlinkedRelatedField(view_name='api-location-detail', read_only=True)
-	name = serializers.HyperlinkedRelatedField(view_name='api-name-detail', read_only=True)
-	qualifier = serializers.HyperlinkedRelatedField(view_name='api-qualifier-detail', read_only=True)
-	reference = serializers.HyperlinkedRelatedField(view_name='api-reference-detail', read_only=True)
+	location = serializers.HyperlinkedRelatedField(view_name='api-location-detail', queryset=models.Location.objects.all())
+	name = serializers.HyperlinkedRelatedField(view_name='api-name-detail', queryset=models.Name.objects.all())
+	qualifier = serializers.HyperlinkedRelatedField(view_name='api-qualifier-detail', queryset=models.Qualifier.objects.all())
+	reference = serializers.HyperlinkedRelatedField(view_name='api-reference-detail', queryset=models.Reference.objects.all())
 
 	class Meta:
 		model = models.StructuredName
@@ -46,9 +46,9 @@ class ReferenceSerializer(serializers.HyperlinkedModelSerializer):
 		fields = ['id', 'first_author', 'year', 'title', 'doi', 'link']
 
 class RelationSerializer(serializers.HyperlinkedModelSerializer):
-	name_one = serializers.HyperlinkedRelatedField(view_name='api-structured-name-detail', read_only=True)
-	name_two = serializers.HyperlinkedRelatedField(view_name='api-structured-name-detail', read_only=True)
-	reference = serializers.HyperlinkedRelatedField(view_name='api-reference-detail', read_only=True)
+	name_one = serializers.HyperlinkedRelatedField(view_name='api-structured-name-detail', queryset=models.StructuredName.objects.all())
+	name_two = serializers.HyperlinkedRelatedField(view_name='api-structured-name-detail', queryset=models.StructuredName.objects.all())
+	reference = serializers.HyperlinkedRelatedField(view_name='api-reference-detail', queryset=models.Reference.objects.all())
 
 	class Meta:
 		model = models.Relation
