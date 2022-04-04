@@ -6,6 +6,13 @@ from rnames_api.models import UserApiKey
 class HasUserApiKey(BaseHasAPIKey):
 	model = UserApiKey
 
+def get_api_key(request):
+	if not api_key_header() in request.headers:
+		return None
+
+	key = request.META["HTTP_AUTHORIZATION"].split()[1]
+	return UserApiKey.objects.get_from_key(key)
+
 def revoke_existing_keys(user):
 	existing_keys = UserApiKey.objects.filter(user=user, revoked=False)
 
