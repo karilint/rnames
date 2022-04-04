@@ -1,0 +1,23 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<a href="{% url 'profile' %}"><div class="w3-button w3-border w3-hover-light-grey">Return</div></a>
+<h2>Key {{key.prefix}}</h2>
+
+<h2>Accesses</h2>
+<table class="w3-table-all">
+	<tr>
+		<th>Date</th>
+		<th>Table</th>
+		<th>Key</th>
+	</tr>
+	{% for entry in entries %}
+		<tr>
+			<td>{{entry.accessed_on}}</td>
+			<td>?</td>
+			<td>{{entry.name_id}}</td>
+		</tr>
+	{% endfor %}
+</table>
+
+{% endblock %}
