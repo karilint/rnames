@@ -15,47 +15,47 @@ class ApiViewSet(viewsets.ModelViewSet):
 		return [permission() for permission in permission_classes]
 
 class LocationViewSet(ApiViewSet):
-	queryset = models.Location.objects.all()
+	queryset = models.Location.objects.is_active()
 	serializer_class = serializers.LocationSerializer
 	filterset_class = filters.LocationFilter
 
 class NameViewSet(ApiViewSet):
-	queryset = models.Name.objects.all()
+	queryset = models.Name.objects.is_active()
 	serializer_class = serializers.NameSerializer
 	filterset_class = filters.NameFilter
 
 class QualifierViewSet(ApiViewSet):
-	queryset = models.Qualifier.objects.all()
+	queryset = models.Qualifier.objects.is_active()
 	serializer_class = serializers.QualifierSerializer
 	filterset_class = filters.QualifierFilter
 
 class QualifierNameViewSet(ApiViewSet):
-	queryset = models.QualifierName.objects.all()
+	queryset = models.QualifierName.objects.is_active()
 	serializer_class = serializers.QualifierNameSerializer
 	filterset_class = filters.QualifierNameFilter
 
 class StratigraphicQualifierViewSet(ApiViewSet):
-	queryset = models.StratigraphicQualifier.objects.all()
+	queryset = models.StratigraphicQualifier.objects.is_active()
 	serializer_class = serializers.StratigraphicQualifierSerializer
 	filterset_class = filters.StratigraphicQualifierFilter
 
 class StructuredNameViewSet(ApiViewSet):
-	queryset = models.StructuredName.objects.all()
+	queryset = models.StructuredName.objects.is_active()
 	serializer_class = serializers.StructuredNameSerializer
 	filterset_class = filters.StructuredNameFilter
 
 class ReferenceViewSet(ApiViewSet):
-	queryset = models.Reference.objects.all()
+	queryset = models.Reference.objects.is_active()
 	serializer_class = serializers.ReferenceSerializer
 	filterset_class = filters.ReferenceFilter
 
 class RelationViewSet(ApiViewSet):
-	queryset = models.Relation.objects.all()
+	queryset = models.Relation.objects.is_active()
 	serializer_class = serializers.RelationSerializer
 	filterset_class = filters.RelationFilter
 
 class TimeSliceViewSet(ApiViewSet):
-	queryset = models.TimeSlice.objects.all()
+	queryset = models.TimeSlice.objects.is_active()
 	serializer_class = serializers.TimeSliceSerializer
 	filterset_class = filters.TimeSliceFilter
 
