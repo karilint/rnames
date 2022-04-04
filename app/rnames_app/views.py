@@ -53,6 +53,7 @@ import multiprocessing as mp
 import time
 
 from rnames_api.permissions import generate_api_key, list_api_keys, api_key_header
+import rnames_api.models as api_models
 # , APINameFilter
 
 
@@ -1569,3 +1570,15 @@ def profile_keys_new(request):
 
     key = generate_api_key(request)
     return render(request, 'profile_keys_new.html', {'api_keys': list_api_keys(request), 'token': key, 'api_token_header': api_key_header})
+
+@login_required
+def profile_key(request, pk):
+    keys = list_api_keys(request).filter(id=pk)
+    key = keys[0]
+
+    if not key:
+        return django.http.HttpResponseNotFound
+
+    entries = []
+
+    return render(request, 'profile_key.html', {'entries': entries, 'key': key})
