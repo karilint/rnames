@@ -34,5 +34,8 @@ class KeyRelation(ApiKeyUsed):
 class KeyStratigraphicQualifier(ApiKeyUsed):
 	stratigraphic_qualifier = models.ForeignKey(rnames_models.StratigraphicQualifier, on_delete=models.CASCADE)
 
+class KeyTimeSlice(ApiKeyUsed):
+	time_slice = models.ForeignKey(rnames_models.TimeSlice, on_delete=models.CASCADE)
+
 class KeyStructuredName(ApiKeyUsed):
 	structured_name = models.ForeignKey(rnames_models.StructuredName, on_delete=models.CASCADE)
