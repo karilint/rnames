@@ -1,0 +1,26 @@
+{% extends "profile.html" %}
+
+{% block profile_keys %}
+{% if user.is_staff %}
+
+{% block new_profile_key %}
+{% endblock %}
+<a href="{% url 'profile-new-api-key' %}"><div class="w3-button w3-border w3-hover-light-grey">Create new key</div></a>
+
+<h2>Current and past API keys</h2>
+<table class="w3-table-all">
+	<tr>
+		<th>Prefix</th>
+		<th>Date Created</th>
+		<th>Status</th>
+	</tr>
+	{% for key in api_keys %}
+		<tr>
+			<td>{{key.prefix}}</td>
+			<td>{{key.created}}</td>
+			<td>{% if key.revoked %}Revoked{% else %}Active{% endif %}</td>
+		</tr>
+	{% endfor %}
+</table>
+{% endif %}
+{% endblock %}

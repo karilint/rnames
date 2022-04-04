@@ -1,0 +1,9 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<h2>New API key created:</h2>
+<p><b>{{token}}</b></p>
+<p>This key is shown only once. When using the API, pass the token in the {{api_token_header}} header as follows: "{{api_token_header}}: Api-Key {{token}}"</p>
+
+<a href="{% url 'profile' %}"><div class="w3-button w3-border w3-hover-light-grey">Return</div></a>
+{% endblock %}

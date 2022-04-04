@@ -18,3 +18,9 @@ def generate_api_key(request):
 	revoke_existing_keys(request.user)
 	api_key, key = UserApiKey.objects.create_key(name='key',user=request.user)
 	return key
+
+def list_api_keys(request):
+	return UserApiKey.objects.filter(user=request.user).order_by('-created')
+
+def api_key_header():
+	return 'Authorization'
