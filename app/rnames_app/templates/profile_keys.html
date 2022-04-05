@@ -16,7 +16,7 @@
 	</tr>
 	{% for key in api_keys %}
 		<tr>
-			<td><a href="{% url 'profile-api-key' pk=key.id %}">{{key.prefix}}</a></td>
+			<td>{{key.prefix}}</td>
 			<td>{{key.created}}</td>
 			<td>{% if key.revoked %}Revoked{% else %}Active{% endif %}</td>
 		</tr>
