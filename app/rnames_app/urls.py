@@ -122,7 +122,8 @@ urlpatterns = [
     path('wizard_submit', views.submit),
     path('profile/', views.profile, name='profile'),
     path('profile/keys/new', views.profile_keys_new, name='profile-new-api-key'),
-    path('profile/keys/<str:pk>', views.profile_key, name='profile-api-key'),
+    path('profile/keys/<str:prefix>/', views.profile_key, name='profile-api-key'),
+    path('profile/keys/<str:prefix>/revoke/', views.profile_key_revoke, name='profile-revoke-api-key'),
 ]
 
 # Add Django site authentication urls (for login, logout, password management)
