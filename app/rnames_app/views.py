@@ -1581,6 +1581,9 @@ def profile_key_revoke(request, prefix):
 
 @login_required
 def profile_key(request, prefix):
+    if not request.user.is_staff:
+        return django.http.HttpResponseForbidden
+
     keys = list_api_keys(request).filter(prefix=prefix)
     key = keys[0]
 
