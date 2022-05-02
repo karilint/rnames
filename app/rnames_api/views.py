@@ -104,3 +104,7 @@ class TimeSliceViewSet(ApiViewSet):
 class BinningViewSet(viewsets.ReadOnlyModelViewSet):
 	queryset = models.Binning.objects.all()
 	serializer_class = serializers.BinningSerializer
+
+class InlineRelationViewSet(viewsets.ReadOnlyModelViewSet):
+	queryset = models.Relation.objects.all()
+	serializer_class = serializers.RelationInlineSerializer

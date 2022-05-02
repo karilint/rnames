@@ -63,3 +63,30 @@ class BinningSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = models.Binning
 		fields = ['binning_scheme', 'name', 'oldest', 'youngest', 'ts_count', 'refs', 'rule']
+
+class QualifierInlineSerializer(serializers.ModelSerializer):
+	qualifier_name = QualifierNameSerializer(read_only=True)
+	stratigraphic_qualifier = StratigraphicQualifierSerializer(read_only=True)
+
+	class Meta:
+		model = models.Qualifier
+		fields = ['id', 'level', 'qualifier_name', 'stratigraphic_qualifier']
+
+class StructuredNameInlineSerializer(serializers.ModelSerializer):
+	name = NameSerializer(read_only=True)
+	location = LocationSerializer(read_only=True)
+	qualifier = QualifierInlineSerializer(read_only=True)
+	reference = ReferenceSerializer(read_only=True)
+
+	class Meta:
+		model = models.StructuredName
+		fields = ['id', 'location', 'name', 'qualifier', 'reference', 'remarks']
+
+class RelationInlineSerializer(serializers.ModelSerializer):
+	name_one = StructuredNameInlineSerializer(read_only=True)
+	name_two = StructuredNameInlineSerializer(read_only=True)
+	reference = ReferenceSerializer(read_only=True)
+
+	class Meta:
+		model = models.Relation
+		fields = ['id', 'belongs_to', 'name_one', 'name_two', 'reference']
