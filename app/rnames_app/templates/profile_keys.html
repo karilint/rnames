@@ -12,12 +12,14 @@
 	<tr>
 		<th>Prefix</th>
 		<th>Date Created</th>
+		<th></th>
 		<th>Status</th>
 	</tr>
 	{% for key in api_keys %}
 		<tr>
 			<td>{{key.prefix}}</td>
 			<td>{{key.created}}</td>
+			<td>{% if not key.revoked %}<a href="{% url 'profile-revoke-api-key' prefix=key.prefix %}">Revoke</a>{% endif %}</td>
 			<td>{% if key.revoked %}Revoked{% else %}Active{% endif %}</td>
 		</tr>
 	{% endfor %}

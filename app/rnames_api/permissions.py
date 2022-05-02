@@ -21,8 +21,15 @@ def revoke_existing_keys(user):
 
 	UserApiKey.objects.bulk_update(existing_keys, ['revoked'], len(existing_keys))
 
+def revoke_user_api_key(user, prefix):
+	existing_keys = UserApiKey.objects.filter(user=user, prefix=prefix, revoked=False)
+
+	for key in existing_keys:
+		key.revoked = True
+
+	UserApiKey.objects.bulk_update(existing_keys, ['revoked'], len(existing_keys))
+
 def generate_api_key(request):
-	revoke_existing_keys(request.user)
 	api_key, key = UserApiKey.objects.create_key(name='key',user=request.user)
 	return key
 

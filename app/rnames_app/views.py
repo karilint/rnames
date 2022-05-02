@@ -52,7 +52,7 @@ from types import SimpleNamespace
 import multiprocessing as mp
 import time
 
-from rnames_api.permissions import generate_api_key, list_api_keys, api_key_header
+from rnames_api.permissions import generate_api_key, list_api_keys, api_key_header, revoke_user_api_key
 import rnames_api.models as api_models
 # , APINameFilter
 
@@ -1572,8 +1572,19 @@ def profile_keys_new(request):
     return render(request, 'profile_keys_new.html', {'api_keys': list_api_keys(request), 'token': key, 'api_token_header': api_key_header})
 
 @login_required
-def profile_key(request, pk):
-    keys = list_api_keys(request).filter(id=pk)
+def profile_key_revoke(request, prefix):
+    if not request.user.is_staff:
+        return django.http.HttpResponseForbidden
+
+    revoke_user_api_key(user=request.user, prefix=prefix)
+    return redirect('profile')
+
+@login_required
+def profile_key(request, prefix):
+    if not request.user.is_staff:
+        return django.http.HttpResponseForbidden
+
+    keys = list_api_keys(request).filter(prefix=prefix)
     key = keys[0]
 
     if not key:
