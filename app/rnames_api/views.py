@@ -107,9 +107,9 @@ class BinningViewSet(viewsets.ReadOnlyModelViewSet):
 
 class InlineRelationViewSet(viewsets.ReadOnlyModelViewSet):
 	queryset = (models.Relation.objects.all()
-			.select_related('name_one', 'name_two', 'reference')
-			.select_related('name_one__name', 'name_one__location','name_one__reference','name_one__qualifier')
-			.select_related('name_two__name', 'name_two__location','name_two__reference','name_two__qualifier')
-			.select_related('name_one__qualifier__qualifier_name', 'name_one__qualifier__stratigraphic_qualifier')
-			.select_related('name_two__qualifier__qualifier_name', 'name_two__qualifier__stratigraphic_qualifier'))
+			.prefetch_related('name_one', 'name_two', 'reference')
+			.prefetch_related('name_one__name', 'name_one__location','name_one__reference','name_one__qualifier')
+			.prefetch_related('name_two__name', 'name_two__location','name_two__reference','name_two__qualifier')
+			.prefetch_related('name_one__qualifier__qualifier_name', 'name_one__qualifier__stratigraphic_qualifier')
+			.prefetch_related('name_two__qualifier__qualifier_name', 'name_two__qualifier__stratigraphic_qualifier'))
 	serializer_class = serializers.RelationInlineSerializer
