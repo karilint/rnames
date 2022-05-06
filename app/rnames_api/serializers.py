@@ -75,7 +75,7 @@ class QualifierInlineSerializer(serializers.ModelSerializer):
 class StructuredNameInlineSerializer(serializers.ModelSerializer):
 	name = NameSerializer(read_only=True)
 	location = LocationSerializer(read_only=True)
-	qualifier = QualifierInlineSerializer(read_only=True)
+	qualifier = QualifierInlineSerializer(models.Qualifier.objects.prefetch_related('qualifier_name', 'stratigraphic_qualifier'), read_only=True)
 	reference = ReferenceSerializer(read_only=True)
 
 	class Meta:
@@ -83,8 +83,8 @@ class StructuredNameInlineSerializer(serializers.ModelSerializer):
 		fields = ['id', 'location', 'name', 'qualifier', 'reference', 'remarks']
 
 class RelationInlineSerializer(serializers.ModelSerializer):
-	name_one = StructuredNameInlineSerializer(read_only=True)
-	name_two = StructuredNameInlineSerializer(read_only=True)
+	name_one = StructuredNameInlineSerializer(models.StructuredName.objects.prefetch_related('name', 'location', 'qualifier', 'reference'), read_only=True)
+	name_two = StructuredNameInlineSerializer(models.StructuredName.objects.prefetch_related('name', 'location', 'qualifier', 'reference'), read_only=True)
 	reference = ReferenceSerializer(read_only=True)
 
 	class Meta:

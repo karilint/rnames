@@ -106,5 +106,5 @@ class BinningViewSet(viewsets.ReadOnlyModelViewSet):
 	serializer_class = serializers.BinningSerializer
 
 class InlineRelationViewSet(viewsets.ReadOnlyModelViewSet):
-	queryset = models.Relation.objects.all()
+	queryset = models.Relation.objects.prefetch_related('name_one', 'name_two', 'reference')
 	serializer_class = serializers.RelationInlineSerializer
