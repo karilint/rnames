@@ -69,7 +69,8 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.orcid',
-    'frontend.apps.FrontendConfig'
+    'frontend.apps.FrontendConfig',
+    'silk',
 ]
 
 SITE_ID = 1
@@ -96,6 +97,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_userforeignkey.middleware.UserForeignKeyMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
+    'django_cprofile_middleware.middleware.ProfilerMiddleware',
+    'silk.middleware.SilkyMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
