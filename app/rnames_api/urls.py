@@ -14,7 +14,7 @@ router.register(r'references', views.ReferenceViewSet, basename='api-reference')
 router.register(r'relations', views.RelationViewSet, basename='api-relation')
 router.register(r'time-slices', views.TimeSliceViewSet, basename='api-time-slice')
 router.register(r'binnings', views.BinningViewSet, basename='api-binning')
-router.register(r'inline-relations', views.InlineRelationViewSet)
+router.register(r'inline-relations', views.InlineRelationViewSet, basename='api-inline-relation')
 
 urlpatterns = [
 	path('', include(router.urls)),
