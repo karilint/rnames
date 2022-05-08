@@ -9,6 +9,12 @@
         <button type="submit" class="w3-button w3-border w3-hover-light-grey"><i class="fas fa-search"> Search</i></button>
         <a href="{% url 'binning-scheme-list-2' %}" class="w3-button w3-border w3-hover-light-grey"><i class="fas fa-undo"> Reset filter</i></a>
     </form>
+    {% if user.is_authenticated %}
+      <br>
+      <a class="btn btn-default" href="{% url 'binning-scheme-new' %}"><span class="fa  fa-plus"></span> Add</a>
+      <br>
+    {% endif %}
+
     {% if page_obj %}
     <table class="w3-table-all">
       <tr>
