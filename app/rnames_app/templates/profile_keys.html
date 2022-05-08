@@ -5,7 +5,6 @@
 
 {% block new_profile_key %}
 {% endblock %}
-<a href="{% url 'profile-new-api-key' %}"><div class="w3-button w3-border w3-hover-light-grey">Create new key</div></a>
 
 <h2>Current and past API keys</h2>
 <table class="w3-table-all">
@@ -24,5 +23,7 @@
 		</tr>
 	{% endfor %}
 </table>
+
+<a href="{% url 'profile-new-api-key' %}"><div class="w3-button w3-border w3-hover-light-grey">Create new key</div></a>
 {% endif %}
 {% endblock %}
