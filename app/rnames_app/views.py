@@ -34,11 +34,11 @@ from rest_framework.response import Response
 #from .utils.utils import YourClassOrFunction
 from rest_framework import status, generics
 from .models import (Binning, Location, Name, Qualifier, QualifierName, BinningProgress,
-                     Relation, Reference, StratigraphicQualifier, StructuredName, TimeSlice)
+                     Relation, Reference, StratigraphicQualifier, StructuredName, TimeSlice, BinningScheme, BinningSchemeName)
 from .filters import (BinningSchemeFilter, LocationFilter, NameFilter, QualifierFilter, QualifierNameFilter,
                       ReferenceFilter, RelationFilter, StratigraphicQualifierFilter, StructuredNameFilter, TimeSliceFilter)
 from .forms import (ColorfulContactForm, ContactForm, LocationForm, NameForm, QualifierForm, QualifierNameForm, ReferenceForm,
-                    ReferenceRelationForm, ReferenceStructuredNameForm, RelationForm, StratigraphicQualifierForm, StructuredNameForm, TimeSliceForm)
+                    ReferenceRelationForm, ReferenceStructuredNameForm, RelationForm, StratigraphicQualifierForm, StructuredNameForm, TimeSliceForm, BinningSchemeForm)
 from django.contrib.auth.models import User
 from .filters import UserFilter
 
@@ -1593,3 +1593,67 @@ def profile_key(request, prefix):
     entries = []
 
     return render(request, 'profile_key.html', {'entries': entries, 'key': key})
+
+def binning_scheme_detail(request, pk):
+    scheme = get_object_or_404(BinningScheme, pk=pk, is_active=1)
+    print(scheme.name)
+    return render(request, 'binning_scheme_detail.html', {'scheme': scheme})
+
+@login_required
+@permission_required('rnames_app.add_binning_scheme', raise_exception=True)
+def binning_scheme_new(request):
+    if request.method == "POST":
+        form = BinningSchemeForm(request.POST)
+        if form.is_valid():
+            scheme = form.save(commit=False)
+            scheme.created_by_id = request.user.id
+            scheme.created_on = timezone.now()
+            scheme.save()
+            return redirect('binning-scheme-detail', pk=scheme.pk)
+    else:
+        form = BinningSchemeForm()
+
+    return render(request, 'binning_scheme_edit.html', {'form': form})
+
+@login_required
+@permission_required('rnames_app.change_binning_scheme', raise_exception=True)
+def binning_scheme_edit(request, pk):
+    scheme = get_object_or_404(BinningScheme, pk=pk, is_active=1)
+
+    if not user_is_data_admin_or_owner(request.user, scheme):
+        raise PermissionDenied
+
+    if request.method == "POST":
+        form = BinningSchemeForm(request.POST, instance=scheme)
+        if form.is_valid():
+            scheme = form.save(commit=False)
+            scheme.save()
+            return redirect('binning-scheme-detail', pk=scheme.pk)
+    else:
+        form = BinningSchemeForm(instance=scheme)
+    return render(request, 'binning_scheme_edit.html', {'form': form})
+
+class binning_scheme_delete(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        return user_is_data_admin_or_owner(self.request.user, self.get_object())
+
+    model = BinningScheme
+    success_url = reverse_lazy('binning-scheme-list')
+
+def binning_scheme_list(request):
+    f = BinningSchemeFilter(request.GET, queryset=BinningScheme.objects.is_active())
+    paginator = Paginator(f.qs, 10)
+
+    page_number = request.GET.get('page')
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    return render(
+        request,
+        'binning_scheme_list_2.html',
+        {'page_obj': page_obj, 'filter': f, }
+    )

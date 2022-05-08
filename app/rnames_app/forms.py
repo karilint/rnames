@@ -2,7 +2,7 @@ from django import forms
 from django_select2.forms import (
     ModelSelect2Widget,
 )
-from .models import Location, Name, Qualifier, QualifierName, Reference, Relation, StratigraphicQualifier, StructuredName, TimeSlice
+from .models import Location, Name, Qualifier, QualifierName, Reference, Relation, StratigraphicQualifier, StructuredName, TimeSlice, BinningScheme, BinningSchemeName
 
 class ContactForm(forms.Form):
     name = forms.CharField(max_length=30)
@@ -207,3 +207,19 @@ class TimeSliceForm(forms.ModelForm):
     class Meta:
         model = TimeSlice
         fields = ('scheme', 'order', 'name')
+
+class BinningSchemeForm(forms.ModelForm):
+
+    class Meta:
+        model = BinningScheme
+        fields = ('name',)
+
+class StructuredNameWidget(ModelSelect2Widget):
+    search_fields = ['name__name__icontains']
+
+class AddBinningSchemeNameForm(forms.ModelForm):
+
+    class Meta:
+        model = BinningSchemeName
+        fields = ('structured_name',)
+        widgets = {'structured_name' : StructuredNameWidget}
