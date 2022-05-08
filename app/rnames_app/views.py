@@ -1597,7 +1597,7 @@ def profile_key(request, prefix):
 
 def binning_scheme_detail(request, pk):
     scheme = get_object_or_404(BinningScheme, pk=pk, is_active=1)
-    names = BinningSchemeName.objects.is_active().filter(scheme=pk).order_by('order');
+    names = BinningSchemeName.objects.filter(scheme=pk).order_by('order');
     return render(request, 'binning_scheme_detail.html', {'scheme': scheme, 'names': names})
 
 @login_required
@@ -1671,7 +1671,7 @@ def binning_scheme_add_name(request, pk):
         if form.is_valid():
             entry = form.save(commit=False)
             entry.scheme = scheme
-            entry.order = BinningSchemeName.objects.is_active().filter(scheme=scheme).count()
+            entry.order = BinningSchemeName.objects.filter(scheme=scheme).count()
             entry.save()
         print(form.errors.as_data())
         return redirect('binning-scheme-detail', pk=pk)

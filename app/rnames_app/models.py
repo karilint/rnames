@@ -470,7 +470,7 @@ class BinningScheme(BaseModel):
     class Meta:
         unique_together = [['name', 'created_by']]
 
-class BinningSchemeName(BaseModel):
+class BinningSchemeName(models.Model):
     scheme = models.ForeignKey(BinningScheme, on_delete=models.CASCADE)
     structured_name = models.ForeignKey(StructuredName, on_delete=models.CASCADE)
     order = models.IntegerField(default=0)
