@@ -1597,8 +1597,8 @@ def profile_key(request, prefix):
 
 def binning_scheme_detail(request, pk):
     scheme = get_object_or_404(BinningScheme, pk=pk, is_active=1)
-    print(scheme.name)
-    return render(request, 'binning_scheme_detail.html', {'scheme': scheme})
+    names = BinningSchemeName.objects.is_active().filter(scheme=pk).order_by('order');
+    return render(request, 'binning_scheme_detail.html', {'scheme': scheme, 'names': names})
 
 @login_required
 @permission_required('rnames_app.add_binning_scheme', raise_exception=True)

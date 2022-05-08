@@ -20,6 +20,22 @@
           {% if user.is_authenticated %}
             <p><a class="btn btn-default" href="{% url 'binning-scheme-add-name' pk=scheme.pk %}">Add name</a></p>
           {% endif %}
+           <table class="w3-table-all">
+            <thead>
+              <tr>
+                <th>Scheme name</th>
+                <th>Order</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for name in names %}
+                <tr>
+                  <td>{{ name.structured_name }}</td>
+                  <td>{{ name.order }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
     </div>
   </article>
 {% endblock %}
