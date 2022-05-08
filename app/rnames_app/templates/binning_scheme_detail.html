@@ -17,9 +17,6 @@
               {% endif %}
             </p>
           </div>
-          {% if user.is_authenticated %}
-            <p><a class="btn btn-default" href="{% url 'binning-scheme-add-name' pk=scheme.pk %}">Add name</a></p>
-          {% endif %}
            <table class="w3-table-all">
             <thead>
               <tr>
@@ -45,6 +42,10 @@
               {% endfor %}
             </tbody>
           </table>
+          {% if user.is_authenticated %}
+            <a href="{% url 'binning-scheme-add-name' pk=scheme.pk %}"><div class="w3-btn w3-grey">Add name</div></a>
+            <a><div class="w3-btn w3-green">Run binning</div></a>
+          {% endif %}
     </div>
   </article>
 {% endblock %}
