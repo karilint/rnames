@@ -1639,7 +1639,7 @@ class binning_scheme_delete(UserPassesTestMixin, DeleteView):
         return user_is_data_admin_or_owner(self.request.user, self.get_object())
 
     model = BinningScheme
-    success_url = reverse_lazy('binning-scheme-list')
+    success_url = reverse_lazy('binning-scheme-list-2')
 
 def binning_scheme_list(request):
     f = BinningSchemeFilter(request.GET, queryset=BinningScheme.objects.is_active())
@@ -1679,3 +1679,12 @@ def binning_scheme_add_name(request, pk):
     form = AddBinningSchemeNameForm();
 
     return render(request, 'binning_scheme_add_name.html', {'form': form})
+
+class binning_scheme_delete_name(UserPassesTestMixin, DeleteView):
+    def test_func(self):
+        name = self.get_object()
+        print(name.scheme)
+        return user_is_data_admin_or_owner(self.request.user, name.scheme)
+
+    model = BinningSchemeName
+    success_url = reverse_lazy('binning-scheme-list-2')

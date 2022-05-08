@@ -25,6 +25,9 @@
               <tr>
                 <th>Scheme name</th>
                 <th>Order</th>
+                {% if user.is_authenticated %}
+                  <th>Action</th>
+                {% endif %}
               </tr>
             </thead>
             <tbody>
@@ -32,6 +35,9 @@
                 <tr>
                   <td>{{ name.structured_name }}</td>
                   <td>{{ name.order }}</td>
+                  {% if user.is_authenticated %}
+                    <td><a class="btn btn-default" href="{% url 'binning-scheme-delete-name' pk=name.pk %}"><span class="fa  fa-trash-o"></span></a></td>
+                  {% endif %}
                 </tr>
               {% endfor %}
             </tbody>
