@@ -219,4 +219,7 @@ class AddBinningSchemeNameForm(forms.ModelForm):
     class Meta:
         model = BinningSchemeName
         fields = ('structured_name',)
-        widgets = {'structured_name' : RelationWidget}
+        widgets = {'structured_name' : RelationWidget(attrs={
+                'class': 'w3-input w3-border',
+                'readonly':'readonly',
+            })}
