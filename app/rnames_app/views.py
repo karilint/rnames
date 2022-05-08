@@ -1562,7 +1562,8 @@ def submit(request):
 
 @login_required
 def profile(request):
-    return render(request, 'profile_keys.html', {'api_keys': list_api_keys(request)})
+    schemes = BinningScheme.objects.is_active().filter(created_by=request.user.id)
+    return render(request, 'profile_keys.html', {'schemes': schemes, 'api_keys': list_api_keys(request)})
 
 @login_required
 def profile_keys_new(request):
