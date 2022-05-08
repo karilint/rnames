@@ -124,6 +124,14 @@ urlpatterns = [
     path('profile/keys/new', views.profile_keys_new, name='profile-new-api-key'),
     path('profile/keys/<str:prefix>/', views.profile_key, name='profile-api-key'),
     path('profile/keys/<str:prefix>/revoke/', views.profile_key_revoke, name='profile-revoke-api-key'),
+    path('rnames/scheme/<int:pk>', views.binning_scheme_detail, name='binning-scheme-detail'),
+    path('rnames/scheme/<int:pk>/edit/', views.binning_scheme_edit, name='binning-scheme-edit'),
+    path('rnames/scheme/<int:pk>/delete/', views.binning_scheme_delete.as_view(), name='binning-scheme-delete'),
+    path('rnames/scheme-name/<int:pk>/', views.binning_scheme_add_name, name='binning-scheme-add-name'),
+    path('rnames/scheme-name/<int:pk>/delete', views.binning_scheme_delete_name.as_view(), name='binning-scheme-delete-name'),
+    path('rnames/scheme-name/<int:pk>/edit', views.binning_scheme_edit_name, name='binning-scheme-edit-name'),
+    path('rnames/scheme/new', views.binning_scheme_new, name='binning-scheme-new'),
+    path('rnames/schemes', views.binning_scheme_list, name='binning-scheme-list-2'),
 ]
 
 # Add Django site authentication urls (for login, logout, password management)

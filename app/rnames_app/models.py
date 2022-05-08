@@ -464,3 +464,16 @@ class BinningProgress(models.Model):
     text = models.CharField(max_length=1000, default='')
     value_one = models.IntegerField(default=0)
     value_two = models.IntegerField(default=0)
+
+class BinningScheme(BaseModel):
+    name = models.CharField(max_length=200, blank=False)
+    class Meta:
+        unique_together = [['name', 'created_by']]
+
+class BinningSchemeName(models.Model):
+    scheme = models.ForeignKey(BinningScheme, on_delete=models.CASCADE)
+    structured_name = models.ForeignKey(StructuredName, on_delete=models.CASCADE)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = [['scheme', 'structured_name'], ['scheme', 'order']]

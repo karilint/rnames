@@ -13,7 +13,8 @@ from .models import (Binning
     , Relation
     , StratigraphicQualifier
     , StructuredName
-    , TimeSlice)
+    , TimeSlice
+    , BinningScheme)
 from django.contrib.auth.models import User
 
 class BinningSchemeFilter(filters.FilterSet):
@@ -110,3 +111,9 @@ class TimeSliceFilter(filters.FilterSet):
     class Meta:
         model = TimeSlice
         fields = ['scheme', 'name' ]
+
+class BinningSchemeFilter(filters.FilterSet):
+    scheme = filters.CharFilter(lookup_expr='icontains')
+    class Meta:
+        model = BinningScheme
+        fields = ['name']
