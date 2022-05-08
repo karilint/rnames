@@ -1,0 +1,17 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<!-- Write your comments here -->
+  {% if user.is_authenticated %}
+    <h1>Delete Binning Scheme</h1>
+    <p>Are you sure you want to delete the binning scheme: <b><i>{{ binningscheme.name }}</i></b>?</p>
+
+    <form action="" method="POST">
+      {% csrf_token %}
+      <input type="submit" action="" value="Yes, delete." />
+    </form>
+    <button type="button" class="w3-button w3-border w3-light-grey" onClick="javascript:history.back();" style="width:120px">Cancel</button>
+  {% else %}
+    <p><a href="{% url 'account_login'%}?next={{request.path}}">Please login first</a></p>
+  {% endif %}
+{% endblock %}
