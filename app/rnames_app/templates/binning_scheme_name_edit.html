@@ -1,0 +1,22 @@
+{% extends "base_generic.html" %}
+{% block title %}RNames - Edit scheme name order{% endblock %}
+
+{% block content %}
+  <article>
+    {% if user.is_authenticated %}
+      <h2>Edit {{ scheme.name }}</h2>
+      <p>Set order for <b>{{name.structured_name}}</b></p>
+      <form method="POST" class="relation-form">
+        {% csrf_token %}
+        <table class="w3-table-all">
+          {{ form.as_table }}
+        </table>
+        <button type="button" class="w3-button w3-border w3-light-grey" onClick="javascript:history.back();" style="width:120px">Cancel</button>
+        <button type="submit" class="w3-button w3-border w3-light-grey" style="width:120px">Submit &nbsp; <i class="fas fa-angle-right"></i></button>      
+      </form>
+    {% else %}
+      <p><a href="{% url 'account_login'%}?next={{request.path}}">Please login first</a></p>
+    {% endif %}
+  </article>
+
+{% endblock %}

@@ -223,3 +223,10 @@ class AddBinningSchemeNameForm(forms.ModelForm):
                 'class': 'w3-input w3-border',
                 'readonly':'readonly',
             })}
+
+class BinningSchemeNameOrderForm(forms.ModelForm):
+    order = forms.IntegerField()
+
+    class Meta:
+        model = BinningSchemeName
+        fields = ('order',)
