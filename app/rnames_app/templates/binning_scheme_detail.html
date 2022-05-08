@@ -17,6 +17,9 @@
               {% endif %}
             </p>
           </div>
+          {% if user.is_authenticated %}
+            <p><a class="btn btn-default" href="{% url 'binning-scheme-add-name' pk=scheme.pk %}">Add name</a></p>
+          {% endif %}
     </div>
   </article>
 {% endblock %}

@@ -127,6 +127,7 @@ urlpatterns = [
     path('rnames/scheme/<int:pk>', views.binning_scheme_detail, name='binning-scheme-detail'),
     path('rnames/scheme/<int:pk>/edit/', views.binning_scheme_edit, name='binning-scheme-edit'),
     path('rnames/scheme/<int:pk>/delete/', views.binning_scheme_delete.as_view(), name='binning-scheme-delete'),
+    path('rnames/scheme-name/<int:pk>/', views.binning_scheme_add_name, name='binning-scheme-add-name'),
     path('rnames/scheme/new', views.binning_scheme_new, name='binning-scheme-new'),
     path('rnames/schemes', views.binning_scheme_list, name='binning-scheme-list-2'),
 ]

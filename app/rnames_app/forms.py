@@ -214,12 +214,9 @@ class BinningSchemeForm(forms.ModelForm):
         model = BinningScheme
         fields = ('name',)
 
-class StructuredNameWidget(ModelSelect2Widget):
-    search_fields = ['name__name__icontains']
-
 class AddBinningSchemeNameForm(forms.ModelForm):
 
     class Meta:
         model = BinningSchemeName
         fields = ('structured_name',)
-        widgets = {'structured_name' : StructuredNameWidget}
+        widgets = {'structured_name' : RelationWidget}

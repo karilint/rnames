@@ -38,7 +38,8 @@ from .models import (Binning, Location, Name, Qualifier, QualifierName, BinningP
 from .filters import (BinningSchemeFilter, LocationFilter, NameFilter, QualifierFilter, QualifierNameFilter,
                       ReferenceFilter, RelationFilter, StratigraphicQualifierFilter, StructuredNameFilter, TimeSliceFilter)
 from .forms import (ColorfulContactForm, ContactForm, LocationForm, NameForm, QualifierForm, QualifierNameForm, ReferenceForm,
-                    ReferenceRelationForm, ReferenceStructuredNameForm, RelationForm, StratigraphicQualifierForm, StructuredNameForm, TimeSliceForm, BinningSchemeForm)
+                    ReferenceRelationForm, ReferenceStructuredNameForm, RelationForm, StratigraphicQualifierForm, StructuredNameForm,
+                    TimeSliceForm, BinningSchemeForm, AddBinningSchemeNameForm)
 from django.contrib.auth.models import User
 from .filters import UserFilter
 
@@ -1657,3 +1658,24 @@ def binning_scheme_list(request):
         'binning_scheme_list_2.html',
         {'page_obj': page_obj, 'filter': f, }
     )
+
+@login_required
+@permission_required('rnames_app.change_binning_scheme', raise_exception=True)
+def binning_scheme_add_name(request, pk):
+    scheme = get_object_or_404(BinningScheme, pk=pk, is_active=1)
+    if not user_is_data_admin_or_owner(request.user, scheme):
+        raise PermissionDenied
+
+    if (request.method == 'POST'):
+        form = AddBinningSchemeNameForm(request.POST)
+        if form.is_valid():
+            entry = form.save(commit=False)
+            entry.scheme = scheme
+            entry.order = BinningSchemeName.objects.is_active().filter(scheme=scheme).count()
+            entry.save()
+        print(form.errors.as_data())
+        return redirect('binning-scheme-detail', pk=pk)
+
+    form = AddBinningSchemeNameForm();
+
+    return render(request, 'binning_scheme_add_name.html', {'form': form})
