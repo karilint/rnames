@@ -31,6 +31,14 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange, time_slices, inf
         b_scheme = "cc"
         runrange = np.arange(0,3,1)
 
+    # Prepare binning scheme
+    # time_slices should be a datframe containing columns : id | order | scheme
+    #t_scheme = binning_scheme
+    #used_ts = time_slices[time_slices['scheme']==binning_scheme]
+    #used_ts = used_ts[['id', 'order']]
+    #used_ts.rename(columns={'id': 'ts'},inplace = True) # rename to fit following code
+
+    
     # Binning schemes
 
     if binning_scheme == "r":
@@ -48,6 +56,20 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange, time_slices, inf
     if binning_scheme == "p":
         used_ts = time_slices['periods']
         t_scheme = "Period"
+        
+    # Prepare c_rels
+    # c_rels should be a dataframe containing columns:
+    # id | name_one_id | name_two_id |name_one_qualifier_qualifier_name_name | name_two_qualifier_qualifier_name_name |reference_id
+    #c_rels = c_rels[['id', 'name_one_id', 'name_two_id','name_one_qualifier_qualifier_name_name', 
+                           #'name_two_qualifier_qualifier_name_name', 'reference_id']]
+    #c_rels.rename(columns={'name_one_id': 'name_1', 'name_two_id':'name_1', 
+                          #'name_one_qualifier_qualifier_name_name': 'strat_qualifier_1',
+                          #'name_two_qualifier_qualifier_name_name': 'strat_qualifier_2'},inplace = True) # rename to fit following code
+    # range limitation can now be taken out
+    # qualifier_name_1/2 problem:
+    # this is used in code to identify the name_ids of the ids of the used_ts
+    # so I replaced it with .isn used_ts['id'filter] 
+
 
     # range limitation
     c_rels_sub = c_rels.loc[((c_rels["name_1"]== xrange))]
@@ -142,10 +164,12 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange, time_slices, inf
 
     ##################################################################################
     cr_g = c_rels.loc[~(c_rels["strat_qualifier_1"]=="Biostratigraphy")
-                              & ~(c_rels["strat_qualifier_2"]=="Biostratigraphy")
-                              & ~(c_rels["qualifier_name_1"]==t_scheme)
-                              & ~(c_rels["qualifier_name_2"]==t_scheme),
+                              & ~(c_rels["strat_qualifier_2"]=="Biostratigraphy"),
+                              #& ~(c_rels["qualifier_name_1"]==t_scheme)
+                              #& ~(c_rels["qualifier_name_2"]==t_scheme),
                               ["reference_id","name_1","name_2", "reference_year"]]
+    cr_g =  cr_g[~cr_g["name_1"].isin(used_ts["ts"])]
+    cr_g =  cr_g[~cr_g["name_2"].isin(used_ts["ts"])]
     ### Rule 5:  indirect relations of non-bio* to resis_4 with link to bio* (route via resi_4)
     results['rule_5'] = rule5(results, cr_g, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme)
     info.update()
@@ -178,10 +202,10 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, xrange, time_slices, inf
 
 def rule0(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme):
     #rule 0 = all direct relations between chronostrat names and binning scheme
-    cr_x = c_rels_d.loc[((c_rels_d["strat_qualifier_1"]=="Chronostratigraphy"))
-                              & ((c_rels_d["qualifier_name_2"]==t_scheme)),
-                              ["reference_id","name_1","name_2", "ts", "ts_index", "reference_year"]]
-
+    cr_x = c_rels_d.loc[((c_rels_d["strat_qualifier_1"]=="Chronostratigraphy")),
+                             # & ((c_rels_d["qualifier_name_2"]==t_scheme))
+                        ["reference_id","name_1","name_2", "ts", "ts_index", "reference_year"]]
+    cr_x =  cr_x[~cr_x["name_2"].isin(used_ts["ts"])]
     cr_x =  cr_x.loc[~(cr_x["name_1"]=="not specified")]
 
     for ibs in runrange:
@@ -212,10 +236,11 @@ def rule0(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme):
 
 def rule1(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme):
     #rule 1 = all direct relations between biostrat names and binning scheme
-    cr_a = c_rels_d.loc[((c_rels_d["strat_qualifier_1"]=="Biostratigraphy"))
-                              & ((c_rels_d["qualifier_name_2"]==t_scheme)),
+    cr_a = c_rels_d.loc[((c_rels_d["strat_qualifier_1"]=="Biostratigraphy")),
+                              #& ((c_rels_d["qualifier_name_2"]==t_scheme)),
                               ["reference_id","name_1","name_2", "ts", "ts_index", "reference_year"]]
     #take out  relations that also relate to not specified in same reference
+    cr_a =  cr_a[~cr_a["name_2"].isin(used_ts["ts"])]
     cr_a =  cr_a.loc[~(cr_a["name_1"]=="not specified")]
 
     for ibs in runrange:
@@ -249,9 +274,10 @@ def rule2(results, c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme):
     ### Rule_2: direct relations between non-bio* with binning scheme
     ### except chronostratigraphy
     cr_c = c_rels_d.loc[~(c_rels_d["strat_qualifier_1"]=="Biostratigraphy")
-                          & ~(c_rels_d["strat_qualifier_1"]=="Chronostratigraphy")
-                          & (c_rels_d["qualifier_name_2"]==t_scheme),
+                          & ~(c_rels_d["strat_qualifier_1"]=="Chronostratigraphy"),
+                          #& (c_rels_d["qualifier_name_2"]==t_scheme),
                               ["reference_id","name_1","name_2", "ts", "ts_index", "reference_year"]]
+    cr_c =  cr_c[~cr_c["name_2"].isin(used_ts["ts"])]
     cr_c =  cr_c.loc[~(cr_c["name_1"]=="not specified")]
 
     for ibs in runrange:
@@ -286,10 +312,12 @@ def rule3(results, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme):
     resi_1 = results["rule_1"]
     #rule_3 all relations between biostrat and biostrat that refer indirectly to binning scheme
     cr_b = c_rels.loc[(c_rels["strat_qualifier_1"]=="Biostratigraphy")
-                                  & (c_rels["strat_qualifier_2"]=="Biostratigraphy")
-                                  &  ~(c_rels["qualifier_name_1"] == t_scheme)
-                                  &  ~(c_rels["qualifier_name_2"] == t_scheme),
+                                  & (c_rels["strat_qualifier_2"]=="Biostratigraphy"),
+                                  #&  ~(c_rels["qualifier_name_1"] == t_scheme)
+                                  #&  ~(c_rels["qualifier_name_2"] == t_scheme),
                                   ["reference_id","name_1","name_2", "reference_year"]]
+    cr_b =  cr_b[~cr_b["name_1"].isin(used_ts["ts"])]
+    cr_b =  cr_b[~cr_b["name_2"].isin(used_ts["ts"])]
 
     x1 = pd.merge(resi_1, cr_b, left_on="name", right_on="name_2") # name_2 is already binned here
     x1 = merge_time_info(x1, used_ts)
@@ -360,11 +388,12 @@ def rule4(results, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b
     ### except direct chronostratigraphy links
 
     cr_d = c_rels.loc[~(c_rels["strat_qualifier_1"]=="Biostratigraphy")
-                              & (c_rels["strat_qualifier_2"]=="Biostratigraphy")
-                              & ~(c_rels["qualifier_name_1"]==t_scheme)
-                              & ~(c_rels["qualifier_name_2"]==t_scheme),
+                              & (c_rels["strat_qualifier_2"]=="Biostratigraphy"),
+                              #& ~(c_rels["qualifier_name_1"]==t_scheme)
+                              #& ~(c_rels["qualifier_name_2"]==t_scheme),
                               ["reference_id","name_1","name_2", "reference_year"]]
-
+    cr_d =  cr_d[~cr_d["name_1"].isin(used_ts["ts"])]
+    cr_d =  cr_d[~cr_d["name_2"].isin(used_ts["ts"])]
     cr_d =  cr_d[~cr_d["name_1"].isin(resi_0["name"])] #filter for chronostrat rule 0
 
     x1 = pd.merge(resis_bio, cr_d, left_on="name", right_on="name_2") # name_2 is already binned here
@@ -560,7 +589,7 @@ def rule6(results, cr_g, runrange, used_ts, xnames_raw, b_scheme):
     resi_6 = resi_6[['name', 'oldest', 'youngest', 'ts_count', 'refs', 'rule']]
     combi_x = pd.concat([resi_0, resi_1, resi_2, resi_3, resi_4], axis=0, sort=False)
     resi_6 = resi_6[~resi_6["name"].isin(combi_x["name"])] # filter non-bio rule 1
-    resi_6 = resi_6[~resi_6["name"].isin(used_ts['ts'])] # filter Dapingian problem
+    resi_6 = resi_6[~resi_6["name"].isin(used_ts['ts'])] 
     print("rule 6 has ", len(resi_6), "binned relations")
     print("Rule 6:  relations among named non-biostratigraphical units that have indirect relations to binning scheme")
     print("via non-biostratigraphical units.")
