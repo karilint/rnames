@@ -1123,7 +1123,7 @@ def dictfetchall(cursor):
 
 
 def structuredname_detail(request, pk):
-    structuredname = get_object_or_404(StructuredName, pk=pk, is_active=1)
+    structuredname = get_object_or_404(StructuredName, pk=pk)
 
     with connection.cursor() as cursor:
         #        cursor.execute("SELECT foo FROM bar WHERE baz = %s", [master_entity.id])
