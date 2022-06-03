@@ -93,12 +93,7 @@ class RelationWidget(ModelSelect2Widget):
 class ReferenceRelationForm(forms.ModelForm):
     class Meta:
         model = Relation
-        fields = ('is_active', 'belongs_to',)
-
-    is_active = forms.IntegerField(       # At least one field needed in ModelForm although this is not needed in the actual input
-        initial=1
-        ,widget=forms.HiddenInput()
-    )
+        fields = ('belongs_to',)
 
     name_id = forms.IntegerField(       # A hidden input for internal use
         widget=forms.HiddenInput()
