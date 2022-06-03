@@ -20,7 +20,7 @@ class ApiViewSet(viewsets.ModelViewSet):
 		return [permission() for permission in permission_classes]
 
 	def create(self, request):
-		serializer = self.serializer_class(data=request.data)
+		serializer = self.get_serializer_class()
 		if serializer.is_valid():
 			serializer.save()
 
