@@ -51,8 +51,12 @@ class NameViewSet(ApiViewSet):
 
 class QualifierViewSet(ApiViewSet):
 	queryset = models.Qualifier.objects.is_active()
-	serializer_class = serializers.QualifierSerializer
 	filterset_class = filters.QualifierFilter
+
+	def get_serializer_class(self):
+		if self.request.method == 'GET' and 'inline' in self.request.query_params:
+			return serializers.QualifierInlineSerializer
+		return serializers.QualifierSerializer
 
 	def log_access(self, api_key, instance):
 		api_models.KeyQualifier(qualifier=instance, api_key=api_key).save()
@@ -75,8 +79,12 @@ class StratigraphicQualifierViewSet(ApiViewSet):
 
 class StructuredNameViewSet(ApiViewSet):
 	queryset = models.StructuredName.objects.is_active()
-	serializer_class = serializers.StructuredNameSerializer
 	filterset_class = filters.StructuredNameFilter
+
+	def get_serializer_class(self):
+		if self.request.method == 'GET' and 'inline' in self.request.query_params:
+			return serializers.StructuredNameInlineSerializer
+		return serializers.StructuredNameSerializer
 
 	def log_access(self, api_key, instance):
 		api_models.KeyStructuredName(structured_name=instance, api_key=api_key).save()
@@ -91,8 +99,12 @@ class ReferenceViewSet(ApiViewSet):
 
 class RelationViewSet(ApiViewSet):
 	queryset = models.Relation.objects.is_active()
-	serializer_class = serializers.RelationSerializer
 	filterset_class = filters.RelationFilter
+
+	def get_serializer_class(self):
+		if self.request.method == 'GET' and 'inline' in self.request.query_params:
+			return serializers.RelationInlineSerializer
+		return serializers.RelationSerializer
 
 	def log_access(self, api_key, instance):
 		api_models.KeyRelation(relation=instance, api_key=api_key).save()
