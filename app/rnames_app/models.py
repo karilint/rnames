@@ -12,24 +12,6 @@ from simple_history.models import HistoricalRecords
 # Used to generate URLs by reversing the URL patterns
 from django.urls import reverse
 
-
-class CustomQuerySet(QuerySet):
-    def delete(self):
-        self.update(is_active=False)
-
-# https://simpleisbetterthancomplex.com/tips/2016/08/16/django-tip-11-custom-manager-with-chainable-querysets.html
-
-
-class ActiveManager(models.Manager):
-    def is_active(self):
-        return self.model.objects.filter(is_active=True)
-
-    def get_queryset(self):
-        return CustomQuerySet(self.model, using=self._db)
-
-# https://medium.com/@KevinPavlish/add-common-fields-to-all-your-django-models-bce033ac2cdc
-
-
 class BaseModel(models.Model):
     """
     A base model including basic fields for each Model
@@ -46,83 +28,6 @@ class BaseModel(models.Model):
         history_change_reason_field=models.TextField(null=True),
         inherit=True)
 # https://stackoverflow.com/questions/5190313/django-booleanfield-how-to-set-the-default-value-to-true
-    is_active = models.BooleanField(
-        default=True, help_text='Is the record active')
-    objects = ActiveManager()
-
-# https://stackoverflow.com/questions/4825815/prevent-delete-in-django-model
-    def delete(self):
-        self.is_active = False
-        print(self._meta.object_name)
-
-        # List of first lefel models
-        # qualifier -> stratigraphicqualifier, qualifier_name
-        # relation -> NameOne, NameTwo, Reference
-        # StructuredName -> Location, Name, Qualifier, (Reference)
-
-        # https://stackoverflow.com/questions/3599524/get-class-name-of-django-model
-        if self._meta.object_name == 'Reference':
-            qs = Relation.objects.is_active().filter(reference__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        # https://stackoverflow.com/questions/3599524/get-class-name-of-django-model
-        if self._meta.object_name == 'Reference':
-            qs = StructuredName.objects.is_active().filter(reference__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        if self._meta.object_name == 'StructuredName':
-            qs = Relation.objects.is_active().filter(
-                name_one__id=self.pk) | Relation.objects.is_active().filter(name_two__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        if self._meta.object_name == 'Name':
-            qs = StructuredName.objects.is_active().filter(name__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        if self._meta.object_name == 'Location':
-            qs = StructuredName.objects.is_active().filter(location__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        if self._meta.object_name == 'Qualifier':
-            qs = StructuredName.objects.is_active().filter(qualifier__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        if self._meta.object_name == 'QualifierName':
-            qs = Qualifier.objects.is_active().filter(qualifier_name__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        if self._meta.object_name == 'StratigraphicQualifier':
-            qs = Qualifier.objects.is_active().filter(stratigraphic_qualifier__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        print(str(self._meta.object_name) +
-              ' id: ' + str(self.pk) + ' deleted')
-        self.save()
-
     class Meta:
         abstract = True
 
