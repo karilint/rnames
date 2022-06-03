@@ -38,7 +38,7 @@ from .models import (Binning, Location, Name, Qualifier, QualifierName, BinningP
 from .filters import (BinningSchemeFilter, LocationFilter, NameFilter, QualifierFilter, QualifierNameFilter,
                       ReferenceFilter, RelationFilter, StratigraphicQualifierFilter, StructuredNameFilter, TimeSliceFilter)
 from .forms import (ColorfulContactForm, ContactForm, LocationForm, NameForm, QualifierForm, QualifierNameForm, ReferenceForm,
-                    ReferenceRelationForm, ReferenceStructuredNameForm, RelationForm, StratigraphicQualifierForm, StructuredNameForm,
+                    ReferenceRelationForm, RelationForm, StratigraphicQualifierForm, StructuredNameForm,
                     TimeSliceForm, BinningSchemeForm, AddBinningSchemeNameForm, BinningSchemeNameOrderForm)
 from django.contrib.auth.models import User
 from .filters import UserFilter

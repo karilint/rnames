@@ -90,49 +90,6 @@ class ReferenceWidget(ModelSelect2Widget):
 class RelationWidget(ModelSelect2Widget):
     search_fields = ['name__name__icontains', 'location__name__icontains', 'qualifier__qualifier_name__name__icontains', 'qualifier__stratigraphic_qualifier__name__icontains',]
 
-class ReferenceStructuredNameForm(forms.ModelForm):
-    class Meta:
-        model = Relation
-        fields = ('is_active',)
-
-    is_active = forms.IntegerField(       # At least one field needed in ModelForm although this is not needed in the actual input
-        initial=1
-        ,widget=forms.HiddenInput()
-    )
-    name_id = forms.IntegerField(       # A hidden input for internal use
-        widget=forms.HiddenInput()
-    )
-    name = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                'class': 'w3-input w3-border',
-                'readonly':'readonly',
-            }
-        )
-    )
-    qualifier = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                'class': 'w3-input w3-border',
-                'readonly':'readonly',
-            }
-        )
-    )
-    location = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                'class': 'w3-input w3-border',
-                'readonly':'readonly',
-            }
-        )
-    )
-
-#class ReferenceRelationForm(forms.ModelForm):
-#    class Meta:
-#        model = Relation
-#        fields = ('name_one', 'name_two', 'belongs_to',)
-#        widgets = {'name_one': RelationWidget, 'name_two': RelationWidget,}
-
 class ReferenceRelationForm(forms.ModelForm):
     class Meta:
         model = Relation
