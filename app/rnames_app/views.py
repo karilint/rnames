@@ -1128,7 +1128,7 @@ def structuredname_detail(request, pk):
     with connection.cursor() as cursor:
         #        cursor.execute("SELECT foo FROM bar WHERE baz = %s", [master_entity.id])
         cursor.execute("""
-			select r.belongs_to
+			SELECT r.belongs_to
 			--	, n1.name name_one
 			--	, qn1.name qualifier_one
 			--	, sq1.name stratigraphic_qualifier_one
@@ -1142,29 +1142,29 @@ def structuredname_detail(request, pk):
 
 			from rnames_app_relation r
 			join rnames_app_structuredname sn1
-				on r.name_one_id=sn1.id and sn1.is_active=true
+				on r.name_one_id=sn1.id
 			join rnames_app_name n1
-				on n1.id=sn1.name_id and n1.is_active=true
+				on n1.id=sn1.name_id
 			join rnames_app_qualifier q1
-				on q1.id=sn1.qualifier_id and q1.is_active=true
+				on q1.id=sn1.qualifier_id
 			join rnames_app_qualifiername qn1
-				on qn1.id=q1.qualifier_name_id and qn1.is_active=true
+				on qn1.id=q1.qualifier_name_id
 			join rnames_app_stratigraphicqualifier sq1
-				on sq1.id=q1.stratigraphic_qualifier_id and sq1.is_active=true
+				on sq1.id=q1.stratigraphic_qualifier_id
 
 			join rnames_app_structuredname sn2
-				on r.name_two_id=sn2.id and sn2.is_active=true
+				on r.name_two_id=sn2.id
 			join rnames_app_name n2
-				on n2.id=sn2.name_id and n2.is_active=true
+				on n2.id=sn2.name_id
 			join rnames_app_qualifier q2
-				on q2.id=sn2.qualifier_id and q2.is_active=true
+				on q2.id=sn2.qualifier_id
 			join rnames_app_qualifiername qn2
-				on qn2.id=q2.qualifier_name_id and qn2.is_active=true
+				on qn2.id=q2.qualifier_name_id
 			join rnames_app_stratigraphicqualifier sq2
-				on sq2.id=q2.stratigraphic_qualifier_id and sq2.is_active=true
+				on sq2.id=q2.stratigraphic_qualifier_id
 			join rnames_app_location l2
-				on l2.id=sn2.location_id and l2.is_active=true
-			where r.name_one_id=%s and r.name_two_id<>%s and r.is_active=true
+				on l2.id=sn2.location_id
+			where r.name_one_id=%s and r.name_two_id<>%s
 
 			union
 
@@ -1182,31 +1182,31 @@ def structuredname_detail(request, pk):
 
 			from rnames_app_relation r
 			join rnames_app_structuredname sn1
-				on r.name_one_id=sn1.id and sn1.is_active=true
+				on r.name_one_id=sn1.id
 			join rnames_app_name n1
-				on n1.id=sn1.name_id and n1.is_active=true
+				on n1.id=sn1.name_id
 			join rnames_app_qualifier q1
-				on q1.id=sn1.qualifier_id and q1.is_active=true
+				on q1.id=sn1.qualifier_id
 			join rnames_app_qualifiername qn1
-				on qn1.id=q1.qualifier_name_id and qn1.is_active=true
+				on qn1.id=q1.qualifier_name_id
 			join rnames_app_stratigraphicqualifier sq1
-				on sq1.id=q1.stratigraphic_qualifier_id and sq1.is_active=true
+				on sq1.id=q1.stratigraphic_qualifier_id
 			join rnames_app_location l1
-				on l1.id=sn1.location_id and l1.is_active=true
+				on l1.id=sn1.location_id
 
 			join rnames_app_structuredname sn2
-				on r.name_two_id=sn2.id and sn2.is_active=true
+				on r.name_two_id=sn2.id
 			join rnames_app_name n2
-				on n2.id=sn2.name_id and n2.is_active=true
+				on n2.id=sn2.name_id
 			join rnames_app_qualifier q2
-				on q2.id=sn2.qualifier_id and q2.is_active=true
+				on q2.id=sn2.qualifier_id
 			join rnames_app_qualifiername qn2
-				on qn2.id=q2.qualifier_name_id and qn2.is_active=true
+				on qn2.id=q2.qualifier_name_id
 			join rnames_app_stratigraphicqualifier sq2
-				on sq2.id=q2.stratigraphic_qualifier_id and sq2.is_active=true
+				on sq2.id=q2.stratigraphic_qualifier_id
 			join rnames_app_location l2
-				on l2.id=sn2.location_id and l2.is_active=true
-			where r.name_one_id<>%s and r.name_two_id=%s and r.is_active=true
+				on l2.id=sn2.location_id
+			where r.name_one_id<>%s and r.name_two_id=%s
 
 			order by 5 desc,4,2""", [structuredname.id, structuredname.id, structuredname.id, structuredname.id])
 
