@@ -9,6 +9,8 @@ from rnames_api.permissions import HasUserApiKey, get_api_key
 from rnames_api.paginators import Paginator
 
 class ApiViewSet(viewsets.ModelViewSet):
+	pagination_class = Paginator
+
 	def get_permissions(self):
 		if self.action in ['list', 'retrieve']:
 			permission_classes = []
@@ -18,7 +20,7 @@ class ApiViewSet(viewsets.ModelViewSet):
 		return [permission() for permission in permission_classes]
 
 	def create(self, request):
-		serializer = self.serializer_class(data=request.data)
+		serializer = self.get_serializer_class()
 		if serializer.is_valid():
 			serializer.save()
 
@@ -49,8 +51,12 @@ class NameViewSet(ApiViewSet):
 
 class QualifierViewSet(ApiViewSet):
 	queryset = models.Qualifier.objects.is_active()
-	serializer_class = serializers.QualifierSerializer
 	filterset_class = filters.QualifierFilter
+
+	def get_serializer_class(self):
+		if self.request.method == 'GET' and 'inline' in self.request.query_params:
+			return serializers.QualifierInlineSerializer
+		return serializers.QualifierSerializer
 
 	def log_access(self, api_key, instance):
 		api_models.KeyQualifier(qualifier=instance, api_key=api_key).save()
@@ -73,8 +79,12 @@ class StratigraphicQualifierViewSet(ApiViewSet):
 
 class StructuredNameViewSet(ApiViewSet):
 	queryset = models.StructuredName.objects.is_active()
-	serializer_class = serializers.StructuredNameSerializer
 	filterset_class = filters.StructuredNameFilter
+
+	def get_serializer_class(self):
+		if self.request.method == 'GET' and 'inline' in self.request.query_params:
+			return serializers.StructuredNameInlineSerializer
+		return serializers.StructuredNameSerializer
 
 	def log_access(self, api_key, instance):
 		api_models.KeyStructuredName(structured_name=instance, api_key=api_key).save()
@@ -89,8 +99,12 @@ class ReferenceViewSet(ApiViewSet):
 
 class RelationViewSet(ApiViewSet):
 	queryset = models.Relation.objects.is_active()
-	serializer_class = serializers.RelationSerializer
 	filterset_class = filters.RelationFilter
+
+	def get_serializer_class(self):
+		if self.request.method == 'GET' and 'inline' in self.request.query_params:
+			return serializers.RelationInlineSerializer
+		return serializers.RelationSerializer
 
 	def log_access(self, api_key, instance):
 		api_models.KeyRelation(relation=instance, api_key=api_key).save()
@@ -106,13 +120,3 @@ class TimeSliceViewSet(ApiViewSet):
 class BinningViewSet(viewsets.ReadOnlyModelViewSet):
 	queryset = models.Binning.objects.all()
 	serializer_class = serializers.BinningSerializer
-
-class InlineRelationViewSet(viewsets.ReadOnlyModelViewSet):
-	queryset = (models.Relation.objects.is_active()
-			.prefetch_related('name_one', 'name_two', 'reference')
-			.prefetch_related('name_one__name', 'name_one__location','name_one__reference','name_one__qualifier')
-			.prefetch_related('name_two__name', 'name_two__location','name_two__reference','name_two__qualifier')
-			.prefetch_related('name_one__qualifier__qualifier_name', 'name_one__qualifier__stratigraphic_qualifier')
-			.prefetch_related('name_two__qualifier__qualifier_name', 'name_two__qualifier__stratigraphic_qualifier'))
-	serializer_class = serializers.RelationInlineSerializer
-	pagination_class = Paginator
