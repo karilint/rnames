@@ -1,3 +1,6 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 
@@ -10,6 +13,13 @@ from rnames_api.paginators import Paginator
 
 class ApiViewSet(viewsets.ModelViewSet):
 	pagination_class = Paginator
+
+	@method_decorator(cache_page(60*60))
+	def list(self, request, format=None):
+		qs = self.get_queryset()
+		page = self.paginate_queryset(qs)
+		serializer = self.get_serializer(page, many=True)
+		return self.get_paginated_response(serializer.data)
 
 	def get_permissions(self):
 		if self.action in ['list', 'retrieve']:
