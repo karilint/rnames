@@ -9,6 +9,8 @@ from rnames_api.permissions import HasUserApiKey, get_api_key
 from rnames_api.paginators import Paginator
 
 class ApiViewSet(viewsets.ModelViewSet):
+	pagination_class = Paginator
+
 	def get_permissions(self):
 		if self.action in ['list', 'retrieve']:
 			permission_classes = []
@@ -115,4 +117,3 @@ class InlineRelationViewSet(viewsets.ReadOnlyModelViewSet):
 			.prefetch_related('name_one__qualifier__qualifier_name', 'name_one__qualifier__stratigraphic_qualifier')
 			.prefetch_related('name_two__qualifier__qualifier_name', 'name_two__qualifier__stratigraphic_qualifier'))
 	serializer_class = serializers.RelationInlineSerializer
-	pagination_class = Paginator
