@@ -1,3 +1,6 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 
@@ -10,6 +13,13 @@ from rnames_api.paginators import Paginator
 
 class ApiViewSet(viewsets.ModelViewSet):
 	pagination_class = Paginator
+
+	@method_decorator(cache_page(60*60))
+	def list(self, request, format=None):
+		qs = self.get_queryset()
+		page = self.paginate_queryset(qs)
+		serializer = self.get_serializer(page, many=True)
+		return self.get_paginated_response(serializer.data)
 
 	def get_permissions(self):
 		if self.action in ['list', 'retrieve']:
@@ -50,8 +60,14 @@ class NameViewSet(ApiViewSet):
 		api_models.KeyName(name=instance, api_key=api_key).save()
 
 class QualifierViewSet(ApiViewSet):
-	queryset = models.Qualifier.objects.is_active()
 	filterset_class = filters.QualifierFilter
+
+	def get_queryset(self):
+		if self.request.method == 'GET' and 'inline' in self.request.query_params:
+			return models.Qualifier.objects.is_active() \
+				.prefetch_related('qualifier_name', 'stratigraphic_qualifier')
+
+		return models.Qualifier.objects.is_active()
 
 	def get_serializer_class(self):
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
@@ -78,8 +94,16 @@ class StratigraphicQualifierViewSet(ApiViewSet):
 		api_models.KeyStratigraphicQualifier(stratigraphic_qualifier=instance, api_key=api_key).save()
 
 class StructuredNameViewSet(ApiViewSet):
-	queryset = models.StructuredName.objects.is_active()
 	filterset_class = filters.StructuredNameFilter
+
+	def get_queryset(self):
+
+		if self.request.method == 'GET' and 'inline' in self.request.query_params:
+			return models.StructuredName.objects.is_active() \
+				.prefetch_related('name', 'location', 'reference', 'qualifier') \
+				.prefetch_related('qualifier__qualifier_name', 'qualifier__stratigraphic_qualifier')
+
+		return models.StructuredName.objects.is_active()
 
 	def get_serializer_class(self):
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
@@ -98,8 +122,18 @@ class ReferenceViewSet(ApiViewSet):
 		api_models.KeyReference(reference=instance, api_key=api_key).save()
 
 class RelationViewSet(ApiViewSet):
-	queryset = models.Relation.objects.is_active()
 	filterset_class = filters.RelationFilter
+
+	def get_queryset(self):
+		if self.request.method == 'GET' and 'inline' in self.request.query_params:
+			return models.Relation.objects.is_active() \
+				.prefetch_related('name_one', 'name_two', 'reference') \
+				.prefetch_related('name_one__name', 'name_one__location','name_one__reference','name_one__qualifier') \
+				.prefetch_related('name_two__name', 'name_two__location','name_two__reference','name_two__qualifier') \
+				.prefetch_related('name_one__qualifier__qualifier_name', 'name_one__qualifier__stratigraphic_qualifier') \
+				.prefetch_related('name_two__qualifier__qualifier_name', 'name_two__qualifier__stratigraphic_qualifier')
+
+		return models.Relation.objects.is_active()
 
 	def get_serializer_class(self):
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
