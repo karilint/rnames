@@ -80,9 +80,9 @@ def binning_process():
         return
 
     def time_slices(scheme):
-        return list(TimeSlice.objects.is_active().filter(scheme=scheme).order_by('order').values_list('name', flat=True))
+        return list(TimeSlice.objects.filter(scheme=scheme).order_by('order').values_list('name', flat=True))
 
-    queryset_list = list(Relation.objects.is_active().select_related().values_list(
+    queryset_list = list(Relation.objects.select_related().values_list(
         'id',
         'reference',
         'reference__year',
@@ -164,7 +164,7 @@ def binning_process():
 
         for row in df.values:
             name = row[col.name]
-            data = Binning.objects.is_active().filter(name=name, binning_scheme=scheme)
+            data = Binning.objects.filter(name=name, binning_scheme=scheme)
             if len(data) == 0:
                 create(name, scheme, row[col.oldest], row[col.youngest], row[col.ts_count], row[col.refs], row[col.rule])
             else:
@@ -230,7 +230,7 @@ def binning_progress(request):
 def binning_scheme_list(request):
     f = BinningSchemeFilter(
         request.GET,
-        queryset=Binning.objects.is_active().order_by('binning_scheme', 'name')
+        queryset=Binning.objects.order_by('binning_scheme', 'name')
     )
 
     paginator = Paginator(f.qs, 10)
@@ -259,7 +259,7 @@ def export_csv_binnings(request):
     writer.writerow(['binning_scheme', 'name', 'oldest',
                     'youngest', 'ts_count', 'refs', 'binning_date'])
 
-    binnings = Binning.objects.is_active().values_list('binning_scheme', 'name',
+    binnings = Binning.objects.all().values_list('binning_scheme', 'name',
                                                        'oldest', 'youngest', 'ts_count', 'refs', 'modified_on')
     for binning in binnings:
         # Converting tuple to list
@@ -285,7 +285,7 @@ def export_csv_references(request):
     writer = csv.writer(response, quoting=csv.QUOTE_ALL)
     writer.writerow(['id', 'year', 'first_author', 'title', 'link', ])
 
-    references = Reference.objects.is_active().values_list(
+    references = Reference.objects.all().values_list(
         'id', 'year', 'first_author', 'title', 'link')
 
     for reference in references:
@@ -378,9 +378,9 @@ def index(request):
     View function for home page of site.
     """
     # Generate counts of some of the main objects
-    num_names = Name.objects.is_active().count()
-    num_opinions = Relation.objects.is_active().count()
-    num_references = Reference.objects.is_active().count()
+    num_names = Name.objects.count()
+    num_opinions = Relation.objects.count()
+    num_references = Reference.objects.count()
 
     # Render the HTML template index.html with the data in the context variable
     return render(
@@ -392,8 +392,7 @@ def index(request):
 
 
 def parent(request):
-    f = StructuredNameFilter(request.GET, queryset=StructuredName.objects.is_active(
-    ).select_related().order_by('name', 'qualifier', 'location'))
+    f = StructuredNameFilter(request.GET, queryset=StructuredName.objects.select_related().order_by('name', 'qualifier', 'location'))
     paginator = Paginator(f.qs, 5)
 
     page_number = request.GET.get('page')
@@ -412,8 +411,7 @@ def parent(request):
 
 
 def child(request):
-    f = StructuredNameFilter(request.GET, queryset=StructuredName.objects.is_active(
-    ).select_related().order_by('name', 'qualifier', 'location'))
+    f = StructuredNameFilter(request.GET, queryset=StructuredName.objects.select_related().order_by('name', 'qualifier', 'location'))
     paginator = Paginator(f.qs, 5)
 
     page_number = request.GET.get('page')
@@ -440,14 +438,14 @@ class location_delete(UserPassesTestMixin, DeleteView):
 
 
 def location_detail(request, pk):
-    location = get_object_or_404(Location, pk=pk, is_active=1)
+    location = get_object_or_404(Location, pk=pk)
     return render(request, 'location_detail.html', {'location': location})
 
 
 @login_required
 @permission_required('rnames_app.change_location', raise_exception=True)
 def location_edit(request, pk):
-    location = get_object_or_404(Location, pk=pk, is_active=1)
+    location = get_object_or_404(Location, pk=pk)
 
     if not user_is_data_admin_or_owner(request.user, location):
         raise PermissionDenied
@@ -465,7 +463,7 @@ def location_edit(request, pk):
 
 def location_list(request):
     f = LocationFilter(
-        request.GET, queryset=Location.objects.is_active().order_by('name'))
+        request.GET, queryset=Location.objects.order_by('name'))
 
     paginator = Paginator(f.qs, 10)
 
@@ -509,14 +507,14 @@ class name_delete(UserPassesTestMixin, DeleteView):
 
 
 def name_detail(request, pk):
-    name = get_object_or_404(Name, pk=pk, is_active=1)
+    name = get_object_or_404(Name, pk=pk)
     return render(request, 'name_detail.html', {'name': name})
 
 
 @login_required
 @permission_required('rnames_app.change_name', raise_exception=True)
 def name_edit(request, pk):
-    name = get_object_or_404(Name, pk=pk, is_active=1)
+    name = get_object_or_404(Name, pk=pk)
 
     if not user_is_data_admin_or_owner(request.user, name):
         raise PermissionDenied
@@ -535,7 +533,7 @@ def name_edit(request, pk):
 def name_list(request):
     f = NameFilter(
         request.GET,
-        queryset=Name.objects.is_active().order_by('name')
+        queryset=Name.objects.order_by('name')
     )
 
     paginator = Paginator(f.qs, 10)
@@ -580,13 +578,12 @@ class qualifier_delete(UserPassesTestMixin, DeleteView):
 
 
 def qualifier_detail(request, pk):
-    qualifier = get_object_or_404(Qualifier, pk=pk, is_active=1)
+    qualifier = get_object_or_404(Qualifier, pk=pk)
     return render(request, 'qualifier_detail.html', {'qualifier': qualifier})
 
 
 def qualifier_list(request):
-    f = QualifierFilter(request.GET, queryset=Qualifier.objects.is_active(
-    ).select_related().order_by('stratigraphic_qualifier', 'level', 'qualifier_name',))
+    f = QualifierFilter(request.GET, queryset=Qualifier.objects.select_related().order_by('stratigraphic_qualifier', 'level', 'qualifier_name',))
     paginator = Paginator(f.qs, 10)
 
     page_number = request.GET.get('page')
@@ -621,7 +618,7 @@ def qualifier_new(request):
 @login_required
 @permission_required('rnames_app.change_qualifier', raise_exception=True)
 def qualifier_edit(request, pk):
-    qualifier = get_object_or_404(Qualifier, pk=pk, is_active=1)
+    qualifier = get_object_or_404(Qualifier, pk=pk)
 
     if not user_is_data_admin_or_owner(request.user, qualifier):
         raise PermissionDenied
@@ -646,14 +643,14 @@ class qualifiername_delete(UserPassesTestMixin, DeleteView):
 
 
 def qualifiername_detail(request, pk):
-    qualifiername = get_object_or_404(QualifierName, pk=pk, is_active=1)
+    qualifiername = get_object_or_404(QualifierName, pk=pk)
     return render(request, 'qualifiername_detail.html', {'qualifiername': qualifiername})
 
 
 @login_required
 @permission_required('rnames_app.change_qualifiername', raise_exception=True)
 def qualifiername_edit(request, pk):
-    qualifiername = get_object_or_404(QualifierName, pk=pk, is_active=1)
+    qualifiername = get_object_or_404(QualifierName, pk=pk)
 
     if not user_is_data_admin_or_owner(request.user, qualifiername):
         raise PermissionDenied
@@ -672,7 +669,7 @@ def qualifiername_edit(request, pk):
 def qualifiername_list(request):
     f = QualifierNameFilter(
         request.GET,
-        queryset=QualifierName.objects.is_active().order_by('name')
+        queryset=QualifierName.objects.order_by('name')
     )
 
     paginator = Paginator(f.qs, 10)
@@ -715,17 +712,17 @@ class reference_delete(UserPassesTestMixin, DeleteView):
 
 
 def reference_detail(request, pk):
-    reference = get_object_or_404(Reference, pk=pk, is_active=1)
-    qs1 = (Relation.objects.is_active().filter(reference=reference).select_related()
+    reference = get_object_or_404(Reference, pk=pk)
+    qs1 = (Relation.objects.filter(reference=reference).select_related()
            .values('name_one__id', 'name_one__name__name', 'name_one__qualifier__qualifier_name__name', 'name_one__location__name', 'name_one__qualifier__stratigraphic_qualifier__name')
            .distinct().order_by('name_one__id', 'name_one__name__name', 'name_one__qualifier__qualifier_name__name', 'name_one__location__name', 'name_one__qualifier__stratigraphic_qualifier__name'))
-    qs2 = (Relation.objects.is_active().filter(reference=reference).select_related()
+    qs2 = (Relation.objects.filter(reference=reference).select_related()
            .values('name_two__id', 'name_two__name__name', 'name_two__qualifier__qualifier_name__name', 'name_two__location__name', 'name_two__qualifier__stratigraphic_qualifier__name')
            .distinct().order_by('name_two__id', 'name_two__name__name', 'name_two__qualifier__qualifier_name__name', 'name_two__location__name', 'name_two__qualifier__stratigraphic_qualifier__name'))
     sn_list = qs1.union(qs2)
     f = RelationFilter(
         request.GET,
-        queryset=Relation.objects.is_active().select_related().filter(
+        queryset=Relation.objects.select_related().filter(
             reference__id=pk).order_by('name_one')
     )
 
@@ -745,7 +742,7 @@ def reference_detail(request, pk):
 @login_required
 @permission_required('rnames_app.change_reference', raise_exception=True)
 def reference_edit(request, pk):
-    reference = get_object_or_404(Reference, pk=pk, is_active=1)
+    reference = get_object_or_404(Reference, pk=pk)
 
     if not user_is_data_admin_or_owner(request.user, reference):
         raise PermissionDenied
@@ -768,7 +765,7 @@ def reference_edit(request, pk):
 
 def reference_list_old(request):
     f = ReferenceFilter(
-        request.GET, queryset=Reference.objects.is_active().order_by('title'))
+        request.GET, queryset=Reference.objects.order_by('title'))
     paginator = Paginator(f.qs, 10)  # Show 10 References per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -779,7 +776,7 @@ def reference_list_old(request):
 
 def reference_list(request):
     f = ReferenceFilter(
-        request.GET, queryset=Reference.objects.is_active().order_by('title'))
+        request.GET, queryset=Reference.objects.order_by('title'))
     paginator = Paginator(f.qs, 10)
 
     page_number = request.GET.get('page')
@@ -823,13 +820,13 @@ class old_reference_relation_delete(DeleteView):
 
 
 def reference_structured_name_detail(request, pk, reference):
-    structuredname = get_object_or_404(StructuredName, pk=pk, is_active=1)
-    reference = get_object_or_404(Reference, pk=reference, is_active=1)
-    current_relations = Relation.objects.is_active().filter(name_one=structuredname).filter(
+    structuredname = get_object_or_404(StructuredName, pk=pk)
+    reference = get_object_or_404(Reference, pk=reference)
+    current_relations = Relation.objects.filter(name_one=structuredname).filter(
         reference=reference).exclude(name_two=structuredname).select_related().order_by('name_one')
     current_name_two_ids = current_relations.values_list(
         'name_two__id', flat=True)
-    available_relations = Relation.objects.is_active().filter(reference=reference).exclude(name_one__id__in=current_name_two_ids).exclude(name_two__id__in=current_name_two_ids).select_related().values('name_two',
+    available_relations = Relation.objects.filter(reference=reference).exclude(name_one__id__in=current_name_two_ids).exclude(name_two__id__in=current_name_two_ids).select_related().values('name_two',
                                                                                                                                                                                                          'name_two__name__name', 'name_two__qualifier__qualifier_name__name', 'name_two__qualifier__stratigraphic_qualifier__name', 'name_two__location__name', 'name_two__reference',).distinct().order_by('name_two__name__name')
     f = StructuredNameFilter(request.GET, queryset=available_relations)
     paginator = Paginator(f.qs, 5)
@@ -874,13 +871,13 @@ class reference_relation_delete(DeleteView):
 @login_required
 def reference_relation_new(request, name_one, reference):
 
-    name_one = get_object_or_404(StructuredName, pk=name_one, is_active=1)
-    reference = get_object_or_404(Reference, pk=reference, is_active=1)
-    current_relations = Relation.objects.is_active().filter(name_one=name_one).filter(
+    name_one = get_object_or_404(StructuredName, pk=name_one)
+    reference = get_object_or_404(Reference, pk=reference)
+    current_relations = Relation.objects.filter(name_one=name_one).filter(
         reference=reference).exclude(name_two=name_one).select_related().order_by('name_one')
     current_name_two_ids = current_relations.values_list(
         'name_two__id', flat=True)
-    available_relations = (Relation.objects.is_active()
+    available_relations = (Relation.objects
                            .filter(reference=reference)
                            .exclude(name_one=name_one)
                            .exclude(name_two=name_one)
@@ -895,7 +892,7 @@ def reference_relation_new(request, name_one, reference):
         if form.is_valid():
             name_id = request.POST.get('name_id', 1)
             name_two = get_object_or_404(
-                StructuredName, pk=name_id, is_active=1)
+                StructuredName, pk=name_id)
             relation = form.save(commit=False)
             relation.reference = reference
             relation.name_one = name_one
@@ -905,7 +902,7 @@ def reference_relation_new(request, name_one, reference):
     else:
         # Set default for names
         name_one = name_one
-        name_two = get_object_or_404(StructuredName, pk=1, is_active=1)
+        name_two = get_object_or_404(StructuredName, pk=1)
         form = ReferenceRelationForm()
     return render(request, 'reference_relation_edit.html', {'name_one': name_one, 'reference': reference, 'current_relations': current_relations, 'available_relations': available_relations, 'form': form},)
 
@@ -919,7 +916,7 @@ class relation_delete(UserPassesTestMixin, DeleteView):
 
 
 def relation_detail(request, pk):
-    relation = get_object_or_404(Relation, pk=pk, is_active=1)
+    relation = get_object_or_404(Relation, pk=pk)
     return render(request, 'relation_detail.html', {'relation': relation})
 
 
@@ -931,13 +928,12 @@ def relation_sql_detail(request, name_one, name_two):
             from rnames_app_relation r
             where (r.name_one_id=%s and r.name_two_id=%s)
             	or (r.name_one_id=%s and r.name_two_id=%s)
-            	and r.is_active=true
             limit 1""", [name_one, name_two, name_two, name_one])
 
         relations = dictfetchall(cursor)[0]
         relation_id = relations.get('id')
 
-    relation = get_object_or_404(Relation, pk=relation_id, is_active=1)
+    relation = get_object_or_404(Relation, pk=relation_id)
 
     with connection.cursor() as cursor:
         cursor.execute("""
@@ -945,10 +941,8 @@ def relation_sql_detail(request, name_one, name_two):
             from rnames_app_relation r
             join rnames_app_reference ref
             	on ref.id=r.reference_id
-            	and ref.is_active=true
             where (r.name_one_id=%s and r.name_two_id=%s)
             	or (r.name_one_id=%s and r.name_two_id=%s)
-            	and r.is_active=true
     		order by ref.first_author, ref.year""", [name_one, name_two, name_two, name_one])
 
         references = dictfetchall(cursor)
@@ -959,7 +953,7 @@ def relation_sql_detail(request, name_one, name_two):
 @login_required
 @permission_required('rnames_app.change_relation', raise_exception=True)
 def relation_edit(request, pk):
-    relation = get_object_or_404(Relation, pk=pk, is_active=1)
+    relation = get_object_or_404(Relation, pk=pk)
 
     if not user_is_data_admin_or_owner(request.user, relation):
         raise PermissionDenied
@@ -981,7 +975,7 @@ def relation_edit(request, pk):
 def relation_list(request):
     f = RelationFilter(
         request.GET,
-        queryset=Relation.objects.is_active().select_related().order_by('name_one')
+        queryset=Relation.objects.select_related().order_by('name_one')
     )
 
     paginator = Paginator(f.qs, 10)
@@ -1029,7 +1023,7 @@ def run_binning(request):
         raise PermissionDenied
 
     # Generate counts of some of the main objects
-    num_opinions = Relation.objects.is_active().count()
+    num_opinions = Relation.objects.count()
 
     # Render the HTML template index.html with the data in the context variable
     return render(
@@ -1049,7 +1043,7 @@ class stratigraphic_qualifier_delete(UserPassesTestMixin, DeleteView):
 
 def stratigraphic_qualifier_detail(request, pk):
     stratigraphicqualifier = get_object_or_404(
-        StratigraphicQualifier, pk=pk, is_active=1)
+        StratigraphicQualifier, pk=pk)
     return render(request, 'stratigraphic_qualifier_detail.html', {'stratigraphicqualifier': stratigraphicqualifier})
 
 
@@ -1057,7 +1051,7 @@ def stratigraphic_qualifier_detail(request, pk):
 @permission_required('rnames_app.change_stratigraphicqualifier', raise_exception=True)
 def stratigraphic_qualifier_edit(request, pk):
     stratigraphicqualifier = get_object_or_404(
-        StratigraphicQualifier, pk=pk, is_active=1)
+        StratigraphicQualifier, pk=pk)
 
     if not user_is_data_admin_or_owner(request.user, stratigraphicqualifier):
         raise PermissionDenied
@@ -1077,7 +1071,7 @@ def stratigraphic_qualifier_edit(request, pk):
 def stratigraphic_qualifier_list(request):
     f = StratigraphicQualifierFilter(
         request.GET,
-        queryset=StratigraphicQualifier.objects.is_active().order_by('name')
+        queryset=StratigraphicQualifier.objects.order_by('name')
     )
 
     paginator = Paginator(f.qs, 10)
@@ -1221,8 +1215,7 @@ def structuredname_detail(request, pk):
 
 
 def structuredname_list(request):
-    f = StructuredNameFilter(request.GET, queryset=StructuredName.objects.is_active(
-    ).select_related().order_by('name', 'qualifier', 'location'))
+    f = StructuredNameFilter(request.GET, queryset=StructuredName.objects.select_related().order_by('name', 'qualifier', 'location'))
     paginator = Paginator(f.qs, 10)
 
     page_number = request.GET.get('page')
@@ -1257,7 +1250,7 @@ def structuredname_new(request):
 @login_required
 @permission_required('rnames_app.change_structuredname', raise_exception=True)
 def structuredname_edit(request, pk):
-    structuredname = get_object_or_404(StructuredName, pk=pk, is_active=1)
+    structuredname = get_object_or_404(StructuredName, pk=pk)
 
     if not user_is_data_admin_or_owner(request.user, structuredname):
         raise PermissionDenied
@@ -1286,8 +1279,7 @@ def structuredname_select(request):
     #    sn_list= qs1.union(qs2)
 
     #    f = StructuredNameFilter(request.GET, queryset=StructuredName.objects.is_active().exclude(id__in=sn_list).select_related().order_by('name', 'qualifier', 'location'))
-    f = StructuredNameFilter(request.GET, queryset=StructuredName.objects.is_active(
-    ).select_related().order_by('name', 'qualifier', 'location'))
+    f = StructuredNameFilter(request.GET, queryset=StructuredName.objects.select_related().order_by('name', 'qualifier', 'location'))
 
     paginator = Paginator(f.qs, 5)
 
@@ -1321,14 +1313,14 @@ class timeslice_delete(UserPassesTestMixin, DeleteView):
 
 
 def timeslice_detail(request, pk):
-    ts = get_object_or_404(TimeSlice, pk=pk, is_active=1)
+    ts = get_object_or_404(TimeSlice, pk=pk)
     return render(request, 'timeslice_detail.html', {'timeslice': ts})
 
 
 @login_required
 @permission_required('rnames_app.change_timeslice', raise_exception=True)
 def timeslice_edit(request, pk):
-    timeslice = get_object_or_404(TimeSlice, pk=pk, is_active=1)
+    timeslice = get_object_or_404(TimeSlice, pk=pk)
 
     if not user_is_data_admin_or_owner(request.user, timeslice):
         raise PermissionDenied
@@ -1346,7 +1338,7 @@ def timeslice_edit(request, pk):
 
 def timeslice_list(request):
     f = TimeSliceFilter(
-        request.GET, queryset=TimeSlice.objects.is_active().order_by('scheme', 'order'))
+        request.GET, queryset=TimeSlice.objects.order_by('scheme', 'order'))
 
     paginator = Paginator(f.qs, 10)
 
@@ -1423,14 +1415,14 @@ def submit(request):
         location_type = structured_name_data['location_id']['type']
 
         if location_type == 'db_location':
-            location = Location.objects.is_active().get(pk=location_id)
+            location = Location.objects.get(pk=location_id)
         elif location_type == 'location':
             location = locations[location_id]
         else:
             location = None
 
         if name_type == 'db_name':
-            name = Name.objects.is_active().get(pk=name_id)
+            name = Name.objects.get(pk=name_id)
         elif name_type == 'name':
             name = names[name_id]
         else:
@@ -1441,7 +1433,7 @@ def submit(request):
 
         # Wizard doesn't allow creating new qualifiers so this is always a value that exists
         # in the database
-        qualifier = Qualifier.objects.is_active().get(pk=structured_name_data['qualifier_id']['value'])
+        qualifier = Qualifier.objects.get(pk=structured_name_data['qualifier_id']['value'])
 
         if structured_name_data['save_with_reference_id']:
             structured_name_reference = reference
@@ -1464,14 +1456,14 @@ def submit(request):
         name_two_type = relation_data['name2']['type']
 
         if name_one_type == 'db_structured_name':
-            name_one = StructuredName.objects.is_active().get(pk=name_one_id)
+            name_one = StructuredName.objects.get(pk=name_one_id)
         elif name_one_type == 'structured_name':
             name_one = structured_names[name_one_id]
         else:
             name_one = None
 
         if name_two_type == 'db_structured_name':
-            name_two = StructuredName.objects.is_active().get(pk=name_two_id)
+            name_two = StructuredName.objects.get(pk=name_two_id)
         elif name_two_type == 'structured_name':
             name_two = structured_names[name_two_id]
         else:
@@ -1562,7 +1554,7 @@ def submit(request):
 
 @login_required
 def profile(request):
-    schemes = BinningScheme.objects.is_active().filter(created_by=request.user.id)
+    schemes = BinningScheme.objects.filter(created_by=request.user.id)
     return render(request, 'profile_keys.html', {'schemes': schemes, 'api_keys': list_api_keys(request)})
 
 @login_required
@@ -1597,7 +1589,7 @@ def profile_key(request, prefix):
     return render(request, 'profile_key.html', {'entries': entries, 'key': key})
 
 def binning_scheme_detail(request, pk):
-    scheme = get_object_or_404(BinningScheme, pk=pk, is_active=1)
+    scheme = get_object_or_404(BinningScheme, pk=pk)
     names = BinningSchemeName.objects.filter(scheme=pk).order_by('order');
     return render(request, 'binning_scheme_detail.html', {'scheme': scheme, 'names': names})
 
@@ -1620,7 +1612,7 @@ def binning_scheme_new(request):
 @login_required
 @permission_required('rnames_app.change_binning_scheme', raise_exception=True)
 def binning_scheme_edit(request, pk):
-    scheme = get_object_or_404(BinningScheme, pk=pk, is_active=1)
+    scheme = get_object_or_404(BinningScheme, pk=pk)
 
     if not user_is_data_admin_or_owner(request.user, scheme):
         raise PermissionDenied
@@ -1643,7 +1635,7 @@ class binning_scheme_delete(UserPassesTestMixin, DeleteView):
     success_url = reverse_lazy('binning-scheme-list-2')
 
 def binning_scheme_list(request):
-    f = BinningSchemeFilter(request.GET, queryset=BinningScheme.objects.is_active())
+    f = BinningSchemeFilter(request.GET, queryset=BinningScheme.objects.all())
     paginator = Paginator(f.qs, 10)
 
     page_number = request.GET.get('page')
@@ -1663,7 +1655,7 @@ def binning_scheme_list(request):
 @login_required
 @permission_required('rnames_app.change_binning_scheme', raise_exception=True)
 def binning_scheme_add_name(request, pk):
-    scheme = get_object_or_404(BinningScheme, pk=pk, is_active=1)
+    scheme = get_object_or_404(BinningScheme, pk=pk)
     if not user_is_data_admin_or_owner(request.user, scheme):
         raise PermissionDenied
 
