@@ -102,9 +102,3 @@ class APINameFilter(filters.FilterSet):
     class Meta:
         model = Name
         fields = ['name', 'created_by__first_name', ]
-
-class BinningSchemeFilter(filters.FilterSet):
-    scheme = filters.CharFilter(lookup_expr='icontains')
-    class Meta:
-        model = BinningScheme
-        fields = ['name']
