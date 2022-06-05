@@ -33,6 +33,7 @@ class BaseModel(models.Model):
 
 class BinningScheme(BaseModel):
     name = models.CharField(max_length=200, blank=False)
+    is_public = models.BooleanField(blank=False, default=False, help_text='Are the scheme and its results public')
     class Meta:
         unique_together = [['name', 'created_by']]
 

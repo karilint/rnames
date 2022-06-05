@@ -157,7 +157,7 @@ class BinningSchemeForm(forms.ModelForm):
 
     class Meta:
         model = BinningScheme
-        fields = ('name',)
+        fields = ('name', 'is_public')
 
 class AddBinningSchemeNameForm(forms.ModelForm):
 
