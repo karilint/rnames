@@ -60,7 +60,7 @@ import rnames_api.models as api_models
 
 # def name_list(request):
 #    names = Name.objects.is_active().order_by('name')
-#    names = Name.objects.order_by('name')
+#    names = Name.objects.all().order_by('name')
 #    return render(request, 'name_list.html', {'names': names})
 
 def user_is_data_admin_or_owner(user, data):
@@ -229,7 +229,7 @@ def binning_progress(request):
 def binning_scheme_list(request):
     f = BinningSchemeFilter(
         request.GET,
-        queryset=Binning.objects.order_by('binning_scheme', 'name')
+        queryset=Binning.objects.all().order_by('binning_scheme', 'name')
     )
 
     paginator = Paginator(f.qs, 10)
@@ -462,7 +462,7 @@ def location_edit(request, pk):
 
 def location_list(request):
     f = LocationFilter(
-        request.GET, queryset=Location.objects.order_by('name'))
+        request.GET, queryset=Location.objects.all().order_by('name'))
 
     paginator = Paginator(f.qs, 10)
 
@@ -532,7 +532,7 @@ def name_edit(request, pk):
 def name_list(request):
     f = NameFilter(
         request.GET,
-        queryset=Name.objects.order_by('name')
+        queryset=Name.objects.all().order_by('name')
     )
 
     paginator = Paginator(f.qs, 10)
@@ -668,7 +668,7 @@ def qualifiername_edit(request, pk):
 def qualifiername_list(request):
     f = QualifierNameFilter(
         request.GET,
-        queryset=QualifierName.objects.order_by('name')
+        queryset=QualifierName.objects.all().order_by('name')
     )
 
     paginator = Paginator(f.qs, 10)
@@ -764,7 +764,7 @@ def reference_edit(request, pk):
 
 def reference_list_old(request):
     f = ReferenceFilter(
-        request.GET, queryset=Reference.objects.order_by('title'))
+        request.GET, queryset=Reference.objects.all().order_by('title'))
     paginator = Paginator(f.qs, 10)  # Show 10 References per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -775,7 +775,7 @@ def reference_list_old(request):
 
 def reference_list(request):
     f = ReferenceFilter(
-        request.GET, queryset=Reference.objects.order_by('title'))
+        request.GET, queryset=Reference.objects.all().order_by('title'))
     paginator = Paginator(f.qs, 10)
 
     page_number = request.GET.get('page')
@@ -1067,7 +1067,7 @@ def stratigraphic_qualifier_edit(request, pk):
 def stratigraphic_qualifier_list(request):
     f = StratigraphicQualifierFilter(
         request.GET,
-        queryset=StratigraphicQualifier.objects.order_by('name')
+        queryset=StratigraphicQualifier.objects.all().order_by('name')
     )
 
     paginator = Paginator(f.qs, 10)
