@@ -70,7 +70,7 @@ class Binning(BaseModel):
         """
         String for representing the Model object (in Admin site etc.)
         """
-        return '%s: %s' % (self.binning_scheme, self.name)
+        return '%s: %s' % (self.binning_scheme.name, self.name)
 
 
 class Location(BaseModel):
