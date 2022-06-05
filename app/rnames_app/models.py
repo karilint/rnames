@@ -31,20 +31,17 @@ class BaseModel(models.Model):
     class Meta:
         abstract = True
 
+class BinningScheme(BaseModel):
+    name = models.CharField(max_length=200, blank=False)
+    class Meta:
+        unique_together = [['name', 'created_by']]
 
 class Binning(BaseModel):
     """
     Model representing a Binning Scheme result in RNames (e.g. Ordovician Time Slices, Phanerozoic Stages, Phanerozoic Epochs, etc.)
     """
-    BINNING = (
-        ('x_robinb', 'Ordovician Time Slices (Bergström)'),
-        ('x_robinw', 'Ordovician Time Slices (Webby)'),
-        ('x_robins', 'Phanerozoic Stages (ICS Chart, 2020)'),
-        ('x_robinp', 'Phanerozoic Epochs (ICS Chart, 2020)'),
-    )
 
-    binning_scheme = models.CharField(
-        max_length=200, choices=BINNING, blank=False, help_text='The Binning Scheme')
+    binning_scheme = models.ForeignKey(BinningScheme, blank=False, help_text='The Binning Scheme', on_delete=models.CASCADE)
     name = models.CharField(
         max_length=200, help_text="Enter a Name (e.g. Katian, Viru, etc.)")
     oldest = models.CharField(
@@ -369,11 +366,6 @@ class BinningProgress(models.Model):
     text = models.CharField(max_length=1000, default='')
     value_one = models.IntegerField(default=0)
     value_two = models.IntegerField(default=0)
-
-class BinningScheme(BaseModel):
-    name = models.CharField(max_length=200, blank=False)
-    class Meta:
-        unique_together = [['name', 'created_by']]
 
 class BinningSchemeName(models.Model):
     scheme = models.ForeignKey(BinningScheme, on_delete=models.CASCADE)

@@ -166,7 +166,7 @@ def binning_process(scheme_id):
             name = row[col.name]
             data = Binning.objects.filter(name=name, binning_scheme=scheme)
             if len(data) == 0:
-                create(name, scheme, row[col.oldest], row[col.youngest], row[col.ts_count], row[col.refs], row[col.rule])
+                create(name, scheme_id, row[col.oldest], row[col.youngest], row[col.ts_count], row[col.refs], row[col.rule])
             else:
                 update(data[0], row[col.oldest], row[col.youngest], row[col.ts_count], row[col.refs], row[col.rule])
             update_progress.update()
