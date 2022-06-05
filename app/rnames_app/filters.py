@@ -13,7 +13,6 @@ from .models import (Binning
     , Relation
     , StratigraphicQualifier
     , StructuredName
-    , TimeSlice
     , BinningScheme)
 from django.contrib.auth.models import User
 
@@ -103,14 +102,6 @@ class APINameFilter(filters.FilterSet):
     class Meta:
         model = Name
         fields = ['name', 'created_by__first_name', ]
-
-class TimeSliceFilter(filters.FilterSet):
-    scheme = filters.CharFilter(lookup_expr='icontains')
-    name = filters.CharFilter(lookup_expr='icontains')
-
-    class Meta:
-        model = TimeSlice
-        fields = ['scheme', 'name' ]
 
 class BinningSchemeFilter(filters.FilterSet):
     scheme = filters.CharFilter(lookup_expr='icontains')

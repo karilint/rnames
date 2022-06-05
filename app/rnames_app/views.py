@@ -34,12 +34,12 @@ from rest_framework.response import Response
 #from .utils.utils import YourClassOrFunction
 from rest_framework import status, generics
 from .models import (Binning, Location, Name, Qualifier, QualifierName, BinningProgress,
-                     Relation, Reference, StratigraphicQualifier, StructuredName, TimeSlice, BinningScheme, BinningSchemeName)
+                     Relation, Reference, StratigraphicQualifier, StructuredName, BinningScheme, BinningSchemeName)
 from .filters import (BinningSchemeFilter, LocationFilter, NameFilter, QualifierFilter, QualifierNameFilter,
-                      ReferenceFilter, RelationFilter, StratigraphicQualifierFilter, StructuredNameFilter, TimeSliceFilter)
+                      ReferenceFilter, RelationFilter, StratigraphicQualifierFilter, StructuredNameFilter)
 from .forms import (ColorfulContactForm, ContactForm, LocationForm, NameForm, QualifierForm, QualifierNameForm, ReferenceForm,
                     ReferenceRelationForm, RelationForm, StratigraphicQualifierForm, StructuredNameForm,
-                    TimeSliceForm, BinningSchemeForm, AddBinningSchemeNameForm, BinningSchemeNameOrderForm)
+                    BinningSchemeForm, AddBinningSchemeNameForm, BinningSchemeNameOrderForm)
 from django.contrib.auth.models import User
 from .filters import UserFilter
 
@@ -1298,75 +1298,6 @@ def user_search(request):
     user_list = User.objects.all()
     user_filter = UserFilter(request.GET, queryset=user_list)
     return render(request, 'user_list.html', {'filter': user_filter})
-
-
-class timeslice_delete(UserPassesTestMixin, DeleteView):
-    def test_func(self):
-        return user_is_data_admin_or_owner(self.request.user, self.get_object())
-
-    model = TimeSlice
-    success_url = reverse_lazy('timeslice-list')
-
-
-def timeslice_detail(request, pk):
-    ts = get_object_or_404(TimeSlice, pk=pk)
-    return render(request, 'timeslice_detail.html', {'timeslice': ts})
-
-
-@login_required
-@permission_required('rnames_app.change_timeslice', raise_exception=True)
-def timeslice_edit(request, pk):
-    timeslice = get_object_or_404(TimeSlice, pk=pk)
-
-    if not user_is_data_admin_or_owner(request.user, timeslice):
-        raise PermissionDenied
-
-    if request.method == "POST":
-        form = TimeSliceForm(request.POST, instance=timeslice)
-        if form.is_valid():
-            timeslice = form.save(commit=False)
-            timeslice.save()
-            return redirect('timeslice-detail', pk=timeslice.pk)
-    else:
-        form = TimeSliceForm(instance=timeslice)
-    return render(request, 'timeslice_edit.html', {'form': form})
-
-
-def timeslice_list(request):
-    f = TimeSliceFilter(
-        request.GET, queryset=TimeSlice.objects.order_by('scheme', 'order'))
-
-    paginator = Paginator(f.qs, 10)
-
-    page_number = request.GET.get('page')
-    try:
-        page_obj = paginator.page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-
-    return render(
-        request,
-        'timeslice_list.html',
-        {'page_obj': page_obj, 'filter': f, }
-    )
-
-
-@login_required
-@permission_required('rnames_app.add_timeslice', raise_exception=True)
-def timeslice_new(request):
-    if request.method == "POST":
-        form = TimeSliceForm(request.POST)
-        if form.is_valid():
-            timeslice = form.save(commit=False)
-            timeslice.created_by_id = request.user.id
-            timeslice.created_on = timezone.now()
-            timeslice.save()
-            return redirect('timeslice-detail', pk=timeslice.pk)
-    else:
-        form = TimeSliceForm()
-    return render(request, 'timeslice_edit.html', {'form': form})
 
 @login_required
 def submit(request):

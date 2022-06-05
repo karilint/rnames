@@ -142,14 +142,6 @@ class RelationViewSet(ApiViewSet):
 	def log_access(self, api_key, instance):
 		api_models.KeyRelation(relation=instance, api_key=api_key).save()
 
-class TimeSliceViewSet(ApiViewSet):
-	queryset = models.TimeSlice.objects.all()
-	serializer_class = serializers.TimeSliceSerializer
-	filterset_class = filters.TimeSliceFilter
-
-	def log_access(self, api_key, instance):
-		api_models.KeyTimeSlice(time_slice=instance, api_key=api_key).save()
-
 class BinningViewSet(viewsets.ReadOnlyModelViewSet):
 	queryset = models.Binning.objects.all()
 	serializer_class = serializers.BinningSerializer

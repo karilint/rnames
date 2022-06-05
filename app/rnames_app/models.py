@@ -342,25 +342,6 @@ class Relation(BaseModel):
         """
         return '%s | %s' % (self.name_one, self.name_two)
 
-
-class TimeSlice(BaseModel):
-    name = models.CharField(max_length=200, blank=False)
-    order = models.IntegerField(help_text='Chronological order within scheme.')
-    scheme = models.CharField(max_length=200, blank=False)
-
-    class Meta:
-        ordering = ['scheme', 'order']
-
-    def __str__(self):
-        return '%s %d %s' % (self.scheme, self.order, self.name)
-
-    def get_absolute_url(self):
-        """
-        Returns the url to access a particular name instance.
-        """
-        return reverse('timeslice-detail', args=[str(self.id)])
-
-
 class BinningProgress(models.Model):
     name = models.CharField(max_length=1000, unique=True)
     text = models.CharField(max_length=1000, default='')
