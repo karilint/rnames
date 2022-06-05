@@ -72,7 +72,7 @@ def user_is_data_admin_or_owner(user, data):
 
     return False
 
-def binning_process():
+def binning_process(scheme_id):
     connection.connect()
     info = BinningProgressUpdater()
 
@@ -80,7 +80,7 @@ def binning_process():
         return
 
     def time_slices(scheme):
-        return list(TimeSlice.objects.filter(scheme=scheme).order_by('order').values_list('name', flat=True))
+        return list(BinningSchemeName.objects.filter(scheme=scheme_id).order_by('order').values_list('structured_name__name__name', flat=True))
 
     queryset_list = list(Relation.objects.select_related().values_list(
         'id',
@@ -182,15 +182,14 @@ def binning_process():
     info.finish_binning()
 
 @login_required
-def external(request):
+def external(request, scheme_id):
     if not request.user.groups.filter(name='data_admin').exists():
         raise PermissionDenied
 
     db.connections.close_all()
-    handle = mp.Process(target=binning_process)
+    handle = mp.Process(target=binning_process, args=(scheme_id,))
     handle.start()
     return redirect('/rnames/admin/binning_progress')
-
 
 def binning(request):
 
@@ -1014,7 +1013,7 @@ def rnames_detail(request):
 
 
 @login_required
-def run_binning(request):
+def run_binning(request, scheme_id):
     """
     View function for the run binning operation.
     """
@@ -1022,14 +1021,11 @@ def run_binning(request):
     if not request.user.groups.filter(name='data_admin').exists():
         raise PermissionDenied
 
-    # Generate counts of some of the main objects
-    num_opinions = Relation.objects.count()
-
     # Render the HTML template index.html with the data in the context variable
     return render(
         request,
         'run_binning.html',
-        context={'num_opinions': num_opinions, },
+        {'scheme_id': scheme_id}
     )
 
 
