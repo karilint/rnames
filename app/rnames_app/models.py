@@ -42,7 +42,7 @@ class Binning(BaseModel):
     Model representing a Binning Scheme result in RNames (e.g. Ordovician Time Slices, Phanerozoic Stages, Phanerozoic Epochs, etc.)
     """
 
-    binning_scheme = models.ForeignKey(BinningScheme, blank=False, help_text='The Binning Scheme', on_delete=models.CASCADE)
+    binning_scheme = models.ForeignKey(BinningScheme, blank=True, null=True, help_text='The Binning Scheme', on_delete=models.CASCADE)
     name = models.CharField(
         max_length=200, help_text="Enter a Name (e.g. Katian, Viru, etc.)")
     oldest = models.CharField(
