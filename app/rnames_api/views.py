@@ -45,14 +45,14 @@ class ApiViewSet(viewsets.ModelViewSet):
 		abstract = True
 
 class LocationViewSet(ApiViewSet):
-	queryset = models.Location.objects.is_active()
+	queryset = models.Location.objects.all()
 	serializer_class = serializers.LocationSerializer
 	filterset_class = filters.LocationFilter
 	def log_access(self, api_key, instance):
 		api_models.KeyLocation(location=instance, api_key=api_key).save()
 
 class NameViewSet(ApiViewSet):
-	queryset = models.Name.objects.is_active()
+	queryset = models.Name.objects.all()
 	serializer_class = serializers.NameSerializer
 	filterset_class = filters.NameFilter
 
@@ -64,10 +64,9 @@ class QualifierViewSet(ApiViewSet):
 
 	def get_queryset(self):
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
-			return models.Qualifier.objects.is_active() \
-				.prefetch_related('qualifier_name', 'stratigraphic_qualifier')
+			return models.Qualifier.objects.prefetch_related('qualifier_name', 'stratigraphic_qualifier')
 
-		return models.Qualifier.objects.is_active()
+		return models.Qualifier.objects.all()
 
 	def get_serializer_class(self):
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
@@ -78,7 +77,7 @@ class QualifierViewSet(ApiViewSet):
 		api_models.KeyQualifier(qualifier=instance, api_key=api_key).save()
 
 class QualifierNameViewSet(ApiViewSet):
-	queryset = models.QualifierName.objects.is_active()
+	queryset = models.QualifierName.objects.all()
 	serializer_class = serializers.QualifierNameSerializer
 	filterset_class = filters.QualifierNameFilter
 
@@ -86,7 +85,7 @@ class QualifierNameViewSet(ApiViewSet):
 		api_models.KeyQualifierName(qualifier_name=instance, api_key=api_key).save()
 
 class StratigraphicQualifierViewSet(ApiViewSet):
-	queryset = models.StratigraphicQualifier.objects.is_active()
+	queryset = models.StratigraphicQualifier.objects.all()
 	serializer_class = serializers.StratigraphicQualifierSerializer
 	filterset_class = filters.StratigraphicQualifierFilter
 
@@ -99,11 +98,11 @@ class StructuredNameViewSet(ApiViewSet):
 	def get_queryset(self):
 
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
-			return models.StructuredName.objects.is_active() \
+			return models.StructuredName.objects \
 				.prefetch_related('name', 'location', 'reference', 'qualifier') \
 				.prefetch_related('qualifier__qualifier_name', 'qualifier__stratigraphic_qualifier')
 
-		return models.StructuredName.objects.is_active()
+		return models.StructuredName.objects.all()
 
 	def get_serializer_class(self):
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
@@ -114,7 +113,7 @@ class StructuredNameViewSet(ApiViewSet):
 		api_models.KeyStructuredName(structured_name=instance, api_key=api_key).save()
 
 class ReferenceViewSet(ApiViewSet):
-	queryset = models.Reference.objects.is_active()
+	queryset = models.Reference.objects.all()
 	serializer_class = serializers.ReferenceSerializer
 	filterset_class = filters.ReferenceFilter
 
@@ -126,14 +125,14 @@ class RelationViewSet(ApiViewSet):
 
 	def get_queryset(self):
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
-			return models.Relation.objects.is_active() \
+			return models.Relation.objects \
 				.prefetch_related('name_one', 'name_two', 'reference') \
 				.prefetch_related('name_one__name', 'name_one__location','name_one__reference','name_one__qualifier') \
 				.prefetch_related('name_two__name', 'name_two__location','name_two__reference','name_two__qualifier') \
 				.prefetch_related('name_one__qualifier__qualifier_name', 'name_one__qualifier__stratigraphic_qualifier') \
 				.prefetch_related('name_two__qualifier__qualifier_name', 'name_two__qualifier__stratigraphic_qualifier')
 
-		return models.Relation.objects.is_active()
+		return models.Relation.objects.all()
 
 	def get_serializer_class(self):
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
@@ -142,14 +141,6 @@ class RelationViewSet(ApiViewSet):
 
 	def log_access(self, api_key, instance):
 		api_models.KeyRelation(relation=instance, api_key=api_key).save()
-
-class TimeSliceViewSet(ApiViewSet):
-	queryset = models.TimeSlice.objects.is_active()
-	serializer_class = serializers.TimeSliceSerializer
-	filterset_class = filters.TimeSliceFilter
-
-	def log_access(self, api_key, instance):
-		api_models.KeyTimeSlice(time_slice=instance, api_key=api_key).save()
 
 class BinningViewSet(viewsets.ReadOnlyModelViewSet):
 	queryset = models.Binning.objects.all()

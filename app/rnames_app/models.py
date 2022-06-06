@@ -12,24 +12,6 @@ from simple_history.models import HistoricalRecords
 # Used to generate URLs by reversing the URL patterns
 from django.urls import reverse
 
-
-class CustomQuerySet(QuerySet):
-    def delete(self):
-        self.update(is_active=False)
-
-# https://simpleisbetterthancomplex.com/tips/2016/08/16/django-tip-11-custom-manager-with-chainable-querysets.html
-
-
-class ActiveManager(models.Manager):
-    def is_active(self):
-        return self.model.objects.filter(is_active=True)
-
-    def get_queryset(self):
-        return CustomQuerySet(self.model, using=self._db)
-
-# https://medium.com/@KevinPavlish/add-common-fields-to-all-your-django-models-bce033ac2cdc
-
-
 class BaseModel(models.Model):
     """
     A base model including basic fields for each Model
@@ -46,100 +28,21 @@ class BaseModel(models.Model):
         history_change_reason_field=models.TextField(null=True),
         inherit=True)
 # https://stackoverflow.com/questions/5190313/django-booleanfield-how-to-set-the-default-value-to-true
-    is_active = models.BooleanField(
-        default=True, help_text='Is the record active')
-    objects = ActiveManager()
-
-# https://stackoverflow.com/questions/4825815/prevent-delete-in-django-model
-    def delete(self):
-        self.is_active = False
-        print(self._meta.object_name)
-
-        # List of first lefel models
-        # qualifier -> stratigraphicqualifier, qualifier_name
-        # relation -> NameOne, NameTwo, Reference
-        # StructuredName -> Location, Name, Qualifier, (Reference)
-
-        # https://stackoverflow.com/questions/3599524/get-class-name-of-django-model
-        if self._meta.object_name == 'Reference':
-            qs = Relation.objects.is_active().filter(reference__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        # https://stackoverflow.com/questions/3599524/get-class-name-of-django-model
-        if self._meta.object_name == 'Reference':
-            qs = StructuredName.objects.is_active().filter(reference__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        if self._meta.object_name == 'StructuredName':
-            qs = Relation.objects.is_active().filter(
-                name_one__id=self.pk) | Relation.objects.is_active().filter(name_two__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        if self._meta.object_name == 'Name':
-            qs = StructuredName.objects.is_active().filter(name__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        if self._meta.object_name == 'Location':
-            qs = StructuredName.objects.is_active().filter(location__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        if self._meta.object_name == 'Qualifier':
-            qs = StructuredName.objects.is_active().filter(qualifier__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        if self._meta.object_name == 'QualifierName':
-            qs = Qualifier.objects.is_active().filter(qualifier_name__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        if self._meta.object_name == 'StratigraphicQualifier':
-            qs = Qualifier.objects.is_active().filter(stratigraphic_qualifier__id=self.pk)
-            for x in qs:
-                print(str(x._meta.object_name) +
-                      ' id: ' + str(x.pk) + ' deleted')
-                x.delete()
-
-        print(str(self._meta.object_name) +
-              ' id: ' + str(self.pk) + ' deleted')
-        self.save()
-
     class Meta:
         abstract = True
 
+class BinningScheme(BaseModel):
+    name = models.CharField(max_length=200, blank=False)
+    is_public = models.BooleanField(blank=False, default=False, help_text='Are the scheme and its results public')
+    class Meta:
+        unique_together = [['name', 'created_by']]
 
 class Binning(BaseModel):
     """
     Model representing a Binning Scheme result in RNames (e.g. Ordovician Time Slices, Phanerozoic Stages, Phanerozoic Epochs, etc.)
     """
-    BINNING = (
-        ('x_robinb', 'Ordovician Time Slices (Bergström)'),
-        ('x_robinw', 'Ordovician Time Slices (Webby)'),
-        ('x_robins', 'Phanerozoic Stages (ICS Chart, 2020)'),
-        ('x_robinp', 'Phanerozoic Epochs (ICS Chart, 2020)'),
-    )
 
-    binning_scheme = models.CharField(
-        max_length=200, choices=BINNING, blank=False, help_text='The Binning Scheme')
+    binning_scheme = models.ForeignKey(BinningScheme, blank=False, help_text='The Binning Scheme', on_delete=models.CASCADE)
     name = models.CharField(
         max_length=200, help_text="Enter a Name (e.g. Katian, Viru, etc.)")
     oldest = models.CharField(
@@ -167,7 +70,7 @@ class Binning(BaseModel):
         """
         String for representing the Model object (in Admin site etc.)
         """
-        return '%s: %s' % (self.binning_scheme, self.name)
+        return '%s: %s' % (self.binning_scheme.name, self.name)
 
 
 class Location(BaseModel):
@@ -440,35 +343,11 @@ class Relation(BaseModel):
         """
         return '%s | %s' % (self.name_one, self.name_two)
 
-
-class TimeSlice(BaseModel):
-    name = models.CharField(max_length=200, blank=False)
-    order = models.IntegerField(help_text='Chronological order within scheme.')
-    scheme = models.CharField(max_length=200, blank=False)
-
-    class Meta:
-        ordering = ['scheme', 'order']
-
-    def __str__(self):
-        return '%s %d %s' % (self.scheme, self.order, self.name)
-
-    def get_absolute_url(self):
-        """
-        Returns the url to access a particular name instance.
-        """
-        return reverse('timeslice-detail', args=[str(self.id)])
-
-
 class BinningProgress(models.Model):
     name = models.CharField(max_length=1000, unique=True)
     text = models.CharField(max_length=1000, default='')
     value_one = models.IntegerField(default=0)
     value_two = models.IntegerField(default=0)
-
-class BinningScheme(BaseModel):
-    name = models.CharField(max_length=200, blank=False)
-    class Meta:
-        unique_together = [['name', 'created_by']]
 
 class BinningSchemeName(models.Model):
     scheme = models.ForeignKey(BinningScheme, on_delete=models.CASCADE)

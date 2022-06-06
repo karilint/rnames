@@ -54,11 +54,6 @@ class RelationSerializer(serializers.HyperlinkedModelSerializer):
 		model = models.Relation
 		fields = ['id', 'belongs_to', 'name_one', 'name_two', 'reference']
 
-class TimeSliceSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = models.TimeSlice
-		fields = ['id', 'order', 'scheme']
-
 class BinningSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = models.Binning
