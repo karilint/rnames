@@ -10,12 +10,20 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='historicalbinning',
-            name='binning_scheme',
+        migrations.AlterModelOptions(
+            name='binning',
+            options={},
+        ),
+        migrations.AlterUniqueTogether(
+            name='binning',
+            unique_together=set(),
         ),
         migrations.RemoveField(
             model_name='binning',
+            name='binning_scheme',
+        ),
+        migrations.RemoveField(
+            model_name='historicalbinning',
             name='binning_scheme',
         ),
     ]
