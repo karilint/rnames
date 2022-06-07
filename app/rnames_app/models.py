@@ -362,3 +362,10 @@ class CountryCode(models.Model):
     iso3166_1_alpha_2 = models.CharField(max_length=2, unique=True, help_text="ISO 3166-1 alpha-2 country code")
     official_name_en = models.CharField(max_length=255, help_text="Official English name")
     region_name = models.CharField(max_length=255, help_text="Region Name")
+
+class AbsoluteAgeValue(BaseModel):
+    structured_name = models.ForeignKey(StructuredName, on_delete=models.CASCADE, help_text="Absolute Age Structured Name")
+    age = models.FloatField(blank=False, null=False, help_text="Absolute Age in millions of years")
+    age_upper_confidence = models.FloatField(default=0, help_text="Upper Confidence Value in millions of years")
+    age_lower_confidence = models.FloatField(default=0, help_text="Lower Confidence Value in millions of years")
+    reference = models.ForeignKey(Reference, on_delete=models.CASCADE)
