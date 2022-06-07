@@ -57,8 +57,9 @@ class Binning(BaseModel):
                             help_text='Enter the rule for the Binning.')
 
     class Meta:
-        ordering = ['name', 'binning_scheme']
-        unique_together = ('binning_scheme', 'name',)
+        pass
+        # ordering = ['name', 'binning_scheme']
+        # unique_together = ('binning_scheme', 'name',)
 
     def get_absolute_url(self):
         """
