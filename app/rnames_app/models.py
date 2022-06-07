@@ -351,12 +351,12 @@ class BinningProgress(models.Model):
     value_two = models.IntegerField(default=0)
 
 class BinningSchemeName(models.Model):
-    scheme = models.ForeignKey(TimeScale, on_delete=models.CASCADE)
+    ts_name = models.ForeignKey(TimeScale, on_delete=models.CASCADE)
     structured_name = models.ForeignKey(StructuredName, on_delete=models.CASCADE)
-    order = models.IntegerField(default=0)
+    sequence = models.IntegerField(default=0)
 
     class Meta:
-        unique_together = [['scheme', 'structured_name'], ['scheme', 'order']]
+        unique_together = [['ts_name', 'structured_name'], ['ts_name', 'sequence']]
 
 class CountryCodes(models.Model):
     iso3166_1_alpha_2 = models.CharField(max_length=2, unique=True, help_text="ISO 3166-1 alpha-2 country code")
