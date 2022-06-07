@@ -2,7 +2,7 @@ from django import forms
 from django_select2.forms import (
     ModelSelect2Widget,
 )
-from .models import Location, Name, Qualifier, QualifierName, Reference, Relation, StratigraphicQualifier, StructuredName, BinningScheme, BinningSchemeName
+from .models import Location, Name, Qualifier, QualifierName, Reference, Relation, StratigraphicQualifier, StructuredName, TimeScale, BinningSchemeName
 
 class ContactForm(forms.Form):
     name = forms.CharField(max_length=30)
@@ -153,11 +153,11 @@ class StratigraphicQualifierForm(forms.ModelForm):
         model = StratigraphicQualifier
         fields = ('name',)
 
-class BinningSchemeForm(forms.ModelForm):
+class TimeScaleForm(forms.ModelForm):
 
     class Meta:
-        model = BinningScheme
-        fields = ('name', 'is_public')
+        model = TimeScale
+        fields = ('ts_name', 'is_public')
 
 class AddBinningSchemeNameForm(forms.ModelForm):
 

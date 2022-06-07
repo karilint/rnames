@@ -31,18 +31,18 @@ class BaseModel(models.Model):
     class Meta:
         abstract = True
 
-class BinningScheme(BaseModel):
-    name = models.CharField(max_length=200, blank=False)
+class TimeScale(BaseModel):
+    ts_name = models.CharField(max_length=200, blank=False)
     is_public = models.BooleanField(blank=False, default=False, help_text='Are the scheme and its results public')
     class Meta:
-        unique_together = [['name', 'created_by']]
+        unique_together = [['ts_name', 'created_by']]
 
 class Binning(BaseModel):
     """
     Model representing a Binning Scheme result in RNames (e.g. Ordovician Time Slices, Phanerozoic Stages, Phanerozoic Epochs, etc.)
     """
 
-    binning_scheme = models.ForeignKey(BinningScheme, blank=True, null=True, help_text='The Binning Scheme', on_delete=models.CASCADE)
+    binning_scheme = models.ForeignKey(TimeScale, blank=True, null=True, help_text='The Binning Scheme', on_delete=models.CASCADE)
     name = models.CharField(
         max_length=200, help_text="Enter a Name (e.g. Katian, Viru, etc.)")
     oldest = models.CharField(
@@ -57,8 +57,9 @@ class Binning(BaseModel):
                             help_text='Enter the rule for the Binning.')
 
     class Meta:
-        ordering = ['name', 'binning_scheme']
-        unique_together = ('binning_scheme', 'name',)
+        pass
+        # ordering = ['name', 'binning_scheme']
+        # unique_together = ('binning_scheme', 'name',)
 
     def get_absolute_url(self):
         """
@@ -70,7 +71,7 @@ class Binning(BaseModel):
         """
         String for representing the Model object (in Admin site etc.)
         """
-        return '%s: %s' % (self.binning_scheme.name, self.name)
+        return '%s: %s' % (self.binning_scheme.ts_name, self.name)
 
 
 class Location(BaseModel):
@@ -350,9 +351,14 @@ class BinningProgress(models.Model):
     value_two = models.IntegerField(default=0)
 
 class BinningSchemeName(models.Model):
-    scheme = models.ForeignKey(BinningScheme, on_delete=models.CASCADE)
+    scheme = models.ForeignKey(TimeScale, on_delete=models.CASCADE)
     structured_name = models.ForeignKey(StructuredName, on_delete=models.CASCADE)
     order = models.IntegerField(default=0)
 
     class Meta:
         unique_together = [['scheme', 'structured_name'], ['scheme', 'order']]
+
+class CountryCodes(models.Model):
+    iso3166_1_alpha_2 = models.CharField(max_length=2, unique=True, help_text="ISO 3166-1 alpha-2 country code")
+    official_name_en = models.CharField(max_length=255, help_text="Official English name")
+    region_name = models.CharField(max_length=255, help_text="Region Name")

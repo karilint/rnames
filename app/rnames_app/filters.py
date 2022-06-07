@@ -13,15 +13,15 @@ from .models import (Binning
     , Relation
     , StratigraphicQualifier
     , StructuredName
-    , BinningScheme)
+    , TimeScale)
 from django.contrib.auth.models import User
 
-class BinningSchemeFilter(filters.FilterSet):
+class TimeScaleFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
-        model = Binning
-        fields = ['binning_scheme', 'name', ]
+        model = TimeScale
+        fields = ['ts_name', 'name', ]
 
 class LocationFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr='icontains')
