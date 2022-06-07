@@ -145,3 +145,8 @@ class RelationViewSet(ApiViewSet):
 class BinningViewSet(viewsets.ReadOnlyModelViewSet):
 	queryset = models.Binning.objects.all()
 	serializer_class = serializers.BinningSerializer
+
+class AbsoluteAgeValueViewSet(ApiViewSet):
+	filterset_class = filters.AbsoluteAgeValueFilter
+	queryset = models.AbsoluteAgeValue.objects.all()
+	serializer_class = serializers.AbsoluteAgeValueSerializer

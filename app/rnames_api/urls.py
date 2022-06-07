@@ -13,6 +13,7 @@ router.register(r'structured-names', views.StructuredNameViewSet, basename='api-
 router.register(r'references', views.ReferenceViewSet, basename='api-reference')
 router.register(r'relations', views.RelationViewSet, basename='api-relation')
 router.register(r'binnings', views.BinningViewSet, basename='api-binning')
+router.register(r'absolute-age-values', views.AbsoluteAgeValueViewSet, basename='api-absolute-age-value')
 
 urlpatterns = [
 	path('', include(router.urls)),
