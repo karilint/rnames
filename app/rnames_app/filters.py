@@ -13,7 +13,8 @@ from .models import (Binning
     , Relation
     , StratigraphicQualifier
     , StructuredName
-    , TimeScale)
+    , TimeScale
+    , AbsoluteAgeValue)
 from django.contrib.auth.models import User
 
 class TimeScaleFilter(filters.FilterSet):
@@ -102,3 +103,10 @@ class APINameFilter(filters.FilterSet):
     class Meta:
         model = Name
         fields = ['name', 'created_by__first_name', ]
+
+class AbsoluteAgeValueFilter(filters.FilterSet):
+    structured_name__name__name = filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = AbsoluteAgeValue
+        fields = ['structured_name__name__name']

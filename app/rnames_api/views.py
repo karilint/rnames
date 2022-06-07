@@ -30,7 +30,7 @@ class ApiViewSet(viewsets.ModelViewSet):
 		return [permission() for permission in permission_classes]
 
 	def create(self, request):
-		serializer = self.get_serializer_class()
+		serializer = self.get_serializer(data=request.data)
 		if serializer.is_valid():
 			serializer.save()
 
@@ -145,3 +145,8 @@ class RelationViewSet(ApiViewSet):
 class BinningViewSet(viewsets.ReadOnlyModelViewSet):
 	queryset = models.Binning.objects.all()
 	serializer_class = serializers.BinningSerializer
+
+class AbsoluteAgeValueViewSet(ApiViewSet):
+	filterset_class = filters.AbsoluteAgeValueFilter
+	queryset = models.AbsoluteAgeValue.objects.all()
+	serializer_class = serializers.AbsoluteAgeValueSerializer

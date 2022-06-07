@@ -85,3 +85,8 @@ class RelationInlineSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = models.Relation
 		fields = ['id', 'belongs_to', 'name_one', 'name_two', 'reference']
+
+class AbsoluteAgeValueSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = models.AbsoluteAgeValue
+		fields = ['structured_name', 'age', 'age_upper_confidence', 'age_lower_confidence', 'reference']

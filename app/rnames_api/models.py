@@ -36,3 +36,6 @@ class KeyStratigraphicQualifier(ApiKeyUsed):
 
 class KeyStructuredName(ApiKeyUsed):
 	structured_name = models.ForeignKey(rnames_models.StructuredName, on_delete=models.CASCADE)
+
+class KeyAbsoluteAgeValue(ApiKeyUsed):
+	absolute_age_value = models.ForeignKey(rnames_models.AbsoluteAgeValue, on_delete=models.CASCADE)
