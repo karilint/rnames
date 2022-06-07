@@ -7,11 +7,11 @@
     <form action="" method="get">
         {{ filter.form.as_p }}
         <button type="submit" class="w3-button w3-border w3-hover-light-grey"><i class="fas fa-search"> Search</i></button>
-        <a href="{% url 'binning-scheme-list-2' %}" class="w3-button w3-border w3-hover-light-grey"><i class="fas fa-undo"> Reset filter</i></a>
+        <a href="{% url 'time-scale-list' %}" class="w3-button w3-border w3-hover-light-grey"><i class="fas fa-undo"> Reset filter</i></a>
     </form>
     {% if user.is_authenticated %}
       <br>
-      <a class="btn btn-default" href="{% url 'binning-scheme-new' %}"><span class="fa  fa-plus"></span> Add</a>
+      <a class="btn btn-default" href="{% url 'time-scale-new' %}"><span class="fa  fa-plus"></span> Add</a>
       <br>
     {% endif %}
 
@@ -24,11 +24,11 @@
 
         {% for x in page_obj %}
           <tr>
-            <td>{{ x.name }}</td>
+            <td>{{ x.ts_name }}</td>
             <td>
-                <a class="btn btn-default" href="{% url 'binning-scheme-detail' pk=x.pk %}"><span class="fa fa-search"></span></a>
-                <a class="btn btn-default" href="{% url 'binning-scheme-edit' pk=x.pk %}"><span class="fa fa-pencil-square-o"></span></a>
-                <a class="btn btn-default" href="{% url 'binning-scheme-delete' pk=x.pk %}"><span class="fa  fa-trash-o"></span></a>
+                <a class="btn btn-default" href="{% url 'time-scale-detail' pk=x.pk %}"><span class="fa fa-search"></span></a>
+                <a class="btn btn-default" href="{% url 'time-scale-edit' pk=x.pk %}"><span class="fa fa-pencil-square-o"></span></a>
+                <a class="btn btn-default" href="{% url 'time-scale-delete' pk=x.pk %}"><span class="fa  fa-trash-o"></span></a>
               </td>
           </tr>
         {% endfor %}

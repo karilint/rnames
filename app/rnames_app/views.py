@@ -34,12 +34,12 @@ from rest_framework.response import Response
 #from .utils.utils import YourClassOrFunction
 from rest_framework import status, generics
 from .models import (Binning, Location, Name, Qualifier, QualifierName, BinningProgress,
-                     Relation, Reference, StratigraphicQualifier, StructuredName, BinningScheme, BinningSchemeName)
-from .filters import (BinningSchemeFilter, LocationFilter, NameFilter, QualifierFilter, QualifierNameFilter,
+                     Relation, Reference, StratigraphicQualifier, StructuredName, TimeScale, BinningSchemeName)
+from .filters import (TimeScaleFilter, LocationFilter, NameFilter, QualifierFilter, QualifierNameFilter,
                       ReferenceFilter, RelationFilter, StratigraphicQualifierFilter, StructuredNameFilter)
 from .forms import (ColorfulContactForm, ContactForm, LocationForm, NameForm, QualifierForm, QualifierNameForm, ReferenceForm,
                     ReferenceRelationForm, RelationForm, StratigraphicQualifierForm, StructuredNameForm,
-                    BinningSchemeForm, AddBinningSchemeNameForm, BinningSchemeNameOrderForm)
+                    TimeScaleForm, AddBinningSchemeNameForm, BinningSchemeNameOrderForm)
 from django.contrib.auth.models import User
 from .filters import UserFilter
 
@@ -227,7 +227,7 @@ def binning_progress(request):
     return render(request, 'binning_progress.html')
 
 def binning_scheme_list(request):
-    f = BinningSchemeFilter(
+    f = TimeScaleFilter(
         request.GET,
         queryset=Binning.objects.all().order_by('binning_scheme', 'name')
     )
@@ -1481,7 +1481,7 @@ def submit(request):
 
 @login_required
 def profile(request):
-    schemes = BinningScheme.objects.filter(created_by=request.user.id)
+    schemes = TimeScale.objects.filter(created_by=request.user.id)
     return render(request, 'profile_keys.html', {'schemes': schemes, 'api_keys': list_api_keys(request)})
 
 @login_required
@@ -1515,54 +1515,54 @@ def profile_key(request, prefix):
 
     return render(request, 'profile_key.html', {'entries': entries, 'key': key})
 
-def binning_scheme_detail(request, pk):
-    scheme = get_object_or_404(BinningScheme, pk=pk)
+def time_scale_detail(request, pk):
+    scheme = get_object_or_404(TimeScale, pk=pk)
     names = BinningSchemeName.objects.filter(scheme=pk).order_by('order');
-    return render(request, 'binning_scheme_detail.html', {'scheme': scheme, 'names': names})
+    return render(request, 'time_scale_detail.html', {'scheme': scheme, 'names': names})
 
 @login_required
-@permission_required('rnames_app.add_binning_scheme', raise_exception=True)
-def binning_scheme_new(request):
+@permission_required('rnames_app.add_time_scale', raise_exception=True)
+def time_scale_new(request):
     if request.method == "POST":
-        form = BinningSchemeForm(request.POST)
+        form = TimeScaleForm(request.POST)
         if form.is_valid():
             scheme = form.save(commit=False)
             scheme.created_by_id = request.user.id
             scheme.created_on = timezone.now()
             scheme.save()
-            return redirect('binning-scheme-detail', pk=scheme.pk)
+            return redirect('time-scale-detail', pk=scheme.pk)
     else:
-        form = BinningSchemeForm()
+        form = TimeScaleForm()
 
-    return render(request, 'binning_scheme_edit.html', {'form': form})
+    return render(request, 'time_scale_edit.html', {'form': form})
 
 @login_required
-@permission_required('rnames_app.change_binning_scheme', raise_exception=True)
-def binning_scheme_edit(request, pk):
-    scheme = get_object_or_404(BinningScheme, pk=pk)
+@permission_required('rnames_app.change_time_scale', raise_exception=True)
+def time_scale_edit(request, pk):
+    scheme = get_object_or_404(TimeScale, pk=pk)
 
     if not user_is_data_admin_or_owner(request.user, scheme):
         raise PermissionDenied
 
     if request.method == "POST":
-        form = BinningSchemeForm(request.POST, instance=scheme)
+        form = TimeScaleForm(request.POST, instance=scheme)
         if form.is_valid():
             scheme = form.save(commit=False)
             scheme.save()
-            return redirect('binning-scheme-detail', pk=scheme.pk)
+            return redirect('time-scale-detail', pk=scheme.pk)
     else:
-        form = BinningSchemeForm(instance=scheme)
-    return render(request, 'binning_scheme_edit.html', {'form': form})
+        form = TimeScaleForm(instance=scheme)
+    return render(request, 'time_scale_edit.html', {'form': form})
 
-class binning_scheme_delete(UserPassesTestMixin, DeleteView):
+class time_scale_delete(UserPassesTestMixin, DeleteView):
     def test_func(self):
         return user_is_data_admin_or_owner(self.request.user, self.get_object())
 
-    model = BinningScheme
-    success_url = reverse_lazy('binning-scheme-list-2')
+    model = TimeScale
+    success_url = reverse_lazy('time-scale-list')
 
-def binning_scheme_list(request):
-    f = BinningSchemeFilter(request.GET, queryset=BinningScheme.objects.all())
+def time_scale_list(request):
+    f = TimeScaleFilter(request.GET, queryset=TimeScale.objects.all())
     paginator = Paginator(f.qs, 10)
 
     page_number = request.GET.get('page')
@@ -1575,14 +1575,14 @@ def binning_scheme_list(request):
 
     return render(
         request,
-        'binning_scheme_list_2.html',
+        'time_scale_list.html',
         {'page_obj': page_obj, 'filter': f, }
     )
 
 @login_required
-@permission_required('rnames_app.change_binning_scheme', raise_exception=True)
+@permission_required('rnames_app.change_time_scale', raise_exception=True)
 def binning_scheme_add_name(request, pk):
-    scheme = get_object_or_404(BinningScheme, pk=pk)
+    scheme = get_object_or_404(TimeScale, pk=pk)
     if not user_is_data_admin_or_owner(request.user, scheme):
         raise PermissionDenied
 
@@ -1593,7 +1593,7 @@ def binning_scheme_add_name(request, pk):
             entry.scheme = scheme
             entry.order = BinningSchemeName.objects.filter(scheme=scheme).count()
             entry.save()
-        return redirect('binning-scheme-detail', pk=pk)
+        return redirect('time-scale-detail', pk=pk)
 
     form = AddBinningSchemeNameForm();
 
@@ -1610,7 +1610,7 @@ def binning_scheme_edit_name(request, pk):
         form = BinningSchemeNameOrderForm(request.POST, instance=name)
         if form.is_valid():
             entry = form.save()
-        return redirect('binning-scheme-detail', pk=name.scheme.pk)
+        return redirect('time-scale-detail', pk=name.scheme.pk)
 
     form = BinningSchemeNameOrderForm(instance=name);
     return render(request, 'binning_scheme_name_edit.html', {'scheme': name.scheme, 'name': name, 'form': form})
@@ -1622,4 +1622,4 @@ class binning_scheme_delete_name(UserPassesTestMixin, DeleteView):
         return user_is_data_admin_or_owner(self.request.user, name.scheme)
 
     model = BinningSchemeName
-    success_url = reverse_lazy('binning-scheme-list-2')
+    success_url = reverse_lazy('time-scale-list')
