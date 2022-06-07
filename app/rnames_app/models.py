@@ -358,7 +358,7 @@ class BinningSchemeName(models.Model):
     class Meta:
         unique_together = [['ts_name', 'structured_name'], ['ts_name', 'sequence']]
 
-class CountryCodes(models.Model):
+class CountryCode(models.Model):
     iso3166_1_alpha_2 = models.CharField(max_length=2, unique=True, help_text="ISO 3166-1 alpha-2 country code")
     official_name_en = models.CharField(max_length=255, help_text="Official English name")
     region_name = models.CharField(max_length=255, help_text="Region Name")
