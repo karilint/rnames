@@ -10,14 +10,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='timeslice',
-            name='created_by',
-        ),
-        migrations.RemoveField(
-            model_name='timeslice',
-            name='modified_by',
-        ),
         migrations.AddField(
             model_name='binningscheme',
             name='is_public',
