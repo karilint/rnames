@@ -97,7 +97,7 @@ def paleobiology_database_import():
 	print('Finished creating references')
 
 	print('Creating structured names')
-	# create_structured_names(data['structured_names'])
+	create_structured_names(data['structured_names'])
 	print('Finished creating structured names')
 
 	print('Creating relations')
