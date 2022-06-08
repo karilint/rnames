@@ -162,7 +162,7 @@ def pbdb_import(cc2):
     res_strat_PB1.rename(columns={'eag': 'Name_two', 'Location':'Location_one'},inplace = True)
     res_strat_PB1 = res_strat_PB1.dropna()
     res_strat_PB1["Name_one"] = res_strat_PB1["Name_one"].str.strip('"')
-    res_strat_PB1['Qualifier_two'] = "absolute Time"
+    res_strat_PB1['Qualifier_two'] = "mya"
     res_strat_PB1['Location_two'] = "Global" 
     res_strat_PB1['Reference'] = 'PBDB'
     res_strat_PB1['Relation'] = "relates to"
@@ -215,7 +215,7 @@ def pbdb_import(cc2):
     res_intvl_PB2 = res_intvl_PB[['Name_one', 'Qualifier_one', 'lag', 'Reference']]
     res_intvl_PB2.rename(columns={'lag':'Name_two'},inplace = True)
     res_intvl_PB = pd.concat([res_intvl_PB1, res_intvl_PB2])
-    res_intvl_PB['Qualifier_two'] = 'absolute time'
+    res_intvl_PB['Qualifier_two'] = 'mya'
     res_intvl_PB['Relation'] = 'relates to'
     res_intvl_PB['Location_one'] = 'Global'
     res_intvl_PB['Location_two'] = 'Global'
@@ -226,7 +226,7 @@ def pbdb_import(cc2):
 
     #######################################################
     # relations_PBDB_final should be upladed to relations in RNames
-    relations_PBDB_final = res_intvl_PB[['Name_one', 'Qualifier_one', 'Location_one', 'Name_two', 'Qualifier_two',
+    relations_PBDB_final = relations_PBDB[['Name_one', 'Qualifier_one', 'Location_one', 'Name_two', 'Qualifier_two',
                                 'Location_two', 'Reference', 'Relation']]
     print(relations_PBDB_final)
     #######################################################
