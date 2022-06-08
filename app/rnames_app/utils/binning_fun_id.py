@@ -52,7 +52,7 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
 
 
     
-    # Prepare c_rels
+    # Prepare c_rels #
     # c_rels should be a dataframe containing columns:
     # id | name_one_id | name_two_id |name_one_qualifier_qualifier_name_name | 
     # name_two_qualifier_qualifier_name_name |reference_id
