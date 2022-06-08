@@ -47,6 +47,7 @@ import sys
 from subprocess import run, PIPE
 from .utils.root_binning import main_binning_fun
 from .utils.info import BinningProgressUpdater
+from . import tools
 from io import StringIO
 from contextlib import redirect_stdout
 from types import SimpleNamespace
@@ -1623,3 +1624,13 @@ class binning_scheme_delete_name(UserPassesTestMixin, DeleteView):
 
     model = BinningSchemeName
     success_url = reverse_lazy('time-scale-list')
+
+@login_required
+def pbdb_import(request):
+    if not request.user.groups.filter(name='data_admin').exists():
+        raise PermissionDenied
+
+    db.connections.close_all()
+    handle = mp.Process(target=tools.paleobiology_database_import, )
+    handle.start()
+    return redirect('/')

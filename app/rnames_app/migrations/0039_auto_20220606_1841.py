@@ -7,17 +7,10 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('rnames_app', '0038_auto_20220606_1839'),
+        ('rnames_api', '0003_delete_keytimeslice'),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='timeslice',
-            name='created_by',
-        ),
-        migrations.RemoveField(
-            model_name='timeslice',
-            name='modified_by',
-        ),
         migrations.AddField(
             model_name='binningscheme',
             name='is_public',
