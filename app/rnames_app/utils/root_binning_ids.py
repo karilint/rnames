@@ -12,7 +12,7 @@ import binning_fun_id # to be changed
 ###################
 # first we download and create all objects needed for binning
 
-###################
+####################
 #download relations from RNames API
 # this takes c. 10 mins
 # any possibility to speed this up?
