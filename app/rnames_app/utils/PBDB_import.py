@@ -224,7 +224,7 @@ struct_name_b.rename(columns={'Name_two':'name', 'Qualifier_two':'qualifier_name
 struct_names_PBDB = pd.concat([struct_name_a, struct_name_b])
 struct_names_PBDB = struct_names_PBDB.drop_duplicates()
 
-#######################################################
+########################################################
 # struct_names_PBDB should be upladed to structured names in RNames
 print(struct_names_PBDB)
 #######################################################
