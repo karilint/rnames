@@ -226,8 +226,8 @@ def pbdb_import(cc2):
 
     #######################################################
     # relations_PBDB_final should be upladed to relations in RNames
-    relations_PBDB_final = res_intvl_PB[['Name_one', 'Qualifier_one','Name_two', 'Qualifier_two', 
-                                'Reference', 'Relation']]
+    relations_PBDB_final = res_intvl_PB[['Name_one', 'Qualifier_one', 'Location_one', 'Name_two', 'Qualifier_two',
+                                'Location_two', 'Reference', 'Relation']]
     print(relations_PBDB_final)
     #######################################################
 
@@ -235,9 +235,9 @@ def pbdb_import(cc2):
     struct_name_a = relations_PBDB[['Name_one', 'Qualifier_one','Location_one']]
     struct_name_b = relations_PBDB[['Name_two', 'Qualifier_two','Location_two']]
     struct_name_a.rename(columns={'Name_one':'name', 'Qualifier_one':'qualifier_name', 
-                                 'Location_one': 'Location'},inplace = True)
+                                 'Location_one': 'location'},inplace = True)
     struct_name_b.rename(columns={'Name_two':'name', 'Qualifier_two':'qualifier_name',
-                                 'Location_two':'Location'},inplace = True)
+                                 'Location_two':'location'},inplace = True)
     struct_names_PBDB = pd.concat([struct_name_a, struct_name_b])
     struct_names_PBDB = struct_names_PBDB.drop_duplicates()
 
