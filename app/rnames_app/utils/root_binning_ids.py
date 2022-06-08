@@ -17,7 +17,7 @@ import binning_fun_id # to be changed
 # this takes c. 10 mins
 # any possibility to speed this up?
 start = time.time()
-url = "https://rnames-staging.it.helsinki.fi/api/relations/?inline=true&format=json"
+url = "https://rnames-staging.it.helsinki.fi/api/relations/?inline=true&format=json&page_size=100000"
 print(url)
 response = requests.get(url)
 response_json = response.json()
@@ -53,7 +53,7 @@ res_rels_RN = res_rels_RN_raw[['id', 'name_one_id', 'name_two_id','name_one_qual
 # any possibility to speed this up?
 
 start = time.time()
-url = "https://rnames-staging.it.helsinki.fi/api/structured-names/?inline=true&format=json"
+url = "https://rnames-staging.it.helsinki.fi/api/structured-names/?inline=true&format=json&page_size=100000"
 print(url)
 response = requests.get(url)
 response_json = response.json()
