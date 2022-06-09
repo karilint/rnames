@@ -111,11 +111,6 @@ def create_relations(references_map, relations_df, cache):
 
 	models.Relation.objects.bulk_create(create_relations, ignore_conflicts=True)
 
-
-def create_structured_names(structured_names_df, cache):
-	for index, row in structured_names_df.iterrows():
-		get_structured_name(name_str=row['name'], location_str=row['location'], qualifier_name_str=row['qualifier_name'], cache=cache)
-
 def pbdb_reference():
 	year = datetime.datetime.now().date().year
 	title = 'Paleobiology Database'
@@ -147,10 +142,5 @@ def paleobiology_database_import():
 	print('Creating relations')
 	create_relations(references_map, data['relations'], cache)
 	print('Finished creating relations')
-
-	# ensure all structured names are created
-	print('Creating structured names')
-	create_structured_names(data['structured_names'], cache)
-	print('Finished creating structured names')
 
 	print('Finished importing Paleobiology Database')
