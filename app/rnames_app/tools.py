@@ -1,6 +1,7 @@
 from .utils.pbdb_import import pbdb_import
 from . import models
 from django.db import connection
+from django.core.exceptions import ObjectDoesNotExist
 import pandas as pd
 import numpy as np
 import re
