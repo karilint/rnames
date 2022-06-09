@@ -28,12 +28,11 @@ def create_references(references_map, references_df):
 
 		references_map[row['id']] = reference
 
-def create_structured_names(structured_names_df):
-	for index, row in structured_names_df.iterrows():
-		name = models.Name.objects.get_or_create(name=row['name'])[0]
-		location = models.Location.objects.get_or_create(name=row['location'])[0]
+def get_structured_name(name_str, location_str, qualifier_name_str):
+		name = models.Name.objects.get_or_create(name=name_str)[0]
+		location = models.Location.objects.get_or_create(name=location_str)[0]
 
-		qualifier = models.Qualifier.objects.filter(qualifier_name__name=row['qualifier_name'])
+		qualifier = models.Qualifier.objects.filter(qualifier_name__name=qualifier_name_str)
 		if not qualifier.exists():
 			raise Exception('No matching qualifier for ' + row['qualifier_name'])
 		else:
@@ -45,19 +44,22 @@ def create_structured_names(structured_names_df):
 			structured_name.full_clean()
 			structured_name.save()
 			print('Created structured name ' + str(structured_name))
+			return structured_name
+		else:
+			return structured_name[0]
 
 def create_relations(references_map, relations_df):
 	for index, row in relations_df.iterrows():
-		name_one = models.StructuredName.objects.get(
-			name__name=row['Name_one'],
-			location__name=row['Location_one'],
-			qualifier__qualifier_name__name=row['Qualifier_one']
+		name_one = get_structured_name(
+			name_str=row['Name_one'],
+			location_str=row['Location_one'],
+			qualifier_name_str=row['Qualifier_one']
 		)
 
-		name_two = models.StructuredName.objects.get(
-			name__name=row['Name_two'],
-			location__name=row['Location_two'],
-			qualifier__qualifier_name__name=row['Qualifier_two']
+		name_two = get_structured_name(
+			name_str=row['Name_two'],
+			location_str=row['Location_two'],
+			qualifier_name_str=row['Qualifier_two']
 		)
 
 		if row['Relation'] == 'belongs to':
@@ -96,9 +98,9 @@ def paleobiology_database_import():
 	create_references(references_map, data['references'])
 	print('Finished creating references')
 
-	print('Creating structured names')
-	create_structured_names(data['structured_names'])
-	print('Finished creating structured names')
+	# print('Creating structured names')
+	# create_structured_names(data['structured_names'])
+	# print('Finished creating structured names')
 
 	print('Creating relations')
 	create_relations(references_map, data['relations'])
