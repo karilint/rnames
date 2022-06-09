@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 import pandas as pd
 import numpy as np
 import re
+import datetime
 
 def create_references(references_map, references_df):
 	for index, row in references_df.iterrows():
@@ -107,6 +108,11 @@ def create_structured_names(structured_names_df, cache):
 	for index, row in structured_names_df.iterrows():
 		get_structured_name(name_str=row['name'], location_str=row['location'], qualifier_name_str=row['qualifier_name'], cache=cache)
 
+def pbdb_reference():
+	year = datetime.datetime.now().date().year
+	title = 'Paleobiology Database'
+	return models.Reference.objects.get_or_create(year=year,title=title,)[0]
+
 def paleobiology_database_import():
 	print('Starting pbdb import')
 
@@ -117,6 +123,8 @@ def paleobiology_database_import():
 	connection.connect()
 
 	references_map = {}
+	references_map['PBDB'] = pbdb_reference()
+
 	cache = {}
 	cache['name'] = {}
 	cache['location'] = {}
