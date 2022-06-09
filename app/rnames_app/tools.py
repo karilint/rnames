@@ -26,6 +26,7 @@ def create_references(references_map, references_df):
 			)
 			reference.full_clean()
 			reference.save()
+			print('Created reference ' + str(reference))
 
 		references_map[row['id']] = reference
 
