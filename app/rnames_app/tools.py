@@ -83,8 +83,6 @@ def create_relations(references_map, relations_df):
 			created = relation[1]
 			relation = relation[0]
 
-			relation.belongs_to = belongs_to
-			relation.save()
 			if created:
 				print('Created relation ' + str(relation))
 
