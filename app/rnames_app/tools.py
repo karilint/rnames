@@ -54,7 +54,7 @@ def create_structured_name_components(relations_df, cache):
 		location_1.clean()
 		create_locations.append(location_1)
 
-		location_2 = models.Location(name=row['Location_one'])
+		location_2 = models.Location(name=row['Location_two'])
 		location_2.clean_fields()
 		location_2.clean()
 		create_locations.append(location_2)
