@@ -133,7 +133,9 @@ def paleobiology_database_import():
 	cache['location'] = {}
 	cache['qualifier'] = {}
 
+	print('Creating structured name components')
 	create_structured_name_components(data['structured_names'], cache)
+	print('Finished creating structured name components')
 
 	print('Creating references')
 	create_references(references_map, data['references'])
