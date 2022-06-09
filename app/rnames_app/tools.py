@@ -52,6 +52,11 @@ def create_structured_name_components(structured_names_df, cache):
 		cache['qualifier'][qualifier.qualifier_name.name] = qualifier
 
 def get_structured_name(name_str, location_str, qualifier_name_str, cache):
+	# Bulk create can't be used for structured names since the unique_together constraint is for
+	# name, location, qualifier AND reference. A structured name should only have a reference
+	# if its usage is "unusual", so there is no reference added to the structured name and the
+	# unique_together constraint doesn't catch duplicates with reference=null
+
 	try:
 		return models.StructuredName.objects.get(
 			name__name=name_str,
