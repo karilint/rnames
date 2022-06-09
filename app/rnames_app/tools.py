@@ -73,7 +73,11 @@ def get_structured_name(name_str, location_str, qualifier_name_str, cache):
 
 def create_relations(references_map, relations_df, cache):
 	create_relations = []
+	row_count = str(relations_df.shape[0])
+	i = 0
 	for index, row in relations_df.iterrows():
+		print('Relations row ' + str(i) + '/' + row_count)
+		i = i + 1
 		name_one = get_structured_name(
 			name_str=row['Name_one'],
 			location_str=row['Location_one'],
