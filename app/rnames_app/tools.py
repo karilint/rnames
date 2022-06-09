@@ -85,6 +85,9 @@ def create_relations(references_map, relations_df, cache):
 		else:
 			belongs_to = 0
 
+		if not isinstance(row['Reference'], list):
+			row['Reference'] = [row['Reference']]
+
 		for ref_id in row['Reference']:
 			reference = references_map[ref_id]
 			relation = models.Relation.objects.get_or_create(
