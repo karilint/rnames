@@ -34,7 +34,7 @@ class StructuredNameSerializer(serializers.HyperlinkedModelSerializer):
 	location = serializers.HyperlinkedRelatedField(view_name='api-location-detail', queryset=models.Location.objects.all())
 	name = serializers.HyperlinkedRelatedField(view_name='api-name-detail', queryset=models.Name.objects.all())
 	qualifier = serializers.HyperlinkedRelatedField(view_name='api-qualifier-detail', queryset=models.Qualifier.objects.all())
-	reference = serializers.HyperlinkedRelatedField(view_name='api-reference-detail', queryset=models.Reference.objects.all())
+	reference = serializers.HyperlinkedRelatedField(view_name='api-reference-detail', queryset=models.Reference.objects.all(), allow_null=True)
 
 	class Meta:
 		model = models.StructuredName
