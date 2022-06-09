@@ -31,13 +31,36 @@ def create_references(references_map, references_df):
 
 		references_map[row['id']] = reference
 
-def create_structured_name_components(structured_names_df, cache):
+def create_structured_name_components(relations_df, cache):
 	create_names = []
 	create_locations = []
 
-	for index, row in structured_names_df.iterrows():
-		create_names.append(models.Name(name=row['name']))
-		create_locations.append(models.Location(name=row['location']))
+	for index, row in relations_df.iterrows():
+		name_1 = models.Name(name=row['Name_one'])
+		name_1.clean_fields()
+		name_1.clean()
+		create_names.append(name_1)
+
+		name_2 = models.Name(name=row['Name_two'])
+		name_2.clean_fields()
+		name_2.clean()
+		create_names.append(name_2)
+
+		row['Name_one'] = name_1.name
+		row['Name_two'] = name_2.name
+
+		location_1 = models.Location(name=row['Location_one'])
+		location_1.clean_fields()
+		location_1.clean()
+		create_locations.append(location_1)
+
+		location_2 = models.Location(name=row['Location_one'])
+		location_2.clean_fields()
+		location_2.clean()
+		create_locations.append(location_2)
+
+		row['Location_one'] = location_1.name
+		row['Location_two'] = location_2.name
 
 	models.Name.objects.bulk_create(create_names, ignore_conflicts=True)
 	models.Location.objects.bulk_create(create_locations, ignore_conflicts=True)
@@ -139,7 +162,7 @@ def paleobiology_database_import():
 	cache['qualifier'] = {}
 
 	print('Creating structured name components')
-	create_structured_name_components(data['structured_names'], cache)
+	create_structured_name_components(data['relations'], cache)
 	print('Finished creating structured name components')
 
 	print('Creating references')
