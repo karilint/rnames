@@ -14,7 +14,7 @@ from bisect import (bisect_left, bisect_right)
 
 ################################################################
 # strictly searches for maximum compromise between all binnings
-def bifu_c(col, ntts):
+def bifu_c(col, ntts, PBDB_id):
     return ntts
 
 ################################################################
