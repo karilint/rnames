@@ -12,7 +12,7 @@ from bisect import (bisect_left, bisect_right)
 # ntts is a numpy ndarray which contains a combination of names, binning scheme, and time slice
 # information. The ndarray only ever contains entries for a single name
 
-#################################################################
+################################################################
 # strictly searches for maximum compromise between all binnings
 def bifu_c(col, ntts, PBDB_id):
     return ntts

@@ -120,8 +120,7 @@ binning_algorithm = 'combined' # this is input
 ###################
 ## binning of structured names imported from PBDB
 PBDB_names_binned= binning_fun_PBDB.bin_fun_PBDB(c_rels = res_rels_RN_raw, c_strat= res_sn_raw,
-                           binning_scheme = binning_scheme, ts_names = ts_names, 
-                           t_scales = t_scales, not_spec = not_spec)
+                           binning_scheme = binning_scheme, ts_names = ts_names, t_scales = t_scales)
 
 ###################
 ###################
