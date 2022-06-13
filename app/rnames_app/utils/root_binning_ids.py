@@ -47,7 +47,7 @@ print("download took:",(ende - start)/60, "mins")
 res_rels_RN = res_rels_RN_raw[['id', 'name_one_id', 'name_two_id','name_one_qualifier_stratigraphic_qualifier_name', 
                            'name_two_qualifier_stratigraphic_qualifier_name', 'reference_id','reference_year',
                                'reference_title']]
-print(res_rels_RN_raw.keys())
+#print(res_rels_RN_raw.keys())
 
 
 
@@ -107,7 +107,7 @@ t_scales = pd.read_csv ('time_scales.csv')
 # this should be via input form on frontend
 # examples: 'Ordovician time bins (Webby et al., 2004)'
 # 'Periods (ICS, 2020)'
-binning_scheme = 'Ordovician time slices (Bergström et al., 2009)' # this is input
+binning_scheme = 'Stages (ICS, 2020)' # this is input
 
 
 ###################
@@ -125,7 +125,7 @@ PBDB_names_binned= binning_fun_PBDB.bin_fun_PBDB(c_rels = res_rels_RN_raw, c_str
 ###################
 ###################
 ## binning of all other strucured names
-resi_binned_raw = binning_fun_id.bin_fun(c_rels = res_rels_RN, binning_algorithm = binning_algorithm, 
+resi_binned_raw = binning_fun_id.bin_fun(c_rels = res_rels_RN_raw, binning_algorithm = binning_algorithm, 
                            binning_scheme = binning_scheme, ts_names = ts_names, 
                            t_scales = t_scales, not_spec = not_spec)
 #print(resi_binned_raw)

@@ -24,7 +24,7 @@ def bifu_y(col, ntts, PBDB_id):
     
     # if only PBDB relations exist in ntts (PBDB==ntts) do not filter, if not prefer own data
     nttsx = ntts[ntts["reference_id"].isin(PBDB_id['reference_id'])] 
-    if nttsx.shape[0]>0 & nttsx.shape[0]<ntts.shape[0]:
+    if (nttsx.shape[0]>0) & (nttsx.shape[0]<ntts.shape[0]):
         ntts = ntts[~ntts["reference_id"].isin(PBDB_id['reference_id'])]
         max_y = np.max(ntts[:, col.reference_year])
     
@@ -54,10 +54,10 @@ def bifu_s(col, ntts, PBDB_id):
     max_y = np.max(bio_setb[:, col.reference_year])
 
     # if only PBDB relations exist in ntts (PBDB==ntts) do not filter if not prefer own data
-    bio_setx = bio_setb[bio_setb["reference_id"].isin(PBDB_id['reference_id'])] 
-    if bio_setx.shape[0]>0 & bio_setx.shape[0]<bio_setb.shape[0]:
+    bio_setx = bio_setb[bio_setb['reference_id'].isin(PBDB_id['reference_id'])] 
+    if (bio_setx.shape[0]>0) & (bio_setx.shape[0]<bio_setb.shape[0]):
         bio_setb = bio_setb[~bio_setb["reference_id"].isin(PBDB_id['reference_id'])]
-        max_y = np.max(bio_setb[:, col.reference_year])
+        #max_y = np.max(bio_setb[:, col.reference_year])
           
     return bio_setb[bio_setb[:, col.reference_year] == max_y]
 
@@ -95,8 +95,8 @@ def bifu_s2(col, ntts, PBDB_id):
     
     # if only PBDB relations exist in ntts (PBDB==ntts) do not filter if not prefer own data
     bio_setx = bio_setb[bio_setb["reference_id"].isin(PBDB_id['reference_id'])] 
-    if bio_setx.shape[0]>0 & bio_setx.shape[0]<bio_setb.shape[0]:
+    if (bio_setx.shape[0]>0) & (bio_setx.shape[0]<bio_setb.shape[0]):
         bio_setb = bio_setb[~bio_setb["reference_id"].isin(PBDB_id['reference_id'])]
-        max_y = np.max(bio_setb[:, col.reference_year])
+        #max_y = np.max(bio_setb[:, col.reference_year])
     
     return bio_setb[bio_setb[:, col.reference_year] == max_y]

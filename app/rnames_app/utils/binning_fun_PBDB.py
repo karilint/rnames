@@ -43,34 +43,25 @@ def bin_fun_PBDB (c_rels, c_strat, binning_scheme, ts_names, t_scales):
     abs_ages = abs_ages[['id','name_name']]
     abs_ages['name_name'] = pd.to_numeric(abs_ages['name_name'])
     abs_ts = pd.merge(c_rels_abs_ts, abs_ages, how= 'inner', left_on="name_2", right_on="id")
-    abs_ts = pd.merge(c_rels_abs_ts, abs_ages, how= 'inner', left_on="name_2", right_on="id")
 
     PBDB_ts_binned = pd.DataFrame([] * 6, columns=['name', 'oldest','youngest', 'ts_count', 'refs', 'rule'])
     PBDB_ts_binned_abs = pd.DataFrame([] * 6, columns=['name', 'oldest','youngest', 'ts_count', 'refs', 'rule'])
     for i in range(0,len(used_ts)):
-        x_abs_ts = abs_ts[abs_ts['name_1'] == used_ts['ts'].iloc[i]]
-        if x_abs_ts.shape[0]>0:
+        x_abs_ts = abs_ts[abs_ts['name_1'] == used_ts['ts'].iloc[i]];
+        if x_abs_ts.shape[0] > 0:
             oldest = max(pd.to_numeric(x_abs_ts['name_name']))
             youngest = min(pd.to_numeric(x_abs_ts['name_name']))
             x_youngest = x_abs_ts[x_abs_ts['name_name'] == youngest]
             x_oldest = x_abs_ts[x_abs_ts['name_name'] == oldest]
-            combi = pd.DataFrame([{'name': x_abs_ts['name_1'].iloc[0],
+            combi = pd.DataFrame([{'name': used_ts['ts'].iloc[i],
                                'oldest': x_oldest['id_x'].iloc[0], 'youngest': x_youngest['id_x'].iloc[0],
                                'ts_count': 0,'refs':PBDB_id['reference_id'].iloc[0], 'rule': 7.0}])
-            combi_abs = pd.DataFrame([{'name': x_abs_ts['name_1'].iloc[0],
+            combi_abs = pd.DataFrame([{'name': used_ts['ts'].iloc[i],
                                'oldest': oldest, 'youngest': youngest,
                                'ts_count': 0,'refs':PBDB_id['reference_id'].iloc[0], 'rule': 7.0}])
             PBDB_ts_binned = pd.concat([PBDB_ts_binned, combi], axis=0)
             PBDB_ts_binned_abs = pd.concat([PBDB_ts_binned_abs, combi_abs], axis=0)
         
-    combi = pd.DataFrame([{'name': x_abs_ts['name_1'].iloc[0],
-                       'oldest': x_oldest['id_x'].iloc[0], 'youngest': x_youngest['id_x'].iloc[0],
-                       'ts_count': 0,'refs':PBDB_id['reference_id'].iloc[0], 'rule': 7.0}])
-    combi_abs = pd.DataFrame([{'name': x_abs_ts['name_1'].iloc[0],
-                       'oldest': oldest, 'youngest': youngest,
-                       'ts_count': 0,'refs':PBDB_id['reference_id'].iloc[0], 'rule': 7.0}])
-    PBDB_ts_binned = pd.concat([PBDB_ts_binned, combi], axis=0)
-    PBDB_ts_binned_abs = pd.concat([PBDB_ts_binned_abs, combi_abs], axis=0)
 
     # all other absolute ages from pbdb
     c_rels_abs = c_rels[(c_rels['strat_qualifier_2']=='Absolute age')]
