@@ -45,7 +45,7 @@ from .filters import UserFilter
 
 import sys
 from subprocess import run, PIPE
-from .utils.root_binning import main_binning_fun
+from .utils.root_binning_ids import main_binning_fun
 from .utils.info import BinningProgressUpdater
 from . import tools
 from io import StringIO
