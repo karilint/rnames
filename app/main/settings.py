@@ -60,7 +60,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_api_key',
     'django_filters',
-    'rest_framework_filters',
     'rnames_app',
     'rnames_api',
     'simple_history',
@@ -142,9 +141,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
-    'DEFAULT_FILTER_BACKENDS': (
-        'rest_framework_filters.backends.RestFrameworkFilterBackend',
-    ),
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
 
 # Database

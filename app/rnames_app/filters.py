@@ -2,7 +2,7 @@
 # If you want to access the filtered objects in your views,
 # for example if you want to paginate them, you can do that.
 # They are in f.qs
-import rest_framework_filters as filters
+import django_filters as filters
 
 from .models import (Binning
     , Location
