@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import time
 import requests
+from math import ceil
 
 #import csv evtls needed for saving downloads locally
 
@@ -46,6 +47,37 @@ def stratseparator (res_sections_MS ,stratlevel, stratstring):
     sec_mbr = sec_mbr.drop_duplicates()
     return sec_mbr
 
+def download_sections():
+    url = 'https://macrostrat.org/api/sections?all'
+    response = requests.get(url)
+    return response.json()['success']['data']
+
+def download_intervals():
+    sections = download_sections()
+    results = []
+    n = len(sections)
+    d = 1000
+
+    for i in range(0, ceil(n/d)):
+        url = 'https://macrostrat.org/api/age_model?section_id={0}'.format(sections[i]['section_id'])
+        for j in range(i + 1, min(i + d, n)):
+            url = url + ',' + str(sections[j]['section_id'])
+        response = requests.get(url).json()
+        results = results + response['success']['data']
+
+    return pd.DataFrame(results)
+
+def download_map_legends():
+    url = 'https://macrostrat.org/api/v2/geologic_units/map/legend?source_id=1'
+
+    for i in range(2, 501): # TODO: valid range should be detected using the api
+        url = url + ',' + str(i)
+
+    response = requests.get(url)
+    response_json = response.json()
+    return pd.json_normalize(response_json['success'], record_path=['data'])
+
+
 def macrostrat_import(res_sn_raw):
     ###################
     # res_sn_raw contains structured names with inlined relations in RNames
@@ -69,55 +101,16 @@ def macrostrat_import(res_sn_raw):
     ###################
     # loop through MS sections to get intervals
     # takes a very long time (< 2h)
-    url = 'https://macrostrat.org/api/age_model?section_id=1'
-    r = urlopen(url)
-    print(url)
-    start = time.time()
-    response = requests.get(url)
-    response_json = response.json()
-    flat_json = pd.json_normalize(response_json['success'], record_path=['data'])
-    res_intvl_MS_raw = pd.DataFrame(flat_json)
 
-    x=1
-    while True:
-        x=x+1
-        url = 'https://macrostrat.org/api/age_model?section_id={0}'.format(x)
-        response = requests.get(url)
-        response_json = response.json()
-        flat_json = pd.json_normalize(response_json['success'], record_path=['data'])
-        if x==15000: #
-            # There is no next page to download
-            break
-        print(x)
-        res_intvl_MS_raw = pd.concat([res_intvl_MS_raw, pd.DataFrame(flat_json)])
-    ende = time.time()
-    print("download took:",(ende - start)/60, "mins")
-
+    res_intvl_MS_raw = download_intervals()
     res_intvl_MS = res_intvl_MS_raw[['interval_id', 'interval_name', 'age_bottom', 'age_top']]
     res_intvl_MS = res_intvl_MS.drop_duplicates()
 
     ###################
     ###################
     # loop through maps
-    url = 'https://macrostrat.org/api/v2/geologic_units/map/legend?source_id=1'
-    print(url)
-    response = requests.get(url)
-    response_json = response.json()
-    flat_json = pd.json_normalize(response_json['success'], record_path=['data'])
-    res_sections_MS_raw = pd.DataFrame(flat_json)
-    x=1
-    while True:
-        x=x+1
-        url = 'https://macrostrat.org/api/v2/geologic_units/map/legend?source_id={0}'.format(x)
-        response = requests.get(url)
-        response_json = response.json()
-        flat_json = pd.json_normalize(response_json['success'], record_path=['data'])
-        if x==500:#flat_json.shape[0]==0
-            # There is no next page to download
-            break
-        print(url)
-        res_sections_MS_raw = pd.concat([res_sections_MS_raw, pd.DataFrame(flat_json)])
 
+    res_sections_MS_raw = download_map_legends()
     res_sections_MS = res_sections_MS_raw[res_sections_MS_raw['strat_name'].notnull()]
     res_sections_MS = res_sections_MS[['strat_name', 't_age', 'b_age', 't_interval', 'b_interval']]
     res_sections_MS = res_sections_MS[~res_sections_MS['strat_name'].str.contains(";")]
