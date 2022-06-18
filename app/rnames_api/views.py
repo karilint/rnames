@@ -17,6 +17,7 @@ class ApiViewSet(viewsets.ModelViewSet):
 	@method_decorator(cache_page(60*60))
 	def list(self, request, format=None):
 		qs = self.get_queryset()
+		qs = self.filter_queryset(qs)
 		page = self.paginate_queryset(qs)
 		serializer = self.get_serializer(page, many=True)
 		return self.get_paginated_response(serializer.data)
