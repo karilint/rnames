@@ -59,8 +59,8 @@ def download_intervals():
     d = 1000
 
     for i in range(0, ceil(n/d)):
-        url = 'https://macrostrat.org/api/age_model?section_id={0}'.format(sections[i]['section_id'])
-        for j in range(i + 1, min(i + d, n)):
+        url = 'https://macrostrat.org/api/age_model?section_id={0}'.format(sections[i * d]['section_id'])
+        for j in range(i * d + 1, min((i + 1) * d, n)):
             url = url + ',' + str(sections[j]['section_id'])
         response = requests.get(url).json()
         results = results + response['success']['data']
