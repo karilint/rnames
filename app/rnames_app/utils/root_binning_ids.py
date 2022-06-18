@@ -168,11 +168,12 @@ binned_raw = pd.merge(binned_raw, res_sn, left_on="youngest", right_on="id")
 binned_raw.rename(columns={'youngest':'youngest_id', 'name_name': 'youngest_name'},inplace = True)
 binned_raw = binned_raw[['name_id', 'name', 'qualifier_name','oldest_id', 'oldest_name',
                            'youngest_id', 'youngest_name', 'refs']]
+binned_raw['binning_scheme'] = binning_scheme
 
 ###################
 ###################
 # output 1:
-# all structural names with distinct distinct id
+# all structural names with distinct ids
 # binned to binning scheme
 binned_raw = binned_raw.drop_duplicates()
 
@@ -223,6 +224,7 @@ binned_generalised.rename(columns={'name_name': 'oldest'},inplace = True)
 binned_generalised = binned_generalised[['name', 'oldest', 'youngest_id']]
 binned_generalised = pd.merge(binned_generalised, res_sn, left_on="youngest_id", right_on="id")
 binned_generalised.rename(columns={'name_name': 'youngest'},inplace = True)
+binned_generalised['binning_scheme'] = binning_scheme
 
 ###################
 ###################
@@ -230,7 +232,7 @@ binned_generalised.rename(columns={'name_name': 'youngest'},inplace = True)
 # all structural names with identical name and qualifier name
 # binned to binning scheme
 # we could call this "simplified binning"
-binned_generalised = binned_generalised[['name', 'oldest', 'youngest']]
+binned_generalised = binned_generalised[['name', 'oldest', 'youngest', 'binning_scheme']]
 #print(binned_generalised) 
 
 ## adding absolute ages to the binnings
@@ -271,4 +273,14 @@ def agebinbin (xage_res_rels,agecon):
             binned_ages.rename(columns={'oldest_age_x':'oldest_age', 'name_id_x': 'name_id'},inplace = True)
             return (binned_ages)
         
-binned_with_abs_ages = agebinbin(xage_res_rels = xage_res_rels,agecon = agecon)    
+binned_with_abs_ages = agebinbin(xage_res_rels = xage_res_rels,agecon = agecon)
+
+###################
+###################
+# output 3:
+# all structural names with distinct ids
+# binned to binning scheme and with absolute ages
+binned_with_abs_ages['binning_scheme'] = binning_scheme
+binned_with_abs_ages['age_constraints'] = agecon
+
+
