@@ -203,7 +203,7 @@ def paleobiology_database_import():
 
 def macrostrat_database_import():
 	print('Starting macrostrat import')
-	pd.set_option('display.max_columns', None)
+
 	connection.connect()
 	snames = models.StructuredName.objects.all().select_related('name', 'location', 'qualifier', 'reference',
 		'qualifier__qualifier_name').values('id', 'name__name', 'qualifier__qualifier_name__name',
@@ -220,13 +220,9 @@ def macrostrat_database_import():
 		'reference__id': 'reference_id'
 	}, inplace=True)
 
-	print(structured_names_df)
 	data = macrostrat_import(structured_names_df)
 	data['references'] = pd.DataFrame()
 	data['relations']['Reference'] = 'MSDB'
-	print(data['relations'])
-	print(data['structured_names'])
 
-	# references_map = {}
-	# references_map['MSDB'] = macrostrat_reference()
-	# import_data(data, references_map);
+	references_map = {'MSDB': macrostrat_reference()}
+	import_data(data, references_map);
