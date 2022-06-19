@@ -1,6 +1,7 @@
 from .utils.info import BinningProgressUpdater
 from .utils.root_binning_ids import main_binning_fun
 from . import models
+import traceback
 
 from django.db import connection
 from types import SimpleNamespace
@@ -64,6 +65,62 @@ def get_structured_names_df():
 
     return get_table_as_df(db_columns, models.StructuredName)
 
+def process_results(scheme_id, result, info = None):
+    scheme = models.TimeScale.objects.get(pk=scheme_id)
+    create_objects = []
+    update_objects = []
+
+    def update(obj, oldest_name, youngest_name, ts_count, refs, rule):
+        obj.oldest_name = oldest_name
+        obj.youngest_name = youngest_name
+        obj.ts_count = ts_count
+        obj.refs = refs
+        obj.rule = rule
+        update_objects.append(obj)
+
+    def create(name, oldest_name, youngest_name, ts_count, refs, rule):
+        obj = models.Binning(name=name, binning_scheme=scheme, oldest_name=oldest_name, youngest_name=youngest_name, ts_count=ts_count, refs=refs, rule=rule)
+        create_objects.append(obj)
+
+    def process_result(df):
+        col = SimpleNamespace(**{k: v for v, k in enumerate(df.columns)})
+
+        for row in df.values:
+            name = row[col.name]
+            data = models.Binning.objects.filter(name=name, binning_scheme=scheme_id)
+            if len(data) == 0:
+                create(name, row[col.oldest_name], row[col.youngest_name], row[col.ts_count], row[col.refs], row[col.rule])
+            else:
+                update(data[0], row[col.oldest_name], row[col.youngest_name], row[col.ts_count], row[col.refs], row[col.rule])
+            # update_progress.update()
+
+    # todo
+    result['binning']['rule'] = '-1'
+    result['generalised']['rule'] = '-1'
+    result['absolute_ages']['rule'] = '-1'
+
+    result['binning']['ts_count'] = 0
+    result['generalised']['ts_count'] = 0
+    result['absolute_ages']['ts_count'] = 0
+
+    result['generalised']['refs'] = ''
+    result['generalised'].rename(inplace=True, columns={'oldest': 'oldest_name', 'youngest': 'youngest_name'})
+
+    ########
+
+    print('Processing binning')
+    process_result(result['binning'])
+    print('Processing generalised')
+    process_result(result['generalised'])
+    print('Processing absolute_ages')
+    process_result(result['absolute_ages'])
+
+    models.Binning.objects.bulk_create(create_objects, 100)
+    models.Binning.objects.bulk_update(update_objects, ['oldest_name', 'youngest_name', 'ts_count', 'refs', 'rule'], 100)
+
+    # info.finish_binning()
+
+
 def binning_process(scheme_id):
     connection.connect()
     # info = BinningProgressUpdater()
@@ -82,69 +139,22 @@ def binning_process(scheme_id):
     time_scale = pd.DataFrame(list(models.TimeScale.objects.filter(pk=scheme_id).values('id', 'ts_name')))
     ts_names = pd.DataFrame(list(models.BinningSchemeName.objects.filter(ts_name=scheme_id).order_by('sequence').values('id', 'ts_name', 'structured_name', 'sequence')))
 
-    result = main_binning_fun(time_scale['ts_name'], time_scale, ts_names, relations, structured_names)
+    try:
+        result = main_binning_fun(time_scale['ts_name'], time_scale, ts_names, relations, structured_names)
+    except:
+        traceback.print_exc()
+        return
 
-    # def time_slices(scheme):
-    #     return list(BinningSchemeName.objects.filter(scheme=scheme_id).order_by('order').values_list('structured_name__name__name', flat=True))
+    # print(result['binning'].columns)
+    # Index(['name_id', 'name', 'qualifier_name', 'oldest_id', 'oldest_name', 'youngest_id', 'youngest_name', 'refs', 'binning_scheme'], dtype='object')
+    print(result['binning'])
 
-    # cols = 
+    # print(result['generalised'].columns)
+    # Index(['name', 'oldest', 'youngest', 'binning_scheme'], dtype='object')
+    print(result['generalised'])
 
-    # try:
-    #     result = main_binning_fun(queryset_list, cols, {
-    #         'rassm': time_slices('rasmussen'),
-    #         'berg': time_slices('bergstrom'),
-    #         'webby': time_slices('webby'),
-    #         'stages': time_slices('stages'),
-    #         'periods': time_slices('periods'),
-    #         'epochs': time_slices('epochs'),
-    #         'eras': time_slices('eras'),
-    #         'eons': time_slices('eons')
-    #     }, info)
-    # except Exception as e:
-    #     info.set_error(str(e))
-    #     traceback.print_exc()
-    #     return
+    # print(result['absolute_ages'].columns)
+    # Index(['name_id', 'name', 'qualifier_name', 'oldest_id', 'oldest_name', 'youngest_id', 'youngest_name', 'refs', 'binning_scheme', 'oldest_age', 'youngest_age', 'ref_age', 'age_constraints'], dtype='object')
+    print(result['absolute_ages'])
 
-    # update_progress = info.db_update_progress_updater(
-    #     len(result['berg'])
-    #     + len(result['webby'])
-    #     + len(result['stages'])
-    #     + len(result['periods'])
-    # )
-
-    # create_objects = []
-    # update_objects = []
-
-    # def update(obj, oldest, youngest, ts_count, refs, rule):
-    #     obj.oldest = oldest
-    #     obj.youngest = youngest
-    #     obj.ts_count = ts_count
-    #     obj.refs = refs
-    #     obj.rule = rule
-    #     update_objects.append(obj)
-
-    # def create(name, scheme, oldest, youngest, ts_count, refs, rule):
-    #     obj = Binning(name=name, binning_scheme=scheme, oldest=oldest, youngest=youngest, ts_count=ts_count, refs=refs, rule=rule)
-    #     create_objects.append(obj)
-
-    # def process_result(df, scheme):
-    #     col = SimpleNamespace(**{k: v for v, k in enumerate(df.columns)})
-
-    #     for row in df.values:
-    #         name = row[col.name]
-    #         data = Binning.objects.filter(name=name, binning_scheme=scheme)
-    #         if len(data) == 0:
-    #             create(name, scheme_id, row[col.oldest], row[col.youngest], row[col.ts_count], row[col.refs], row[col.rule])
-    #         else:
-    #             update(data[0], row[col.oldest], row[col.youngest], row[col.ts_count], row[col.refs], row[col.rule])
-    #         update_progress.update()
-
-    # process_result(result['berg'], 'x_robinb')
-    # process_result(result['webby'], 'x_robinw')
-    # process_result(result['stages'], 'x_robins')
-    # process_result(result['periods'], 'x_robinp')
-
-    # Binning.objects.bulk_create(create_objects, 100)
-    # Binning.objects.bulk_update(update_objects, ['oldest', 'youngest', 'ts_count', 'refs', 'rule'], 100)
-
-    # info.finish_binning()
+    process_results(scheme_id, result);
