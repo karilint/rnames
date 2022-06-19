@@ -73,7 +73,7 @@ def download_structured_names_from_api():
     print("download took:",(ende - start)/60, "mins")
     return res_sn_raw
 
-def main_binning_fun(res_rels_RN_raw = None, res_sn_raw = None):
+def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_RN_raw = None, res_sn_raw = None):
     ###################
     ###################
     # first we download and create all objects needed for binning
