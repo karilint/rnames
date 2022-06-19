@@ -18,7 +18,7 @@ from math import ceil
 ###################
 # download from Macrostrat
 ###################
-def stratseparator (res_sections_MS ,stratlevel, stratstring):   
+def stratseparator (res_intvl_MS, res_sn_RNx, res_sections_MS ,stratlevel, stratstring):
     sec_mbr = res_sections_MS[res_sections_MS['strat_name'].str.endswith(stratstring)]
     sec_mbr['strat_name'] = sec_mbr['strat_name'].str.replace(stratstring, '')
     sec_mbr['Qualifier_one'] = stratlevel
@@ -141,12 +141,18 @@ def macrostrat_import(res_sn_raw):
 
 
 
-    sec_mbr = stratseparator (res_sections_MS = res_sections_MS, stratstring =" Member", stratlevel = "Member")
-    sec_fm = stratseparator (res_sections_MS = res_sections_MS, stratstring =" Formation", stratlevel = "Formation")
-    sec_gp = stratseparator (res_sections_MS = res_sections_MS, stratstring =" Group", stratlevel = "Group")
-    sec_sgp = stratseparator (res_sections_MS = res_sections_MS, stratstring =" Supergroup", stratlevel = "Supergroup")
-    sec_beds = stratseparator (res_sections_MS = res_sections_MS, stratstring =" Beds", stratlevel = "Informal Lithostratigraphy")
-    sec_bed = stratseparator (res_sections_MS = res_sections_MS, stratstring =" Bed", stratlevel = "Bed")
+    sec_mbr = stratseparator (res_intvl_MS = res_intvl_MS, res_sn_RNx = res_sn_RNx, res_sections_MS = res_sections_MS,
+        stratstring =" Member", stratlevel = "Member")
+    sec_fm = stratseparator (res_intvl_MS = res_intvl_MS, res_sn_RNx = res_sn_RNx, res_sections_MS = res_sections_MS,
+        stratstring =" Formation", stratlevel = "Formation")
+    sec_gp = stratseparator (res_intvl_MS = res_intvl_MS, res_sn_RNx = res_sn_RNx, res_sections_MS = res_sections_MS,
+        stratstring =" Group", stratlevel = "Group")
+    sec_sgp = stratseparator (res_intvl_MS = res_intvl_MS, res_sn_RNx = res_sn_RNx, res_sections_MS = res_sections_MS,
+        stratstring =" Supergroup", stratlevel = "Supergroup")
+    sec_beds = stratseparator (res_intvl_MS = res_intvl_MS, res_sn_RNx = res_sn_RNx, res_sections_MS = res_sections_MS,
+        stratstring =" Beds", stratlevel = "Informal Lithostratigraphy")
+    sec_bed = stratseparator (res_intvl_MS = res_intvl_MS, res_sn_RNx = res_sn_RNx, res_sections_MS = res_sections_MS,
+        stratstring =" Bed", stratlevel = "Bed")
 
     sec_rest = res_sections_MS[(~res_sections_MS['strat_name'].str.endswith(" Member")) &
                                     (~res_sections_MS['strat_name'].str.endswith(" Formation")) &
