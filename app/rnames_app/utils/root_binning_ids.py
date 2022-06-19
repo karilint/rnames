@@ -292,4 +292,10 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     binned_with_abs_ages['binning_scheme'] = binning_scheme
     binned_with_abs_ages['age_constraints'] = agecon
 
+    return {
+        'binning': binned_raw,
+        'generalised': binned_generalised,
+        'absolute_ages': binned_with_abs_ages,
+    }
+
 
