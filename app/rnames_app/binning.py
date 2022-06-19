@@ -68,31 +68,15 @@ def get_structured_names_df():
 def process_results(scheme_id, result, info = None):
     scheme = models.TimeScale.objects.get(pk=scheme_id)
     create_objects = []
-    update_objects = []
 
-    def update(obj, oldest_name, youngest_name, ts_count, refs, rule):
-        obj.oldest_name = oldest_name
-        obj.youngest_name = youngest_name
-        obj.ts_count = ts_count
-        obj.refs = refs
-        obj.rule = rule
-        update_objects.append(obj)
-
-    def create(name, oldest_name, youngest_name, ts_count, refs, rule):
-        obj = models.Binning(name=name, binning_scheme=scheme, oldest_name=oldest_name, youngest_name=youngest_name, ts_count=ts_count, refs=refs, rule=rule)
-        create_objects.append(obj)
+    models.Binning.objects.filter(binning_scheme=scheme_id).delete()
 
     def process_result(df):
         col = SimpleNamespace(**{k: v for v, k in enumerate(df.columns)})
 
         for row in df.values:
-            name = row[col.name]
-            data = models.Binning.objects.filter(name=name, binning_scheme=scheme_id)
-            if len(data) == 0:
-                create(name, row[col.oldest_name], row[col.youngest_name], row[col.ts_count], row[col.refs], row[col.rule])
-            else:
-                update(data[0], row[col.oldest_name], row[col.youngest_name], row[col.ts_count], row[col.refs], row[col.rule])
-            # update_progress.update()
+            obj = models.Binning(name=row[col.name], binning_scheme=scheme, oldest_name=row[col.oldest_name], youngest_name=row[col.youngest_name], ts_count=row[col.ts_count], refs=row[col.refs], rule=row[col.rule])
+            create_objects.append(obj)
 
     # todo
     result['binning']['rule'] = '-1'
@@ -116,8 +100,7 @@ def process_results(scheme_id, result, info = None):
     process_result(result['absolute_ages'])
 
     models.Binning.objects.bulk_create(create_objects, 100)
-    models.Binning.objects.bulk_update(update_objects, ['oldest_name', 'youngest_name', 'ts_count', 'refs', 'rule'], 100)
-
+    print('Binning finished')
     # info.finish_binning()
 
 
