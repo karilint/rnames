@@ -268,3 +268,5 @@ def macrostrat_import(res_sn_raw):
     relations_MS = relations_MS.drop('Location', axis=1)
     ################################
 
+    return {'relations': relations_MS, 'structured_names': sn_MS}
+

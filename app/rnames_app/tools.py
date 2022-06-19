@@ -1,4 +1,5 @@
 from .utils.pbdb_import import pbdb_import
+from .utils.macrostrat_import import macrostrat_import
 from . import models
 from django.db import connection
 from django.core.exceptions import ObjectDoesNotExist
@@ -162,6 +163,11 @@ def pbdb_reference():
 	title = 'Paleobiology Database'
 	return models.Reference.objects.get_or_create(year=year,title=title,)[0]
 
+def macrostrat_reference():
+	year = datetime.datetime.now().date().year
+	title = 'Macrostrat Database'
+	return models.Reference.objects.get_or_create(year=year,title=title,)[0]
+
 def import_data(data, references_map):
 	cache = {}
 	cache['name'] = {}
@@ -194,3 +200,32 @@ def paleobiology_database_import():
 	references_map = {}
 	references_map['PBDB'] = pbdb_reference()
 	import_data(data, references_map);
+
+def macrostrat_database_import():
+	print('Starting macrostrat import')
+	pd.set_option('display.max_columns', None)
+	connection.connect()
+	snames = models.StructuredName.objects.all().select_related('name', 'location', 'qualifier', 'reference',
+		'qualifier__qualifier_name').values('id', 'name__name', 'qualifier__qualifier_name__name',
+			'location__name', 'reference__first_author', 'reference__year','reference__id')
+
+	structured_names_df = pd.DataFrame(snames)
+
+	structured_names_df.rename(columns={
+		'name__name': 'name_name',
+		'qualifier__qualifier_name__name': 'qualifier_qualifier_name_name',
+		'location__name': 'location_name',
+		'reference__first_author': 'reference_first_author',
+		'reference__year': 'reference_year',
+		'reference__id': 'reference_id'
+	}, inplace=True)
+
+	print(structured_names_df)
+	data = macrostrat_import(structured_names_df)
+
+	print(data['relations'])
+	print(data['structured_names'])
+
+	# references_map = {}
+	# references_map['MSDB'] = macrostrat_reference()
+	# import_data(data, references_map);
