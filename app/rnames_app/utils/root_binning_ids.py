@@ -77,9 +77,7 @@ def main_binning_fun(res_rels_RN_raw = None, res_sn_raw = None):
     ###################
     ###################
     # first we download and create all objects needed for binning
-
-    if res_rels_RN_raw == None:
-        res_rels_RN_raw = download_relations_from_api()
+    # res_rels_RN_raw = download_relations_from_api()
 
     #print(res_rels_RN_raw.keys())
 
@@ -103,9 +101,7 @@ def main_binning_fun(res_rels_RN_raw = None, res_sn_raw = None):
 
     ###################
     #download structured names from RNames API
-
-    if res_sn_raw == None:
-        res_sn_raw = download_structured_names_from_api()
+    # res_sn_raw = download_structured_names_from_api()
 
     #print(res_sn_raw.keys())
     res_sn = res_sn_raw[['id', 'name_name', 'qualifier_qualifier_name_name','location_name',
