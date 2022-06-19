@@ -99,9 +99,7 @@ class StructuredNameViewSet(ApiViewSet):
 	def get_queryset(self):
 
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
-			return models.StructuredName.objects \
-				.prefetch_related('name', 'location', 'reference', 'qualifier') \
-				.prefetch_related('qualifier__qualifier_name', 'qualifier__stratigraphic_qualifier')
+			return models.StructuredName.objects.all().select_related()
 
 		return models.StructuredName.objects.all()
 
@@ -126,12 +124,7 @@ class RelationViewSet(ApiViewSet):
 
 	def get_queryset(self):
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
-			return models.Relation.objects \
-				.prefetch_related('name_one', 'name_two', 'reference') \
-				.prefetch_related('name_one__name', 'name_one__location','name_one__reference','name_one__qualifier') \
-				.prefetch_related('name_two__name', 'name_two__location','name_two__reference','name_two__qualifier') \
-				.prefetch_related('name_one__qualifier__qualifier_name', 'name_one__qualifier__stratigraphic_qualifier') \
-				.prefetch_related('name_two__qualifier__qualifier_name', 'name_two__qualifier__stratigraphic_qualifier')
+			return models.Relation.objects.all().select_related()
 
 		return models.Relation.objects.all()
 
