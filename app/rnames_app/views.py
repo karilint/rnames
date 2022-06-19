@@ -1591,8 +1591,8 @@ def binning_scheme_add_name(request, pk):
         form = AddBinningSchemeNameForm(request.POST)
         if form.is_valid():
             entry = form.save(commit=False)
-            entry.scheme = scheme
-            entry.order = BinningSchemeName.objects.filter(scheme=scheme).count()
+            entry.ts_name = scheme
+            entry.sequence = BinningSchemeName.objects.filter(ts_name=scheme).count()
             entry.save()
         return redirect('time-scale-detail', pk=pk)
 
