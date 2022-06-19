@@ -223,6 +223,7 @@ def macrostrat_database_import():
 	print(structured_names_df)
 	data = macrostrat_import(structured_names_df)
 
+	data['relations']['Reference'] = 'MSDB'
 	print(data['relations'])
 	print(data['structured_names'])
 
