@@ -8,11 +8,7 @@ import time
 from . import binning_fun_id # to be changedx
 from . import binning_fun_PBDB # to be changedx
 
-def main_binning_fun():
-    ###################
-    ###################
-    # first we download and create all objects needed for binning
-
+def download_relations_from_api():
     ###################
     #download relations from RNames API
     # this takes up to c. 0.5h
@@ -42,27 +38,9 @@ def main_binning_fun():
     ende = time.time()
 
     print("download took:",(ende - start)/60, "mins")
+    return res_rels_RN_raw
 
-    #print(res_rels_RN_raw.keys())
-
-    # make relations two sided
-    res_rels_RN = res_rels_RN_raw[['id', 'name_one_id', 'name_two_id',
-                                   'name_one_name_name', 'name_two_name_name',
-                                   'name_one_qualifier_qualifier_name_name',
-                                   'name_two_qualifier_qualifier_name_name',
-                                   'reference_id','reference_year','reference_title']]
-    res_rels_RN_rw = res_rels_RN_raw[['id', 'name_two_id', 'name_one_id',
-                                   'name_two_name_name', 'name_one_name_name',
-                                   'name_one_qualifier_qualifier_name_name',
-                                   'name_two_qualifier_qualifier_name_name',
-                                   'reference_id','reference_year','reference_title']]
-    res_rels_RN_rw.columns = ['id', 'name_one_id', 'name_two_id',
-                                   'name_one_name_name', 'name_two_name_name',
-                                   'name_one_qualifier_qualifier_name_name',
-                                   'name_two_qualifier_qualifier_name_name',
-                                   'reference_id','reference_year','reference_title']
-    res_rels_RN_tw = pd.concat([res_rels_RN, res_rels_RN_rw], axis=0)
-
+def download_structured_names_from_api():
     ###################
     #download structured names from RNames API
     # this takes c. 1 min
@@ -93,6 +71,41 @@ def main_binning_fun():
     ende = time.time()
 
     print("download took:",(ende - start)/60, "mins")
+    return res_sn_raw
+
+def main_binning_fun(res_rels_RN_raw = None, res_sn_raw = None):
+    ###################
+    ###################
+    # first we download and create all objects needed for binning
+
+    if res_rels_RN_raw == None:
+        res_rels_RN_raw = download_relations_from_api()
+
+    #print(res_rels_RN_raw.keys())
+
+    # make relations two sided
+    res_rels_RN = res_rels_RN_raw[['id', 'name_one_id', 'name_two_id',
+                                   'name_one_name_name', 'name_two_name_name',
+                                   'name_one_qualifier_qualifier_name_name',
+                                   'name_two_qualifier_qualifier_name_name',
+                                   'reference_id','reference_year','reference_title']]
+    res_rels_RN_rw = res_rels_RN_raw[['id', 'name_two_id', 'name_one_id',
+                                   'name_two_name_name', 'name_one_name_name',
+                                   'name_one_qualifier_qualifier_name_name',
+                                   'name_two_qualifier_qualifier_name_name',
+                                   'reference_id','reference_year','reference_title']]
+    res_rels_RN_rw.columns = ['id', 'name_one_id', 'name_two_id',
+                                   'name_one_name_name', 'name_two_name_name',
+                                   'name_one_qualifier_qualifier_name_name',
+                                   'name_two_qualifier_qualifier_name_name',
+                                   'reference_id','reference_year','reference_title']
+    res_rels_RN_tw = pd.concat([res_rels_RN, res_rels_RN_rw], axis=0)
+
+    ###################
+    #download structured names from RNames API
+
+    if res_sn_raw == None:
+        res_sn_raw = download_structured_names_from_api()
 
     #print(res_sn_raw.keys())
     res_sn = res_sn_raw[['id', 'name_name', 'qualifier_qualifier_name_name','location_name',
