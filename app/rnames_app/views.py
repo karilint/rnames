@@ -1634,3 +1634,14 @@ def pbdb_import(request):
     handle = mp.Process(target=tools.paleobiology_database_import, )
     handle.start()
     return redirect('/')
+
+
+@login_required
+def macrostrat_import(request):
+    if not request.user.groups.filter(name='data_admin').exists():
+        raise PermissionDenied
+
+    db.connections.close_all()
+    handle = mp.Process(target=tools.macrostrat_database_import, )
+    handle.start()
+    return redirect('/')
