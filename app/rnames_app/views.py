@@ -1518,7 +1518,7 @@ def profile_key(request, prefix):
 
 def time_scale_detail(request, pk):
     scheme = get_object_or_404(TimeScale, pk=pk)
-    names = BinningSchemeName.objects.filter(scheme=pk).order_by('order');
+    names = BinningSchemeName.objects.filter(ts_name=pk).order_by('sequence');
     return render(request, 'time_scale_detail.html', {'scheme': scheme, 'names': names})
 
 @login_required
