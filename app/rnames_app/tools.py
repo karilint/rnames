@@ -162,18 +162,7 @@ def pbdb_reference():
 	title = 'Paleobiology Database'
 	return models.Reference.objects.get_or_create(year=year,title=title,)[0]
 
-def paleobiology_database_import():
-	print('Starting pbdb import')
-
-	country_codes_df = pd.DataFrame(list(models.CountryCode.objects.all().values('iso3166_1_alpha_2', 'official_name_en' ,'region_name')))
-	country_codes_df.rename(inplace=True, columns={'iso3166_1_alpha_2': 'ISO3166-1-Alpha-2', 'region_name': 'Region Name'})
-	data = pbdb_import(country_codes_df)
-
-	connection.connect()
-
-	references_map = {}
-	references_map['PBDB'] = pbdb_reference()
-
+def import_data(data, references_map):
 	cache = {}
 	cache['name'] = {}
 	cache['location'] = {}
@@ -192,4 +181,16 @@ def paleobiology_database_import():
 	create_relations(references_map, data['relations'], cache)
 	print('Finished creating relations')
 
-	print('Finished importing Paleobiology Database')
+	print('Finished importing data')
+
+def paleobiology_database_import():
+	print('Starting pbdb import')
+
+	connection.connect()
+	country_codes_df = pd.DataFrame(list(models.CountryCode.objects.all().values('iso3166_1_alpha_2', 'official_name_en' ,'region_name')))
+	country_codes_df.rename(inplace=True, columns={'iso3166_1_alpha_2': 'ISO3166-1-Alpha-2', 'region_name': 'Region Name'})
+	data = pbdb_import(country_codes_df)
+
+	references_map = {}
+	references_map['PBDB'] = pbdb_reference()
+	import_data(data, references_map);
