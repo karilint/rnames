@@ -57,7 +57,7 @@ class RelationSerializer(serializers.HyperlinkedModelSerializer):
 class BinningSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = models.Binning
-		fields = ['binning_scheme', 'name', 'oldest', 'youngest', 'ts_count', 'refs', 'rule']
+		fields = ['binning_scheme', 'name', 'oldest_name', 'youngest_name', 'ts_count', 'refs', 'rule']
 
 class QualifierInlineSerializer(serializers.ModelSerializer):
 	qualifier_name = QualifierNameSerializer(read_only=True)
