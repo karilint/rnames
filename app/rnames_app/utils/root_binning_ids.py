@@ -281,6 +281,7 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
                 binned_ages = binned_ages.drop(['oldest_age_y', 'name_id_y','name_id'], axis=1)
                 binned_ages.rename(columns={'oldest_age_x':'oldest_age', 'name_id_x': 'name_id'},inplace = True)
                 return (binned_ages)
+        return pd.DataFrame()
 
     binned_with_abs_ages = agebinbin(xage_res_rels = xage_res_rels,agecon = agecon)
 
