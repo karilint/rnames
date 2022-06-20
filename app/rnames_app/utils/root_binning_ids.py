@@ -119,8 +119,8 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     ## read time scales
     # this should be via API as soon as functional
     # see my email
-    ts_names = pd.read_csv ('ts_names.csv')
-    t_scales = pd.read_csv ('time_scales.csv')
+    # ts_names = pd.read_csv ('ts_names.csv')
+    # t_scales = pd.read_csv ('time_scales.csv')
 
     ###################
     # define time scale scheme
@@ -130,8 +130,9 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     # examples: 'Ordovician time bins (Webby et al., 2004)'
     # 'Periods (ICS, 2020)'
     # 'Stages (ICS, 2020)'
-    binning_scheme = 'Ordovician time bins (Webby et al., 2004)'# this is input
-
+    # binning_scheme = 'Ordovician time bins (Webby et al., 2004)'# this is input
+    # binning_scheme = 'Periods (ICS, 2020)'
+    # binning_scheme = 'Stages (ICS, 2020)'
 
     ###################
     # define binning algorithm

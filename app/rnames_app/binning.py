@@ -120,10 +120,13 @@ def binning_process(scheme_id):
     print(structured_names)
 
     time_scale = pd.DataFrame(list(models.TimeScale.objects.filter(pk=scheme_id).values('id', 'ts_name')))
-    ts_names = pd.DataFrame(list(models.BinningSchemeName.objects.filter(ts_name=scheme_id).order_by('sequence').values('id', 'ts_name', 'structured_name', 'sequence')))
+    sequence = pd.DataFrame(list(models.BinningSchemeName.objects.filter(ts_name=scheme_id).order_by('sequence').values('id', 'ts_name', 'structured_name', 'sequence')))
+    sequence.rename(inplace=True, columns={'ts_name': 'ts_name_id', 'structured_name': 'structured_name_id'})
+
+    print('Binning ' + time_scale['ts_name'][0])
 
     try:
-        result = main_binning_fun(time_scale['ts_name'], time_scale, ts_names, relations, structured_names)
+        result = main_binning_fun(time_scale['ts_name'][0], time_scale, sequence, relations, structured_names)
     except:
         traceback.print_exc()
         return
