@@ -8,6 +8,7 @@ from .models import (Binning
     , Location
     , Name
     , Qualifier
+    , Binning
     , QualifierName
     , Reference
     , Relation
@@ -110,3 +111,9 @@ class AbsoluteAgeValueFilter(filters.FilterSet):
     class Meta:
         model = AbsoluteAgeValue
         fields = ['structured_name__name__name']
+
+class BinningFilter(filters.FilterSet):
+    binning_scheme__ts_name = filters.CharFilter(lookup_expr='icontains')
+    class Meta:
+        model = Binning
+        fields = ['binning_scheme__ts_name', 'binning_scheme']

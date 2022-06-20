@@ -137,6 +137,7 @@ class RelationViewSet(ApiViewSet):
 		api_models.KeyRelation(relation=instance, api_key=api_key).save()
 
 class BinningViewSet(viewsets.ReadOnlyModelViewSet):
+	filterset_class = filters.BinningFilter
 	queryset = models.Binning.objects.all()
 	serializer_class = serializers.BinningSerializer
 
