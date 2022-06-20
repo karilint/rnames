@@ -8,7 +8,7 @@ import numpy as np
 from bisect import (bisect_left, bisect_right)
 from types import SimpleNamespace
 #from .rn_funs import *
-import rn_funs
+from . import rn_funs
 
 
 def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_spec):

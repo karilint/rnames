@@ -45,9 +45,9 @@ class Binning(BaseModel):
     binning_scheme = models.ForeignKey(TimeScale, blank=True, null=True, help_text='The Binning Scheme', on_delete=models.CASCADE)
     name = models.CharField(
         max_length=200, help_text="Enter a Name (e.g. Katian, Viru, etc.)")
-    oldest = models.CharField(
+    oldest_name = models.CharField(
         max_length=200, help_text="Enter a Name (e.g. Katian, Viru, etc.)")
-    youngest = models.CharField(
+    youngest_name = models.CharField(
         max_length=200, help_text="Enter a Name (e.g. Katian, Viru, etc.)")
     ts_count = models.PositiveSmallIntegerField(
         default=0, blank=False, help_text='The count of Time Slices within the binned Name.')
