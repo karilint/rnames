@@ -90,3 +90,23 @@ class AbsoluteAgeValueSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = models.AbsoluteAgeValue
 		fields = ['structured_name', 'age', 'age_upper_confidence', 'age_lower_confidence', 'reference']
+
+class TimeScaleSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = models.TimeScale
+		fields = ['id', 'ts_name']
+
+class BinningSchemeNameSerializer(serializers.ModelSerializer):
+	ts_name = serializers.HyperlinkedRelatedField(view_name='api-time-scale-detail', queryset=models.TimeScale.objects.all())
+	structured_name = serializers.HyperlinkedRelatedField(view_name='api-structured-name-detail', queryset=models.StructuredName.objects.all())
+
+	class Meta:
+		model = models.BinningSchemeName
+		fields = ['id', 'ts_name', 'structured_name', 'sequence']
+
+class BinningSchemeNameInlineSerializer(serializers.ModelSerializer):
+	ts_name = TimeScaleSerializer(read_only=True)
+	structured_name = StructuredNameInlineSerializer(read_only=True)
+	class Meta:
+		model = models.BinningSchemeName
+		fields = ['id', 'ts_name', 'structured_name', 'sequence']

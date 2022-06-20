@@ -14,6 +14,8 @@ router.register(r'references', views.ReferenceViewSet, basename='api-reference')
 router.register(r'relations', views.RelationViewSet, basename='api-relation')
 router.register(r'binnings', views.BinningViewSet, basename='api-binning')
 router.register(r'absolute-age-values', views.AbsoluteAgeValueViewSet, basename='api-absolute-age-value')
+router.register(r'time-scales', views.TimeScaleViewSet, basename='api-time-scale')
+router.register(r'time-scale-names', views.BinningSchemeNameSerializer, basename='api-time-scale-name')
 
 urlpatterns = [
 	path('', include(router.urls)),

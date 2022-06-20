@@ -145,3 +145,25 @@ class AbsoluteAgeValueViewSet(ApiViewSet):
 	filterset_class = filters.AbsoluteAgeValueFilter
 	queryset = models.AbsoluteAgeValue.objects.all()
 	serializer_class = serializers.AbsoluteAgeValueSerializer
+
+class TimeScaleViewSet(ApiViewSet):
+	queryset = models.TimeScale.objects.all()
+	serializer_class = serializers.TimeScaleSerializer
+
+	def log_access(self, api_key, instance):
+		pass
+
+class BinningSchemeNameSerializer(ApiViewSet):
+	def get_queryset(self):
+		if self.request.method == 'GET' and 'inline' in self.request.query_params:
+			return models.BinningSchemeName.objects.all().select_related()
+
+		return models.BinningSchemeName.objects.all()
+
+	def get_serializer_class(self):
+		if self.request.method == 'GET' and 'inline' in self.request.query_params:
+			return serializers.BinningSchemeNameInlineSerializer
+		return serializers.BinningSchemeNameSerializer
+
+	def log_access(self, api_key, instance):
+		pass
