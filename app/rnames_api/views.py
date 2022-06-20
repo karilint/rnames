@@ -17,6 +17,7 @@ class ApiViewSet(viewsets.ModelViewSet):
 	@method_decorator(cache_page(60*60))
 	def list(self, request, format=None):
 		qs = self.get_queryset()
+		qs = self.filter_queryset(qs)
 		page = self.paginate_queryset(qs)
 		serializer = self.get_serializer(page, many=True)
 		return self.get_paginated_response(serializer.data)
@@ -98,9 +99,7 @@ class StructuredNameViewSet(ApiViewSet):
 	def get_queryset(self):
 
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
-			return models.StructuredName.objects \
-				.prefetch_related('name', 'location', 'reference', 'qualifier') \
-				.prefetch_related('qualifier__qualifier_name', 'qualifier__stratigraphic_qualifier')
+			return models.StructuredName.objects.all().select_related()
 
 		return models.StructuredName.objects.all()
 
@@ -125,12 +124,7 @@ class RelationViewSet(ApiViewSet):
 
 	def get_queryset(self):
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
-			return models.Relation.objects \
-				.prefetch_related('name_one', 'name_two', 'reference') \
-				.prefetch_related('name_one__name', 'name_one__location','name_one__reference','name_one__qualifier') \
-				.prefetch_related('name_two__name', 'name_two__location','name_two__reference','name_two__qualifier') \
-				.prefetch_related('name_one__qualifier__qualifier_name', 'name_one__qualifier__stratigraphic_qualifier') \
-				.prefetch_related('name_two__qualifier__qualifier_name', 'name_two__qualifier__stratigraphic_qualifier')
+			return models.Relation.objects.all().select_related()
 
 		return models.Relation.objects.all()
 
@@ -143,6 +137,7 @@ class RelationViewSet(ApiViewSet):
 		api_models.KeyRelation(relation=instance, api_key=api_key).save()
 
 class BinningViewSet(viewsets.ReadOnlyModelViewSet):
+	filterset_class = filters.BinningFilter
 	queryset = models.Binning.objects.all()
 	serializer_class = serializers.BinningSerializer
 
@@ -150,3 +145,25 @@ class AbsoluteAgeValueViewSet(ApiViewSet):
 	filterset_class = filters.AbsoluteAgeValueFilter
 	queryset = models.AbsoluteAgeValue.objects.all()
 	serializer_class = serializers.AbsoluteAgeValueSerializer
+
+class TimeScaleViewSet(ApiViewSet):
+	queryset = models.TimeScale.objects.all()
+	serializer_class = serializers.TimeScaleSerializer
+
+	def log_access(self, api_key, instance):
+		pass
+
+class BinningSchemeNameSerializer(ApiViewSet):
+	def get_queryset(self):
+		if self.request.method == 'GET' and 'inline' in self.request.query_params:
+			return models.BinningSchemeName.objects.all().select_related()
+
+		return models.BinningSchemeName.objects.all()
+
+	def get_serializer_class(self):
+		if self.request.method == 'GET' and 'inline' in self.request.query_params:
+			return serializers.BinningSchemeNameInlineSerializer
+		return serializers.BinningSchemeNameSerializer
+
+	def log_access(self, api_key, instance):
+		pass

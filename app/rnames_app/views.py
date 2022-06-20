@@ -45,12 +45,10 @@ from .filters import UserFilter
 
 import sys
 from subprocess import run, PIPE
-from .utils.root_binning import main_binning_fun
-from .utils.info import BinningProgressUpdater
 from . import tools
+from .binning import binning_process
 from io import StringIO
 from contextlib import redirect_stdout
-from types import SimpleNamespace
 import multiprocessing as mp
 import time
 
@@ -72,115 +70,6 @@ def user_is_data_admin_or_owner(user, data):
         return True
 
     return False
-
-def binning_process(scheme_id):
-    connection.connect()
-    info = BinningProgressUpdater()
-
-    if not info.start_binning():
-        return
-
-    def time_slices(scheme):
-        return list(BinningSchemeName.objects.filter(scheme=scheme_id).order_by('order').values_list('structured_name__name__name', flat=True))
-
-    queryset_list = list(Relation.objects.select_related().values_list(
-        'id',
-        'reference',
-        'reference__year',
-        'name_one__id',
-        'name_one__location__name',
-        'name_one__name__name',
-        'name_one__qualifier__level',
-        'name_one__qualifier__qualifier_name__name',
-        'name_one__qualifier__stratigraphic_qualifier__name',
-
-        'name_two__id',
-        'name_two__location__name',
-        'name_two__name__name',
-        'name_two__qualifier__level',
-        'name_two__qualifier__qualifier_name__name',
-        'name_two__qualifier__stratigraphic_qualifier__name',
-    ))
-
-    cols = [
-        'id',
-        'reference_id',
-        'reference_year',
-
-        'name_1_id',
-        'locality_name_1',
-        'name_1',
-        'level_1',
-        'qualifier_name_1',
-        'strat_qualifier_1',
-
-        'name_2_id',
-        'locality_name_2',
-        'name_2',
-        'level_2',
-        'qualifier_name_2',
-        'strat_qualifier_2',
-    ]
-
-    try:
-        result = main_binning_fun(queryset_list, cols, {
-            'rassm': time_slices('rasmussen'),
-            'berg': time_slices('bergstrom'),
-            'webby': time_slices('webby'),
-            'stages': time_slices('stages'),
-            'periods': time_slices('periods'),
-            'epochs': time_slices('epochs'),
-            'eras': time_slices('eras'),
-            'eons': time_slices('eons')
-        }, info)
-    except Exception as e:
-        info.set_error(str(e))
-        traceback.print_exc()
-        return
-
-    update_progress = info.db_update_progress_updater(
-        len(result['berg'])
-        + len(result['webby'])
-        + len(result['stages'])
-        + len(result['periods'])
-    )
-
-    create_objects = []
-    update_objects = []
-
-    def update(obj, oldest, youngest, ts_count, refs, rule):
-        obj.oldest = oldest
-        obj.youngest = youngest
-        obj.ts_count = ts_count
-        obj.refs = refs
-        obj.rule = rule
-        update_objects.append(obj)
-
-    def create(name, scheme, oldest, youngest, ts_count, refs, rule):
-        obj = Binning(name=name, binning_scheme=scheme, oldest=oldest, youngest=youngest, ts_count=ts_count, refs=refs, rule=rule)
-        create_objects.append(obj)
-
-    def process_result(df, scheme):
-        col = SimpleNamespace(**{k: v for v, k in enumerate(df.columns)})
-
-        for row in df.values:
-            name = row[col.name]
-            data = Binning.objects.filter(name=name, binning_scheme=scheme)
-            if len(data) == 0:
-                create(name, scheme_id, row[col.oldest], row[col.youngest], row[col.ts_count], row[col.refs], row[col.rule])
-            else:
-                update(data[0], row[col.oldest], row[col.youngest], row[col.ts_count], row[col.refs], row[col.rule])
-            update_progress.update()
-
-    process_result(result['berg'], 'x_robinb')
-    process_result(result['webby'], 'x_robinw')
-    process_result(result['stages'], 'x_robins')
-    process_result(result['periods'], 'x_robinp')
-
-    Binning.objects.bulk_create(create_objects, 100)
-    Binning.objects.bulk_update(update_objects, ['oldest', 'youngest', 'ts_count', 'refs', 'rule'], 100)
-
-    info.finish_binning()
 
 @login_required
 def external(request, scheme_id):
@@ -1518,8 +1407,20 @@ def profile_key(request, prefix):
 
 def time_scale_detail(request, pk):
     scheme = get_object_or_404(TimeScale, pk=pk)
-    names = BinningSchemeName.objects.filter(scheme=pk).order_by('order');
-    return render(request, 'time_scale_detail.html', {'scheme': scheme, 'names': names})
+    names = BinningSchemeName.objects.filter(ts_name=pk).order_by('sequence');
+    results = Binning.objects.filter(binning_scheme=scheme).order_by('name')
+    paginator = Paginator(results, 20)
+
+    page_number = request.GET.get('page')
+
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    return render(request, 'time_scale_detail.html', {'scheme': scheme, 'names': names, 'page_obj': page_obj})
 
 @login_required
 @permission_required('rnames_app.add_time_scale', raise_exception=True)
@@ -1591,8 +1492,8 @@ def binning_scheme_add_name(request, pk):
         form = AddBinningSchemeNameForm(request.POST)
         if form.is_valid():
             entry = form.save(commit=False)
-            entry.scheme = scheme
-            entry.order = BinningSchemeName.objects.filter(scheme=scheme).count()
+            entry.ts_name = scheme
+            entry.sequence = BinningSchemeName.objects.filter(ts_name=scheme).count()
             entry.save()
         return redirect('time-scale-detail', pk=pk)
 
@@ -1619,8 +1520,8 @@ def binning_scheme_edit_name(request, pk):
 class binning_scheme_delete_name(UserPassesTestMixin, DeleteView):
     def test_func(self):
         name = self.get_object()
-        print(name.scheme)
-        return user_is_data_admin_or_owner(self.request.user, name.scheme)
+        print(name.ts_name)
+        return user_is_data_admin_or_owner(self.request.user, name.ts_name)
 
     model = BinningSchemeName
     success_url = reverse_lazy('time-scale-list')
@@ -1632,5 +1533,16 @@ def pbdb_import(request):
 
     db.connections.close_all()
     handle = mp.Process(target=tools.paleobiology_database_import, )
+    handle.start()
+    return redirect('/')
+
+
+@login_required
+def macrostrat_import(request):
+    if not request.user.groups.filter(name='data_admin').exists():
+        raise PermissionDenied
+
+    db.connections.close_all()
+    handle = mp.Process(target=tools.macrostrat_database_import, )
     handle.start()
     return redirect('/')
