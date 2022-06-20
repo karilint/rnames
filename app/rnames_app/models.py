@@ -34,6 +34,9 @@ class BaseModel(models.Model):
 class TimeScale(BaseModel):
     ts_name = models.CharField(max_length=200, blank=False)
     is_public = models.BooleanField(blank=False, default=False, help_text='Are the scheme and its results public')
+    def __str__(self):
+        return '%s (%i)' % (self.ts_name, self.pk)
+
     class Meta:
         unique_together = [['ts_name', 'created_by']]
 

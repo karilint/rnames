@@ -153,7 +153,7 @@ class TimeScaleViewSet(ApiViewSet):
 	def log_access(self, api_key, instance):
 		pass
 
-class BinningSchemeNameSerializer(ApiViewSet):
+class BinningSchemeNameViewSet(ApiViewSet):
 	def get_queryset(self):
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
 			return models.BinningSchemeName.objects.all().select_related()
