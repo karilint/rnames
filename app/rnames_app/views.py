@@ -1505,17 +1505,17 @@ def binning_scheme_add_name(request, pk):
 @permission_required('rnames_app.change_binning_scheme', raise_exception=True)
 def binning_scheme_edit_name(request, pk):
     name = get_object_or_404(BinningSchemeName, pk=pk)
-    if not user_is_data_admin_or_owner(request.user, name.scheme):
+    if not user_is_data_admin_or_owner(request.user, name.ts_name):
         raise PermissionDenied
 
     if (request.method == 'POST'):
         form = BinningSchemeNameOrderForm(request.POST, instance=name)
         if form.is_valid():
             entry = form.save()
-        return redirect('time-scale-detail', pk=name.scheme.pk)
+        return redirect('time-scale-detail', pk=name.ts_name.pk)
 
     form = BinningSchemeNameOrderForm(instance=name);
-    return render(request, 'binning_scheme_name_edit.html', {'scheme': name.scheme, 'name': name, 'form': form})
+    return render(request, 'binning_scheme_name_edit.html', {'scheme': name.ts_name, 'name': name, 'form': form})
 
 class binning_scheme_delete_name(UserPassesTestMixin, DeleteView):
     def test_func(self):

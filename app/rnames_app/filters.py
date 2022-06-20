@@ -19,11 +19,11 @@ from .models import (Binning
 from django.contrib.auth.models import User
 
 class TimeScaleFilter(filters.FilterSet):
-    name = filters.CharFilter(lookup_expr='icontains')
+    ts_name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = TimeScale
-        fields = ['ts_name', 'name', ]
+        fields = ['ts_name', ]
 
 class LocationFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr='icontains')
