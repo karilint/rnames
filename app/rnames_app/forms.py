@@ -170,8 +170,8 @@ class AddBinningSchemeNameForm(forms.ModelForm):
             })}
 
 class BinningSchemeNameOrderForm(forms.ModelForm):
-    order = forms.IntegerField()
+    sequence = forms.IntegerField()
 
     class Meta:
         model = BinningSchemeName
-        fields = ('order',)
+        fields = ('sequence',)
