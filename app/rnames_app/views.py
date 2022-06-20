@@ -1520,8 +1520,8 @@ def binning_scheme_edit_name(request, pk):
 class binning_scheme_delete_name(UserPassesTestMixin, DeleteView):
     def test_func(self):
         name = self.get_object()
-        print(name.scheme)
-        return user_is_data_admin_or_owner(self.request.user, name.scheme)
+        print(name.ts_name)
+        return user_is_data_admin_or_owner(self.request.user, name.ts_name)
 
     model = BinningSchemeName
     success_url = reverse_lazy('time-scale-list')
