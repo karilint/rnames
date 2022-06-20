@@ -21,7 +21,7 @@
             <thead>
               <tr>
                 <th>Structed Name</th>
-                <th>Order</th>
+                <th>Sequence</th>
                 {% if user.is_authenticated %}
                   <th>Action</th>
                 {% endif %}
@@ -31,7 +31,7 @@
               {% for name in names %}
                 <tr>
                   <td>{{ name.structured_name }}</td>
-                  <td>{{ name.order }}</td>
+                  <td>{{ name.sequence }}</td>
                   {% if user.is_authenticated %}
                     <td>
                       <a class="btn btn-default" href="{% url 'binning-scheme-edit-name' pk=name.pk %}"><span class="fa fa-pencil-square-o"></span></a>
