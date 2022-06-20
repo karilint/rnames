@@ -1408,7 +1408,19 @@ def profile_key(request, prefix):
 def time_scale_detail(request, pk):
     scheme = get_object_or_404(TimeScale, pk=pk)
     names = BinningSchemeName.objects.filter(ts_name=pk).order_by('sequence');
-    return render(request, 'time_scale_detail.html', {'scheme': scheme, 'names': names})
+    results = Binning.objects.filter(binning_scheme=scheme).order_by('name')
+    paginator = Paginator(results, 20)
+
+    page_number = request.GET.get('page')
+
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    return render(request, 'time_scale_detail.html', {'scheme': scheme, 'names': names, 'page_obj': page_obj})
 
 @login_required
 @permission_required('rnames_app.add_time_scale', raise_exception=True)
