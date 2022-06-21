@@ -2,12 +2,13 @@
 # If you want to access the filtered objects in your views,
 # for example if you want to paginate them, you can do that.
 # They are in f.qs
-import rest_framework_filters as filters
+import django_filters as filters
 
 from .models import (Binning
     , Location
     , Name
     , Qualifier
+    , Binning
     , QualifierName
     , Reference
     , Relation
@@ -18,11 +19,11 @@ from .models import (Binning
 from django.contrib.auth.models import User
 
 class TimeScaleFilter(filters.FilterSet):
-    name = filters.CharFilter(lookup_expr='icontains')
+    ts_name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = TimeScale
-        fields = ['ts_name', 'name', ]
+        fields = ['ts_name', ]
 
 class LocationFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr='icontains')
@@ -110,3 +111,9 @@ class AbsoluteAgeValueFilter(filters.FilterSet):
     class Meta:
         model = AbsoluteAgeValue
         fields = ['structured_name__name__name']
+
+class BinningFilter(filters.FilterSet):
+    binning_scheme__ts_name = filters.CharFilter(lookup_expr='icontains')
+    class Meta:
+        model = Binning
+        fields = ['binning_scheme__ts_name', 'binning_scheme']

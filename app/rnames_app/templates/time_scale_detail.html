@@ -17,11 +17,11 @@
               {% endif %}
             </p>
           </div>
-           <table class="w3-table-all">
+          <table class="w3-table-all">
             <thead>
               <tr>
                 <th>Structed Name</th>
-                <th>Order</th>
+                <th>Sequence</th>
                 {% if user.is_authenticated %}
                   <th>Action</th>
                 {% endif %}
@@ -31,7 +31,7 @@
               {% for name in names %}
                 <tr>
                   <td>{{ name.structured_name }}</td>
-                  <td>{{ name.order }}</td>
+                  <td>{{ name.sequence }}</td>
                   {% if user.is_authenticated %}
                     <td>
                       <a class="btn btn-default" href="{% url 'binning-scheme-edit-name' pk=name.pk %}"><span class="fa fa-pencil-square-o"></span></a>
@@ -46,6 +46,35 @@
             <a href="{% url 'binning-scheme-add-name' pk=scheme.pk %}"><div class="w3-btn w3-grey">Add name</div></a>
             <a href="{% url 'run-binning' scheme_id=scheme.pk %}"><div class="w3-btn w3-green">Run binning</div></a>
           {% endif %}
+          {% if page_obj %}
+            <h3>Binning results</h3>
+            <table class="w3-table-all">
+              <thead>
+                <tr>
+                  <th>Structured Name</th>
+                  <th>Oldest Name</th>
+                  <th>Youngest Name</th>
+                  <th>TS Count</th>
+                  <th>References</th>
+                  <th>Rule</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for result in page_obj %}
+                <tr>
+                  <td>{{ result.name }}</td>
+                  <td>{{ result.oldest_name }}</td>
+                  <td>{{ result.youngest_name }}</td>
+                  <td>{{ result.ts_count }}</td>
+                  <td>{{ result.refs }}</td>
+                  <td>{{ result.rule }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% endif %}
+      {% load url_replace %}
+      {% include 'pagination.html' %}
     </div>
   </article>
 {% endblock %}
