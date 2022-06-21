@@ -141,10 +141,7 @@ def create_relations(references_map, relations_df, cache):
 			cache=cache
 		)
 
-		if row['Relation'] == 'belongs to':
-			belongs_to = 1
-		else:
-			belongs_to = 0
+		belongs_to = row['Belongs_to']
 
 		if not isinstance(row['Reference'], list):
 			row['Reference'] = [row['Reference']]
