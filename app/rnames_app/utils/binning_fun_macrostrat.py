@@ -11,7 +11,7 @@ import time
 # bin_fun_macrostrat is doing this.
 #
 
-def bin_fun_macrostat (c_rels, c_strat, binning_scheme, ts_names, t_scales):
+def bin_fun_macrostat (c_rels, c_strat, binning_scheme, ts_names, t_scales,imp_id):
     
     
     t_scheme = binning_scheme
@@ -23,7 +23,7 @@ def bin_fun_macrostat (c_rels, c_strat, binning_scheme, ts_names, t_scales):
     print(used_ts['ts'])
     
     # this object give the PDBD upload id(s)
-    PBDB_id = c_rels.loc[(c_rels["reference_title"]=="Macrostrat"),["reference_id"]]
+    PBDB_id = imp_id
     if PBDB_id.shape[0]>0:
         PBDB_id = PBDB_id.drop_duplicates()
 
@@ -43,12 +43,8 @@ def bin_fun_macrostat (c_rels, c_strat, binning_scheme, ts_names, t_scales):
     c_rels = c_rels.reset_index(drop=True)  
     
     # many Macrostrat downloaded structured names have only relations to Absolute time
-    # these are ignored by binning-fun_id.binning_fun()
-    # here we bin them according to their Macrostrat absolute age
-    # xxxx
-    # xxxx
-    # xxxx
-    
+    # these are mostly ignored by binning-fun_id.binning_fun()
+    # here we bin them according to their Macrostrat absolute age  
     # get Macrostrat based absolute ages of ts   
     c_rels_abs = c_rels[c_rels['strat_qualifier_2'] =='mya'] # all absolute ages of ts
     print(c_rels_abs)
