@@ -281,7 +281,7 @@ def macrostrat_import(res_sn_raw):
     #### structural names out out
     structured_names_MS = structured_names_MS.drop_duplicates()
     #### relations out
-    relations_MS = relations_MS.drop('Location', axis=1)
+    # relations_MS = relations_MS.drop('Location', axis=1)
     # please add ["reference_title"] == 'Macrostrat" into reference all other reference fields NaN
     ################################
     return {'relations': relations_MS, 'structured_names': structured_names_MS}
