@@ -7,7 +7,7 @@
     <form action="" method="get">
         {{ filter.form.as_p }}
         <button type="submit" class="w3-button w3-border w3-hover-light-grey"><i class="fas fa-search"> Search</i></button>
-        <a href="{% url 'binning-scheme-list' %}" class="w3-button w3-border w3-hover-light-grey"><i class="fas fa-undo"> Reset filter</i></a>
+        <a href="{% url 'time-scale-list' %}" class="w3-button w3-border w3-hover-light-grey"><i class="fas fa-undo"> Reset filter</i></a>
     </form>
     {% if user.is_authenticated %}
       <a href="{% url 'export-csv-binnings' %}" class="w3-button w3-border w3-hover-light-grey"><i class="fas fa-file-csv"> Export all binnings</i></a>

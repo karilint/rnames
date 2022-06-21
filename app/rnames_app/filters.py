@@ -2,27 +2,28 @@
 # If you want to access the filtered objects in your views,
 # for example if you want to paginate them, you can do that.
 # They are in f.qs
-import rest_framework_filters as filters
+import django_filters as filters
 
 from .models import (Binning
     , Location
     , Name
     , Qualifier
+    , Binning
     , QualifierName
     , Reference
     , Relation
     , StratigraphicQualifier
     , StructuredName
-    , TimeSlice
-    , BinningScheme)
+    , TimeScale
+    , AbsoluteAgeValue)
 from django.contrib.auth.models import User
 
-class BinningSchemeFilter(filters.FilterSet):
-    name = filters.CharFilter(lookup_expr='icontains')
+class TimeScaleFilter(filters.FilterSet):
+    ts_name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
-        model = Binning
-        fields = ['binning_scheme', 'name', ]
+        model = TimeScale
+        fields = ['ts_name', ]
 
 class LocationFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr='icontains')
@@ -104,16 +105,15 @@ class APINameFilter(filters.FilterSet):
         model = Name
         fields = ['name', 'created_by__first_name', ]
 
-class TimeSliceFilter(filters.FilterSet):
-    scheme = filters.CharFilter(lookup_expr='icontains')
-    name = filters.CharFilter(lookup_expr='icontains')
+class AbsoluteAgeValueFilter(filters.FilterSet):
+    structured_name__name__name = filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
-        model = TimeSlice
-        fields = ['scheme', 'name' ]
+        model = AbsoluteAgeValue
+        fields = ['structured_name__name__name']
 
-class BinningSchemeFilter(filters.FilterSet):
-    scheme = filters.CharFilter(lookup_expr='icontains')
+class BinningFilter(filters.FilterSet):
+    binning_scheme__ts_name = filters.CharFilter(lookup_expr='icontains')
     class Meta:
-        model = BinningScheme
-        fields = ['name']
+        model = Binning
+        fields = ['binning_scheme__ts_name', 'binning_scheme']

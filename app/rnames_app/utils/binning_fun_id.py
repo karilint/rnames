@@ -8,18 +8,32 @@ import numpy as np
 from bisect import (bisect_left, bisect_right)
 from types import SimpleNamespace
 #from .rn_funs import *
+<<<<<<< HEAD
 import rn_funs
 
 
 def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_spec):
     # I took out info parameter, jut to test binning locally
+=======
+from . import rn_funs
+
+
+def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_spec):
+    # I took out info parameter, just to test binning locally
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     # info parameter is only used to update server on binning status
     #ts_names should be a df containing at least columns: 'id', 'ts_scheme' 
     #ts_scales should be a df containing at least columns: 'ts_name_id', 'structured_name_id'
     # c_rels should be a dataframe containing columns:
     #       'id','name_one_id','name_two_id', 'name_one_qualifier_stratigraphic_qualifier_name',
+<<<<<<< HEAD
     #       'name_two_qualifier_stratigraphic_qualifier_name ', 'reference_id', 'reference_year'
     #! also required not_spec: a df with id's of structured names with name: 'not specified'
+=======
+    #       'name_two_qualifier_stratigraphic_qualifier_name ', 'reference_id', 'reference_year', 'reference_title'
+    #! also required not_spec: a df with id's of structured names with name: 'not specified'
+    
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     not_spec = not_spec
         
     print("We begin with six search algorithms binning all relations within the given binning scheme with references.")
@@ -42,6 +56,7 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
         runrange = np.arange(0,3,1)
     
     # Prepare binning scheme
+<<<<<<< HEAD
     
     t_scheme = binning_scheme
     x_names = ts_names[ts_names['ts_name']==t_scheme]
@@ -90,6 +105,30 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
     #c_rels_b = c_rels.loc[((c_rels["name_2"]=="not specified"))]
     c_rels_a = c_rels[c_rels['name_1'].isin(not_spec['id'])]
     c_rels_b = c_rels[c_rels['name_2'].isin(not_spec['id'])]
+=======
+<<<<<<<< HEAD:app/rnames_app/utils/binning_fun.py
+    # time_slices should be a dataframe containing columns : id | order | scheme
+    #t_scheme = binning_scheme
+    #used_ts = time_slices[time_slices['scheme']==binning_scheme]
+    #used_ts = used_ts[['id', 'order']]
+    #used_ts.rename(columns={'id': 'ts'},inplace = True) # rename to fit following code
+
+    # range limitation
+    c_rels_sub = c_rels.loc[((c_rels["name_1"]== xrange))]
+    xsub1 = c_rels.loc[((c_rels["level_1"] <= c_rels_sub['level_1'].values[0])
+                & (c_rels["strat_qualifier_1"] == c_rels_sub['strat_qualifier_1'].values[0]))]
+    xsub2 = c_rels.loc[((c_rels["level_2"] <= c_rels_sub['level_1'].values[0])
+                & (c_rels["strat_qualifier_2"] == c_rels_sub['strat_qualifier_1'].values[0]))]
+    xsubs = pd.concat([xsub1['name_1'], xsub2['name_2']], axis=0, ignore_index=True)
+    xsubs = xsubs.drop_duplicates()
+    c_relsx = c_rels[~c_rels["name_1"].isin(xsubs)]
+    c_rels = c_relsx[~c_relsx["name_2"].isin(xsubs)]
+
+
+     # this block identifies "not specified" - relations
+    c_rels_a = c_rels.loc[((c_rels["name_1"]=="not specified"))]
+    c_rels_b = c_rels.loc[((c_rels["name_2"]=="not specified"))]
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
 
     if len(c_rels_a) == 0:
         xnamesb = c_rels_b[['name_1', 'strat_qualifier_1', 'reference_id']]
@@ -115,9 +154,56 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
         xnames_raw1 = xnamesc.drop_duplicates()
     xnames_raw = xnamesc
     if len(c_rels_a) > 0 or len(c_rels_b) > 0:
+<<<<<<< HEAD
         xnames_raw["combi"] = xnames_raw1["name"].astype(str).copy()+ '_' 
         + xnames_raw1["ref"].astype(str).copy()
     #xnamelist = xnames_raw["combi"].tolist()
+=======
+        xnames_raw["combi"] = xnames_raw1["name"] + xnames_raw1["ref"].astype(str).copy()
+    #xnamelist = xnames_raw["combi"].tolist()
+========
+    
+    t_scheme = binning_scheme
+    x_names = ts_names[ts_names['ts_name']==t_scheme]
+    used_ts = t_scales[t_scales['ts_name_id']==x_names['id'].values[0]]
+    # rename columns in order to make compatible with following code
+    used_ts = used_ts[['structured_name_id', 'sequence']]
+    used_ts.rename(columns={'structured_name_id':'ts', 'sequence': 'ts_index'},inplace = True)
+    
+    # Get reference_id of PBDB relations. This is needed because thethey need to be excluded from 's' and 'cc'
+    PBDB_id = c_rels.loc[(c_rels["reference_title"]=="Paleobiology Database"),["reference_id"]]
+    PBDB_id = PBDB_id.drop_duplicates()
+ 
+    # Prepare c_rels
+    # c_rels should be a dataframe containing columns:
+    # id | name_one_id | name_two_id |name_one_qualifier_qualifier_name_name | 
+    # name_two_qualifier_qualifier_name_name |reference_id
+   
+    c_rels = c_rels[['id', 'name_one_id', 'name_two_id','name_one_qualifier_stratigraphic_qualifier_name', 
+                          'name_two_qualifier_stratigraphic_qualifier_name', 'reference_id', 'reference_year']]
+    c_rels.rename(columns={'name_one_id': 'name_1', 'name_two_id':'name_2', 
+                         'name_one_qualifier_stratigraphic_qualifier_name': 'strat_qualifier_1',
+                         'name_two_qualifier_stratigraphic_qualifier_name': 'strat_qualifier_2'},inplace = True) # rename to fit following code
+    # make c_rels two-sided
+    c_relsx = c_rels[['id', 'name_2','strat_qualifier_2','name_1', 'strat_qualifier_1', 'reference_id', 'reference_year']]
+    c_relsx.columns = ['id', 'name_1','strat_qualifier_1','name_2', 'strat_qualifier_2','reference_id', 'reference_year']
+    c_rels = pd.concat([c_rels.reset_index(drop=False), c_relsx.reset_index(drop=False)], axis=0)
+    c_rels = c_rels.reset_index(drop=True)
+    
+
+    # this block identifies "not specified" - relations
+    c_rels_a = c_rels[c_rels['name_1'].isin(not_spec['id'])]
+    c_rels_b = c_rels[c_rels['name_2'].isin(not_spec['id'])]
+
+    xnamesa = c_rels_b[['name_1', 'strat_qualifier_1','reference_id']]
+    xnamesa.columns = ["name", "strat_qualifier","ref"]
+    xnamesb = c_rels_a[['name_2', 'strat_qualifier_2', 'reference_id']]
+    xnamesb.columns = ["name", "strat_qualifier","ref"]
+    xnamesc = pd.concat((xnamesa,xnamesb), axis=0)
+    xnames_raw = xnamesc.drop_duplicates()
+    xnames_raw["combi"] = xnames_raw["name"].astype(str).copy()+ '_' + xnames_raw["ref"].astype(str).copy()
+>>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d:app/rnames_app/utils/binning_fun_id.py
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
 
     ##############################################################
     ##############################################################
@@ -133,20 +219,32 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
     results = {}
 
     #rule 0 = all direct relations between chronostrat names and binning scheme
+<<<<<<< HEAD
     results['rule_0'] = rule0(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec)
+=======
+    results['rule_0'] = rule0(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id)
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     #info.update()
 
     ##############################################################
     ##############################################################
     #rule 1 = all direct relations between biostrat names and binning scheme
+<<<<<<< HEAD
     results['rule_1'] = rule1(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec)
+=======
+    results['rule_1'] = rule1(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id)
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     #info.update()
 
     ##############################################################
     ##############################################################
     ### Rule_2: direct relations between non-bio* with binning scheme
     ### except chronostratigraphy
+<<<<<<< HEAD
     results['rule_2'] = rule2(results, c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec)
+=======
+    results['rule_2'] = rule2(results, c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id)
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     #info.update()
 
     ##############################################################
@@ -156,7 +254,11 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
     ##############################################################
     ##############################################################
     #rule_3 all relations between biostrat and biostrat that refer indirectly to binning scheme
+<<<<<<< HEAD
     results['rule_3'] = rule3(results, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec)
+=======
+    results['rule_3'] = rule3(results, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id)
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     #info.update()
 
     ##############################################################
@@ -164,7 +266,12 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
     resis_bio = pd.DataFrame.drop_duplicates(resis_bio)
     ### Rule 4: indirect relations of non-bio via resis_bio to binning scheme
     ### except direct chronostratigraphy links
+<<<<<<< HEAD
     results['rule_4'] = rule4(results, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec)
+=======
+    results['rule_4'] = rule4(results, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, 
+                              not_spec, PBDB_id)
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     #info.update()
 
     ##################################################################################
@@ -178,13 +285,22 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
     cr_g =  cr_g[~cr_g["name_2"].isin(used_ts["ts"])]
     
     ### Rule 5:  indirect relations of non-bio* to resis_4 with link to bio* (route via resi_4)
+<<<<<<< HEAD
     results['rule_5'] = rule5(results, cr_g, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec)
+=======
+    results['rule_5'] = rule5(results, cr_g, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, 
+                              not_spec, PBDB_id)
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     #info.update()
 
     ##################################################################################
     ### Rule 6: indirect relations of non-bio* to resis_bio to binning scheme (route via resis_bio)
     #rule 6 corrected at 23.03.2020
+<<<<<<< HEAD
     results['rule_6'] = rule6(results, cr_g, runrange, used_ts, xnames_raw, b_scheme, not_spec)
+=======
+    results['rule_6'] = rule6(results, cr_g, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id)
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     #info.update()
 
     end = time.time()
@@ -207,6 +323,7 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
           "binned names. It took ", round(dura, 2), "+", round(dura2, 2),  "minutes.")
     return combi_names
 
+<<<<<<< HEAD
 def rule0(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec):
     #rule 0 = all direct relations between chronostrat names and binning scheme
     
@@ -219,6 +336,18 @@ def rule0(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec)
 
     for ibs in runrange:
         resi_0 = bin_names(ibs, cr_x, xnames_raw, bifu_selector='bfs')
+=======
+def rule0(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id):
+    #rule 0 = all direct relations between chronostrat names and binning scheme
+    
+    cr_x =  c_rels_d[c_rels_d["name_2"].isin(used_ts["ts"])]
+    cr_x = cr_x[~cr_x['name_1'].isin(not_spec['id'])] 
+    cr_x = cr_x.loc[((cr_x["strat_qualifier_1"]=="Chronostratigraphy")),
+                              ["reference_id","name_1","name_2", "ts", "ts_index", "reference_year"]]
+
+    for ibs in runrange:
+        resi_0 = bin_names(ibs, PBDB_id,cr_x, xnames_raw, bifu_selector='bfs')
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
         resi_0["rule"] = 0.0
         resi_0 = resi_0.loc(axis=1)["name", "oldest", "youngest", "ts_count", "refs", "rule"]
         resi_0 =  resi_0[~resi_0["name"].isin(used_ts["ts"])]
@@ -243,20 +372,33 @@ def rule0(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec)
     print("Rule 0:  relations among named biostratigraphical units that have direct relations to binning scheme")
     return resi_0
 
+<<<<<<< HEAD
 def rule1(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec):
+=======
+def rule1(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id):
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     #rule 1 = all direct relations between biostrat names and binning scheme
     
     cr_a =  c_rels_d[c_rels_d["name_2"].isin(used_ts["ts"])]
     #take out  relations that also relate to not specified in same reference
+<<<<<<< HEAD
     #cr_a =  cr_a.loc[~(cr_a["name_1"]=="not specified")]
     cr_a = cr_a[~cr_a['name_1'].isin(not_spec['id'])]
     cr_a = cr_a.loc[((cr_a["strat_qualifier_1"]=="Biostratigraphy")),
                               #& ((c_rels_d["qualifier_name_2"]==t_scheme)),
+=======
+    cr_a = cr_a[~cr_a['name_1'].isin(not_spec['id'])]
+    cr_a = cr_a.loc[((cr_a["strat_qualifier_1"]=="Biostratigraphy")),
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
                               ["reference_id","name_1","name_2", "ts", "ts_index", "reference_year"]]
     
     
     for ibs in runrange:
+<<<<<<< HEAD
         resi_1 = bin_names(ibs, cr_a, xnames_raw, bifu_selector='bfs')
+=======
+        resi_1 = bin_names(ibs, PBDB_id, cr_a, xnames_raw, bifu_selector='bfs')
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
         resi_1["rule"] = 1.0
         resi_1 = resi_1.loc(axis=1)["name", "oldest", "youngest", "ts_count", "refs", "rule"]
         resi_1 =  resi_1[~resi_1["name"].isin(used_ts["ts"])]
@@ -281,11 +423,16 @@ def rule1(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec)
     print("Rule 1: direct relations of named units to binning scheme")
     return resi_1
 
+<<<<<<< HEAD
 def rule2(results, c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec):
+=======
+def rule2(results, c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id):
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     resi_0 = results["rule_0"]
     ### Rule_2: direct relations between non-bio* with binning scheme
     ### except chronostratigraphy
     cr_c =  c_rels_d[c_rels_d["name_2"].isin(used_ts["ts"])]
+<<<<<<< HEAD
     #cr_c =  cr_c.loc[~(cr_c["name_2"]=="not specified")]
     cr_c = cr_c[~cr_c['name_2'].isin(not_spec['id'])]
     cr_c = cr_c.loc[~(cr_c["strat_qualifier_1"]=="Biostratigraphy")
@@ -295,6 +442,15 @@ def rule2(results, c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, 
     
     for ibs in runrange:
         resi_2 = bin_names(ibs, cr_c, xnames_raw, bifu_selector='bfs')
+=======
+    cr_c = cr_c[~cr_c['name_2'].isin(not_spec['id'])]
+    cr_c = cr_c.loc[~(cr_c["strat_qualifier_1"]=="Biostratigraphy")
+                          & ~(cr_c["strat_qualifier_1"]=="Chronostratigraphy"),
+                              ["reference_id","name_1","name_2", "ts", "ts_index", "reference_year"]]
+    
+    for ibs in runrange:
+        resi_2 = bin_names(ibs, PBDB_id, cr_c, xnames_raw, bifu_selector='bfs')
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
         resi_2["rule"] = 2.0
         resi_2 = resi_2.loc(axis=1)["name", "oldest", "youngest", "ts_count", "refs", "rule"]
         resi_2 =  resi_2[~resi_2["name"].isin(used_ts["ts"])]
@@ -321,13 +477,20 @@ def rule2(results, c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, 
     print("Rule 2:  relations among named biostratigraphical units that have indirect relations to binning scheme")
     return resi_2
 
+<<<<<<< HEAD
 def rule3(results, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec):
+=======
+def rule3(results, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id):
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     resi_1 = results["rule_1"]
     #rule_3 all relations between biostrat and biostrat that refer indirectly to binning scheme
     cr_b = c_rels.loc[(c_rels["strat_qualifier_1"]=="Biostratigraphy")
                                   & (c_rels["strat_qualifier_2"]=="Biostratigraphy"),
+<<<<<<< HEAD
                                   #&  ~(c_rels["qualifier_name_1"] == t_scheme)
                                   #&  ~(c_rels["qualifier_name_2"] == t_scheme),
+=======
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
                                   ["reference_id","name_1","name_2", "reference_year"]]
     
     cr_b =  cr_b[~cr_b["name_1"].isin(used_ts["ts"])]
@@ -335,7 +498,10 @@ def rule3(results, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, no
 
     x1 = pd.merge(resi_1, cr_b, left_on="name", right_on="name_2") # name_2 is already binned here
     x1 = merge_time_info(x1, used_ts)
+<<<<<<< HEAD
     #x1 =  x1.loc[~(x1["name_1"]=="not specified")]
+=======
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     x1 = x1[~x1['name_1'].isin(not_spec['id'])]
     x1 = x1[~x1["name_1"].isin(resi_1["name"])]# filter out all names that are already binned with rule 1
     # name_1 is already binned, name_2 not binned yet
@@ -348,7 +514,11 @@ def rule3(results, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, no
     resi_3 = pd.DataFrame.transpose(resi_3)
     for ibs in runrange:
         for k in np.arange(1,5,1):
+<<<<<<< HEAD
             x3 = bin_names(ibs, x1, xnames_raw, bifu_selector='bfs2', result_selector=result_selector_2)
+=======
+            x3 = bin_names(ibs, PBDB_id, x1, xnames_raw, bifu_selector='bfs2', result_selector=result_selector_2)
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
             x3["rule"] = 3.0+((k-1)*0.1)
             x3b = x3[~x3["name"].isin(resi_3["name"])] # filter for already binned names
             resi_3 = pd.concat([resi_3, x3b], axis=0, sort=True) # appended to previous ruling
@@ -361,7 +531,10 @@ def rule3(results, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, no
 
             x4 = pd.merge(x4a, cr_b, left_on="name", right_on="name_2") # name_2 is already binned here
             x1 = merge_time_info(x4, used_ts)
+<<<<<<< HEAD
             #x1 =  x1.loc[~(x1["name_1"]=="not specified")]
+=======
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
             x1 = x1[~x1['name_1'].isin(not_spec['id'])]
             x1["rule"] = 3.7
             x1 = x1.drop_duplicates()
@@ -395,7 +568,11 @@ def rule3(results, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, no
     print("Rule 3:  relations among named biostratigraphical units that have direct relations to binning scheme")
     return resi_3
 
+<<<<<<< HEAD
 def rule4(results, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec):
+=======
+def rule4(results, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id):
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     resi_0 = results["rule_0"]
     resi_1 = results["rule_1"]
     resi_2 = results["rule_2"]
@@ -405,8 +582,11 @@ def rule4(results, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b
 
     cr_d = c_rels.loc[~(c_rels["strat_qualifier_1"]=="Biostratigraphy")
                               & (c_rels["strat_qualifier_2"]=="Biostratigraphy"),
+<<<<<<< HEAD
                               #& ~(c_rels["qualifier_name_1"]==t_scheme)
                               #& ~(c_rels["qualifier_name_2"]==t_scheme),
+=======
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
                               ["reference_id","name_1","name_2", "reference_year"]]
     
     cr_d =  cr_d[~cr_d["name_1"].isin(used_ts["ts"])]
@@ -417,7 +597,10 @@ def rule4(results, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b
     x1 = merge_time_info(x1, used_ts)
     x1 = x1[~x1["name_1"].isin(resi_2["name"])] # filter non-bio rule 2
     x1 =  x1[~x1["name_1"].isin(resi_0["name"])] # filter direct chronostrat rule 0
+<<<<<<< HEAD
     #x1 =  x1.loc[~(x1["name_1"]=="not specified")] # filter "Not specified"
+=======
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     x1 = x1[~x1['name_1'].isin(not_spec['id'])]
     x1["rule"] = 4.6
     x1 = x1.drop_duplicates()
@@ -428,7 +611,11 @@ def rule4(results, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b
     resi_4 = pd.DataFrame.transpose(resi_4)
     for ibs in runrange:
         for k in np.arange(1,5,1):
+<<<<<<< HEAD
             x3 = bin_names(ibs, x1, xnames_raw, bifu_selector='bfs2', result_selector=result_selector_2)
+=======
+            x3 = bin_names(ibs, PBDB_id, x1, xnames_raw, bifu_selector='bfs2', result_selector=result_selector_2)
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
             x3["rule"] = 4.0+((k-1)*0.1)
             x3b = x3[~x3["name"].isin(resi_4["name"])] # filter for already binned names
             resi_4 = pd.concat([resi_4, x3b], axis=0, sort=True) # appended to previous ruling
@@ -474,7 +661,11 @@ def rule4(results, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b
     print("Rule 4:  relations among named non-biostratigraphical units that have direct relations to binning scheme")
     return resi_4
 
+<<<<<<< HEAD
 def rule5(results, cr_g, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec):
+=======
+def rule5(results, cr_g, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id):
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     resi_0 = results["rule_0"]
     resi_1 = results["rule_1"]
     resi_2 = results["rule_2"]
@@ -486,7 +677,10 @@ def rule5(results, cr_g, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_
     x1 = merge_time_info(x1, used_ts)
     x1 = x1[~x1["name_1"].isin(resi_2["name"])] # filter first level  linked non-bio*
     x1 =  x1[~x1["name_1"].isin(resi_0["name"])] # filter direct  chronostrat rule 0
+<<<<<<< HEAD
     #x1 =  x1.loc[~(x1["name_1"]=="not specified")]
+=======
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     x1 = x1[~x1['name_1'].isin(not_spec['id'])]
     x1["rule"] = 5.0
     x1 = x1.drop_duplicates()
@@ -497,7 +691,11 @@ def rule5(results, cr_g, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_
     resi_5 = pd.DataFrame.transpose(resi_5)
     for ibs in runrange:
         for k in np.arange(1,5,1):
+<<<<<<< HEAD
             x3 = bin_names(ibs, x1, xnames_raw, bifu_selector='bfs2', result_selector=result_selector_2)
+=======
+            x3 = bin_names(ibs, PBDB_id, x1, xnames_raw, bifu_selector='bfs2', result_selector=result_selector_2)
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
             x3["rule"] = 5.0+((k-1)*0.1)
             x3b = x3[~x3["name"].isin(resi_5["name"])] # filter for already binned names
             resi_5 = pd.concat([resi_5, x3b], axis=0, sort=True) # appended to previous ruling
@@ -511,7 +709,10 @@ def rule5(results, cr_g, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_
 
             x4 = pd.merge(x4a, cr_g, left_on="name", right_on="name_2") # name_2 is already binned here
             x1 = merge_time_info(x4, used_ts)
+<<<<<<< HEAD
             #x1 =  x1.loc[~(x1["name_1"]=="not specified")]
+=======
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
             x1 = x1[~x1['name_1'].isin(not_spec['id'])]
             x1["rule"] = 5.7
             x1 = x1.drop_duplicates()
@@ -544,7 +745,11 @@ def rule5(results, cr_g, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_
     print("via biostratigraphical units.")
     return resi_5
 
+<<<<<<< HEAD
 def rule6(results, cr_g, runrange, used_ts, xnames_raw, b_scheme, not_spec):
+=======
+def rule6(results, cr_g, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id):
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     resi_0 = results["rule_0"]
     resi_1 = results["rule_1"]
     resi_2 = results["rule_2"]
@@ -558,7 +763,10 @@ def rule6(results, cr_g, runrange, used_ts, xnames_raw, b_scheme, not_spec):
     x1 = merge_time_info(x1, used_ts)
     x1 = x1[~x1["name_1"].isin(resi_0["name"])]
     x1 = x1[~x1["name_1"].isin(resi_2["name"])]# all first level linked non-bio* to rule 2
+<<<<<<< HEAD
     #x1 =  x1.loc[~(x1["name_1"]=="not specified")]
+=======
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     x1 = x1[~x1['name_1'].isin(not_spec['id'])]
     x1["rule"] = 6.6 # only for control
     x1 = x1.drop_duplicates()
@@ -569,7 +777,11 @@ def rule6(results, cr_g, runrange, used_ts, xnames_raw, b_scheme, not_spec):
     resi_6 = pd.DataFrame.transpose(resi_6)
     for ibs in runrange:
         for k in np.arange(1,5,1):
+<<<<<<< HEAD
             x3 = bin_names(ibs, x1, xnames_raw, bifu_selector='bfs2', result_selector=result_selector_2)
+=======
+            x3 = bin_names(ibs, PBDB_id, x1, xnames_raw, bifu_selector='bfs2', result_selector=result_selector_2)
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
             x3["rule"] = 6.0+((k-1)*0.1)
             x3b = x3[~x3["name"].isin(resi_6["name"])] # filter for already binned names
             resi_6 = pd.concat([resi_6, x3b], axis=0, sort=True) # appended to previous ruling; these are now binned
@@ -582,7 +794,10 @@ def rule6(results, cr_g, runrange, used_ts, xnames_raw, b_scheme, not_spec):
 
             x4 = pd.merge(x4a, cr_g, left_on="name", right_on="name_2") # name_2 is already binned here
             x1 = merge_time_info(x4, used_ts)
+<<<<<<< HEAD
             #x1 =  x1.loc[~(x1["name_1"]=="not specified")]
+=======
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
             x1 = x1[~x1['name_1'].isin(not_spec['id'])]
             x1["rule"] = 6.7
             x1 = x1.drop_duplicates()
@@ -675,16 +890,23 @@ def shortest_time_bins(results, used_ts):
         res_youngest = car_sub["youngest"].iloc[0]
         res_oldest = car_sub["oldest"].iloc[0]
         ts_numbered = used_ts
+<<<<<<< HEAD
         #ts_numbered['index1'] = used_ts.index # xchange BK
+=======
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
         ts_numbered['index1'] = used_ts['ts_index'] # # xchange BK
         old_min = pd.merge(ts_numbered, cpts_oldest, left_on="ts", right_on="oldest")
         old_min = min(old_min["index1"])
         young_max = pd.merge(ts_numbered, cpts_youngest, left_on="ts", right_on="youngest")
         young_max = max(young_max["index1"])
         ts_c = young_max-old_min
+<<<<<<< HEAD
         #res_youngest = ts_numbered.iloc[young_max] [0] # here is bug indexer out of bounds xchangeBK
         res_youngest = ts_numbered.iloc[young_max-1] [0] # corrected BK
         #res_oldest = ts_numbered.iloc[old_min] [0] # here is bug indexer out of bounds xchangeBK
+=======
+        res_youngest = ts_numbered.iloc[young_max-1] [0] # corrected BK
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
         res_oldest = ts_numbered.iloc[old_min-1] [0]  # corrected BK
         rule = "5, 6"
         com_56_da = pd.DataFrame([i_name, res_oldest,res_youngest, ts_c, refs_f, rule],
@@ -720,16 +942,24 @@ def shortest_time_bins(results, used_ts):
         res_youngest = cau_sub["youngest"].iloc[0]
         res_oldest = cau_sub["oldest"].iloc[0]
         ts_numbered = used_ts
+<<<<<<< HEAD
         #ts_numbered['index1'] = used_ts.index # xchange BK
+=======
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
         ts_numbered['index1'] = used_ts['ts_index']
         old_min = pd.merge(ts_numbered, cpts_oldest, left_on="ts", right_on="oldest")
         old_min = min(old_min["index1"])
         young_max = pd.merge(ts_numbered, cpts_youngest, left_on="ts", right_on="youngest")
         young_max = max(young_max["index1"])
+<<<<<<< HEAD
         ts_c = young_max-old_min
        
         res_youngest = ts_numbered.iloc[young_max-1] [0] # corrected
         #res_oldest = ts_numbered.iloc[old_min] [0] # here is bug indexer out of bounds xchangeBK
+=======
+        ts_c = young_max-old_min      
+        res_youngest = ts_numbered.iloc[young_max-1] [0] # corrected
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
         res_oldest = ts_numbered.iloc[old_min-1] [0] # corrected
         rows.append((i_name, res_oldest,res_youngest, ts_c, refs_f, "5, 6"))
     com_56_s = pd.DataFrame(rows, columns=["name", "oldest", "youngest", "ts_count", "refs", "rule"])
@@ -882,7 +1112,11 @@ def result_selector_2(name, data, col):
 
     return (name, data[oldest, col.oldest], data[youngest, col.youngest], ts_c, refs_f)
 
+<<<<<<< HEAD
 def bin_names(ibs, ntts, xnames_raw, bifu_selector, result_selector=result_selector_1):
+=======
+def bin_names(ibs, PBDB_id, ntts, xnames_raw, bifu_selector, result_selector=result_selector_1):
+>>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
     if ntts.empty:
         return pd.DataFrame([], columns=["name", "oldest", "youngest", "ts_count", "refs"])
 
@@ -924,6 +1158,7 @@ def bin_names(ibs, ntts, xnames_raw, bifu_selector, result_selector=result_selec
         # Filter data based on binning function in question
         if ibs == 0:
             if bifu_selector=='bfs':
+<<<<<<< HEAD
                 data = rn_funs.bifu_s(col.ntts, data)
             if bifu_selector=='bfs2':
                 data = rn_funs.bifu_s2(col.ntts, data) 
@@ -931,6 +1166,14 @@ def bin_names(ibs, ntts, xnames_raw, bifu_selector, result_selector=result_selec
             data = rn_funs.bifu_y(col.ntts, data)
         if ibs == 2:
             data = rn_funs.bifu_c(col.ntts, data)
+=======
+                data = rn_funs.bifu_s(col.ntts, data, PBDB_id)
+            if bifu_selector=='bfs2':
+                data = rn_funs.bifu_s2(col.ntts, data, PBDB_id) 
+        if ibs == 1:
+            data = rn_funs.bifu_y(col.ntts, data, PBDB_id)
+        if ibs == 2:
+            data = rn_funs.bifu_c(col.ntts, data, PBDB_id)
 
         # Use selector function to produce final result
         rows.append(result_selector(name, data, col.ntts))
