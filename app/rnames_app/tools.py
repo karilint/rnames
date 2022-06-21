@@ -167,7 +167,7 @@ def pbdb_reference():
 
 def macrostrat_reference():
 	year = datetime.datetime.now().date().year
-	title = 'Macrostrat Database'
+	title = 'Macrostrat'
 	return models.Reference.objects.get_or_create(year=year,title=title,)[0]
 
 def import_data(data, references_map):
