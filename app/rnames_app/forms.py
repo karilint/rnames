@@ -2,7 +2,7 @@ from django import forms
 from django_select2.forms import (
     ModelSelect2Widget,
 )
-from .models import Location, Name, Qualifier, QualifierName, Reference, Relation, StratigraphicQualifier, StructuredName, TimeSlice
+from .models import Location, Name, Qualifier, QualifierName, Reference, Relation, StratigraphicQualifier, StructuredName, TimeScale, BinningSchemeName
 
 class ContactForm(forms.Form):
     name = forms.CharField(max_length=30)
@@ -90,58 +90,10 @@ class ReferenceWidget(ModelSelect2Widget):
 class RelationWidget(ModelSelect2Widget):
     search_fields = ['name__name__icontains', 'location__name__icontains', 'qualifier__qualifier_name__name__icontains', 'qualifier__stratigraphic_qualifier__name__icontains',]
 
-class ReferenceStructuredNameForm(forms.ModelForm):
-    class Meta:
-        model = Relation
-        fields = ('is_active',)
-
-    is_active = forms.IntegerField(       # At least one field needed in ModelForm although this is not needed in the actual input
-        initial=1
-        ,widget=forms.HiddenInput()
-    )
-    name_id = forms.IntegerField(       # A hidden input for internal use
-        widget=forms.HiddenInput()
-    )
-    name = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                'class': 'w3-input w3-border',
-                'readonly':'readonly',
-            }
-        )
-    )
-    qualifier = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                'class': 'w3-input w3-border',
-                'readonly':'readonly',
-            }
-        )
-    )
-    location = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                'class': 'w3-input w3-border',
-                'readonly':'readonly',
-            }
-        )
-    )
-
-#class ReferenceRelationForm(forms.ModelForm):
-#    class Meta:
-#        model = Relation
-#        fields = ('name_one', 'name_two', 'belongs_to',)
-#        widgets = {'name_one': RelationWidget, 'name_two': RelationWidget,}
-
 class ReferenceRelationForm(forms.ModelForm):
     class Meta:
         model = Relation
-        fields = ('is_active', 'belongs_to',)
-
-    is_active = forms.IntegerField(       # At least one field needed in ModelForm although this is not needed in the actual input
-        initial=1
-        ,widget=forms.HiddenInput()
-    )
+        fields = ('belongs_to',)
 
     name_id = forms.IntegerField(       # A hidden input for internal use
         widget=forms.HiddenInput()
@@ -201,9 +153,25 @@ class StratigraphicQualifierForm(forms.ModelForm):
         model = StratigraphicQualifier
         fields = ('name',)
 
-
-class TimeSliceForm(forms.ModelForm):
+class TimeScaleForm(forms.ModelForm):
 
     class Meta:
-        model = TimeSlice
-        fields = ('scheme', 'order', 'name')
+        model = TimeScale
+        fields = ('ts_name', 'is_public')
+
+class AddBinningSchemeNameForm(forms.ModelForm):
+
+    class Meta:
+        model = BinningSchemeName
+        fields = ('structured_name',)
+        widgets = {'structured_name' : RelationWidget(attrs={
+                'class': 'w3-input w3-border',
+                'readonly':'readonly',
+            })}
+
+class BinningSchemeNameOrderForm(forms.ModelForm):
+    sequence = forms.IntegerField()
+
+    class Meta:
+        model = BinningSchemeName
+        fields = ('sequence',)

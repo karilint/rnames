@@ -32,6 +32,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'development_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DEBUG', 1)))
+ADMINS = [('admin', os.environ.get('DJANGO_LOGGING_EMAIL'))]
 
 ALLOWED_HOSTS = []
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
@@ -57,7 +58,10 @@ INSTALLED_APPS = [
     'django_userforeignkey',
     'django_select2',
     'rest_framework',
+    'rest_framework_api_key',
+    'django_filters',
     'rnames_app',
+    'rnames_api',
     'simple_history',
     'debug_toolbar',
     'allauth',
@@ -65,11 +69,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.orcid',
     'frontend.apps.FrontendConfig',
-    'livereload'
+    'silk',
 ]
-
-LIVERELOAD_HOST="0.0.0.0"
-LIVERELOAD_PORT="8002"
 
 SITE_ID = 1
 
@@ -95,8 +96,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_userforeignkey.middleware.UserForeignKeyMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
+    'django_cprofile_middleware.middleware.ProfilerMiddleware',
+    'silk.middleware.SilkyMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
-    'livereload.middleware.LiveReloadScript',
 ]
 
 ROOT_URLCONF = 'main.urls'
@@ -136,7 +138,10 @@ REST_FRAMEWORK = {
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
         #        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
 
 # Database
@@ -217,10 +222,30 @@ DEBUG_TOOLBAR_PANELS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', config.get(
+    'SENDGRID_API_KEY', None))
+
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', config.get(
     'EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend'))
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST = 'smtp.sendgrid.com'
+EMAIL_HOST_USER = 'apikey'
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_USER', config.get('EMAIL_USER'))
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS', config.get('EMAIL_PASS'))
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', config.get(
+    'DEFAULT_FROM_EMAIL', None))
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    },
+    'select2': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://redis:6379',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+SELECT2_CACHE_BACKEND = 'select2'

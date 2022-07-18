@@ -1,3 +1,5 @@
+import { isDbId } from '../../utilities'
+
 export const relReducer = (state = [], { type, rel }) => {
 	if (rel === undefined) return state
 	let ret = null
@@ -10,7 +12,9 @@ export const relReducer = (state = [], { type, rel }) => {
 			ret = state.map(v => (v.id === rel.id ? rel : v))
 			break
 		case 'DELETE':
-			ret = state.filter(v => (v.id !== rel.id))
+			ret = isDbId(rel.id)
+				? state
+				: state.filter(v => (v.id !== rel.id))
 			break
 		default:
 			ret = state

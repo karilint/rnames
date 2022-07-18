@@ -13,6 +13,7 @@ const idTypes = [
 	'db_qualifier',
 	'db_structured_name',
 	'db_reference',
+	'db_relation'
 ]
 
 let ID = 0
@@ -27,6 +28,9 @@ export const makeId = (ty, value) => {
 	const idString = JSON.stringify({ type: ty, value: id })
 	return idString
 }
+
+const dbIdRegex = /^db_/
+export const isDbId = id => dbIdRegex.test(JSON.parse(id).type)
 
 const findRef = (refs, ids) =>
 	refs.find(ref => ref.names.find(v => ids.includes(v.id)))

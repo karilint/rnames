@@ -43,7 +43,7 @@
   </table>
   {% if user.is_authenticated %}
     <br>
-    <a href="{% url 'reference-structured_name-new' reference.id%}"><span class="fa  fa-plus"></span> Add Structured Name</a>
+    <a href="{% url 'wizard_edit' reference.id %}"><span class="fa fa-plus"></span> Open in wizard</a>
     <br>
     {% if sn_list %}
       <table class="w3-table-all">

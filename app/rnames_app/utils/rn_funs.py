@@ -14,18 +14,23 @@ from bisect import (bisect_left, bisect_right)
 
 ################################################################
 # strictly searches for maximum compromise between all binnings
-def bifu_c(col, ntts):
+def bifu_c(col, ntts, PBDB_id):
     return ntts
 
 ################################################################
 # strictly searches for youngest binnings
-def bifu_y(col, ntts):
-    max_y = max(ntts[:, col.reference_year])
+def bifu_y(col, ntts, PBDB_id):
+    # if only PBDB relations exist in ntts (PBDB==ntts) do not filter, if not prefer own data
+    nttsx = ntts[np.isin(ntts[:, col.reference_id], PBDB_id['reference_id'])]
+    if (nttsx.shape[0]>0) & (nttsx.shape[0]<ntts.shape[0]):
+        ntts[np.isin(~ntts[:, col.reference_id], PBDB_id['reference_id'])]
+
+    max_y = np.max(ntts[:, col.reference_year])
     return ntts[ntts[:, col.reference_year] == max_y]
 
 ################################################################
 # strictly searches for shortest binnings
-def bifu_s(col, ntts):
+def bifu_s(col, ntts, PBDB_id):
     rows = []
 
     # Calculate time slice deltas for references
@@ -44,11 +49,17 @@ def bifu_s(col, ntts):
     # Select rows whose reference has minimal time slice delta
     bio_setb = ntts[np.isin(ntts[:, col.reference_id], short_ref[:, 0])]
 
+    # if only PBDB relations exist in ntts (PBDB==ntts) do not filter if not prefer own data
+    bio_setx = bio_setb[np.isin(bio_setb[:, col.reference_id], PBDB_id['reference_id'])]
+    if (bio_setx.shape[0]>0) & (bio_setx.shape[0]<bio_setb.shape[0]):
+        bio_setb = bio_setb[~np.isin(bio_setb[:, col.reference_id], PBDB_id['reference_id'])]
+
     # search for youngest reference among those
     max_y = np.max(bio_setb[:, col.reference_year])
+          
     return bio_setb[bio_setb[:, col.reference_year] == max_y]
 
-def bifu_s2(col, ntts):
+def bifu_s2(col, ntts, PBDB_id):
     # select all references
     rows = []
     min_delta = np.inf
@@ -78,6 +89,12 @@ def bifu_s2(col, ntts):
 
     # Filter for references with shortest delta
     bio_setb = ntts[np.isin(ntts[:, col.reference_id], rows)]
-    # search for youngest reference among those
-    max_y = max(bio_setb[:, col.reference_year])
+
+    # if only PBDB relations exist in ntts (PBDB==ntts) do not filter if not prefer own data
+    bio_setx = bio_setb[np.isin(bio_setb[:, col.reference_id], PBDB_id['reference_id'])]
+    if (bio_setx.shape[0]>0) & (bio_setx.shape[0]<bio_setb.shape[0]):
+        bio_setb = bio_setb[~np.isin(bio_setb[:, col.reference_id], PBDB_id['reference_id'])]
+
+    max_y = np.max(bio_setb[:, col.reference_year])
+    
     return bio_setb[bio_setb[:, col.reference_year] == max_y]

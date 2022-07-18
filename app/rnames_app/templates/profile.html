@@ -1,0 +1,27 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<h1>Profile</h1>
+
+<h2>My schemes</h2>
+<table class="w3-table-all">
+	<tr>
+		<th>Name</th>
+		<th>Action</th>
+	</tr>
+
+	{% for scheme in schemes %}
+		<tr>
+			<td>{{ scheme.ts_name }}</td>
+			<td>
+			<a class="btn btn-default" href="{% url 'time-scale-detail' pk=scheme.pk %}"><span class="fa fa-search"></span></a>
+			<a class="btn btn-default" href="{% url 'time-scale-delete' pk=scheme.pk %}"><span class="fa  fa-trash-o"></span></a>
+			</td>
+		</tr>
+	{% endfor %}
+</table>
+
+{% block profile_keys %}
+{% endblock %}
+
+{% endblock %}

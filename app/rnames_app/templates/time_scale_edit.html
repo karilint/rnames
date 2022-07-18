@@ -1,12 +1,12 @@
 {% extends 'base_generic.html' %}
-{% block title %}RNames - Edit Time Slice{% endblock %}
+{% block title %}RNames - Edit Scheme{% endblock %}
 
 {% block content %}
 <!-- Write your comments here -->
   <article>
     {% if user.is_authenticated %}
-      <h1>Edit Time Slice</h1>
-      <form method="POST" class="timeslice-form">{% csrf_token %}
+      <h1>Edit Scheme</h1>
+      <form method="POST" class="scheme-form">{% csrf_token %}
           {{ form.as_p }}
           <button type="submit" class="w3-btn w3-green">Save</button>
       </form>
