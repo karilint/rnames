@@ -171,7 +171,7 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
     used_ts.rename(columns={'structured_name_id':'ts', 'sequence': 'ts_index'},inplace = True)
     
     # Get reference_id of PBDB relations. This is needed because thethey need to be excluded from 's' and 'cc'
-    PBDB_id = imp_id
+    PBDB_id = c_rels.loc[(c_rels["reference_title"]=="Paleobiology Database"),["reference_id"]]
     PBDB_id = PBDB_id.drop_duplicates()
  
     # Prepare c_rels

@@ -11,7 +11,7 @@ import time
 # bin_fun_PBDB is doing this.
 #
 
-def bin_fun_PBDB (c_rels, c_strat, binning_scheme, ts_names, t_scales, imp_id):
+def bin_fun_PBDB (c_rels, c_strat, binning_scheme, ts_names, t_scales):
     
     
     t_scheme = binning_scheme
@@ -23,7 +23,7 @@ def bin_fun_PBDB (c_rels, c_strat, binning_scheme, ts_names, t_scales, imp_id):
     print(used_ts['ts'])
     
     # this object give the PDBD upload id(s)
-    PBDB_id = imp_id
+    PBDB_id = c_rels.loc[(c_rels["reference_title"]=="Paleobiology Database"),["reference_id"]]
     if PBDB_id.shape[0]>0:
         PBDB_id = PBDB_id.drop_duplicates()
 

@@ -187,7 +187,7 @@ def macrostrat_import(res_sn_raw):
     sec_rest = sec_rest.drop_duplicates()
 
     ### relations from sections
-    secs = pd.concat([sec_rest, sec_mbr, sec_fm, sec_gp, sec_sgp, sec_beds, sec_bed], axis=0)
+    secs = pd.concat([sec_rest, sec_mbr, sec_gp, sec_sgp, sec_beds, sec_bed], axis=0)
     secs['Belongs_to'] = 0
     secs = secs.drop_duplicates()
     ##############################
@@ -253,7 +253,7 @@ def macrostrat_import(res_sn_raw):
     ###### add location and additional columns
     relations_MS = pd.concat([res_rel_MS, secs, intvls], axis=0)
     relations_MS = relations_MS.drop_duplicates()
-    data = ['Era', 'Eon', 'Epoch', 'Period', 'Stage', 'Sytem', 'Substage', 'mya']
+    data = ['Era', 'Eon', 'Epoch', 'Period', 'Stage', 'Sytem', 'Substage']
     dfx = pd.DataFrame(data, columns=['Chrono_global'])
     dfx['Location']= 'Global'
     relations_MS = pd.merge(relations_MS, dfx, left_on='Qualifier_one', right_on= 'Chrono_global', how='outer')

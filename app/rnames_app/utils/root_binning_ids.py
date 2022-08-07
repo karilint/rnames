@@ -18,8 +18,7 @@ import binning_fun_id # to be changed
 # this takes c. 10 mins
 # any possibility to speed this up?
 start = time.time()
-# somehow &page_size=100000 doesnt work when I tried it, gives: 502 Bad Gateway...
-url = "https://rnames-staging.it.helsinki.fi/api/relations/?inline=true&format=json&page_size=100000" 
+url = "https://rnames-staging.it.helsinki.fi/api/relations/?inline=true&format=json&page_size=100000"
 print(url)
 response = requests.get(url)
 response_json = response.json()
@@ -197,7 +196,6 @@ binned_generalised = binned_generalised[['name', 'oldest', 'youngest']]
 =======
 from . import binning_fun_id # to be changedx
 from . import binning_fun_PBDB # to be changedx
-from . import binning_fun_macrostrat # to be changedx
 
 def download_relations_from_api():
     ###################
@@ -330,37 +328,19 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     # this should be via input form on frontend
     # example: 'combined'
     binning_algorithm = 'combined' # this is input
-    
-    ###################
-    # id's of imported relations without true references
-    # these cannot be used in 'youngest' and 'combined' binning algorithms
-    # to be expanded with other imports without true referenced relations
-    imp_id = c_rels.loc[(c_rels["reference_title"]=="Paleobiology Database") or
-                        (c_rels["reference_title"]=="Macrostrat"),["reference_id"]]
-    
-    
-    ###################
-    ###################
-    ## binning of structured names imported from Macrostrat without reference
-    MS_names_binned= binning_fun_macrostrat.bin_fun_macrostrat(c_rels = res_rels_RN_raw, c_strat= res_sn_raw,
-                               binning_scheme = binning_scheme, ts_names = ts_names, t_scales = t_scales,
-                               imp_id = imp_id)
 
     ###################
     ###################
     ## binning of structured names imported from PBDB without reference
     PBDB_names_binned= binning_fun_PBDB.bin_fun_PBDB(c_rels = res_rels_RN_raw, c_strat= res_sn_raw,
-                               binning_scheme = binning_scheme, ts_names = ts_names, t_scales = t_scales,
-                               imp_id = imp_id)
+                               binning_scheme = binning_scheme, ts_names = ts_names, t_scales = t_scales)
 
     ###################
     ###################
-    ## binning of own RNames data
-    res_rels_RN_raw_self = c_rels.loc[~(c_rels["reference_title"]=="Macrostrat")]
-    res_rels_RN_raw_self = res_rels_RN_raw_self.loc[~(res_rels_RN_raw_self["reference_title"]=="Paleobiology Database")]
-    resi_binned_raw = binning_fun_id.bin_fun(c_rels = res_rels_RN_self, binning_algorithm = binning_algorithm,
+    ## binning of all other strucured names
+    resi_binned_raw = binning_fun_id.bin_fun(c_rels = res_rels_RN_raw, binning_algorithm = binning_algorithm,
                                binning_scheme = binning_scheme, ts_names = ts_names,
-                               t_scales = t_scales, not_spec = not_spec, imp_id = imp_id)
+                               t_scales = t_scales, not_spec = not_spec)
     #print(resi_binned_raw)
 
 
@@ -372,7 +352,7 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     # binned_generalised: gives binning of identical names
 
     #make results readable
-    binned_raw = pd.concat([resi_binned_raw, PBDB_names_binned, MS_names_binned], axis=0)
+    binned_raw = pd.concat([resi_binned_raw, PBDB_names_binned], axis=0)
     binned_raw = binned_raw. drop_duplicates()
     binned_raw = pd.merge(binned_raw, res_sn, left_on="name", right_on="id")
     binned_raw.rename(columns={'name':'name_id', 'name_name': 'name',
@@ -455,8 +435,7 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     #print(binned_generalised)
 
     ## adding absolute ages to the binnings
-    # Three options are available:
-    # + adding the age constraints used in the Macrostrat: 'Macrostrat_ages'
+    # Two options are available:
     # + adding the age constraints used in the PBDB: 'PBDB_ages'
     # + adding the age constraints of own RNames entries: 'RN_ages'
     # define age constraints
@@ -467,13 +446,10 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
                      (res_rels_RN_tw['name_two_qualifier_qualifier_name_name']=='mya')]
 
     def agebinbin (xage_res_rels,agecon):
-        if agecon== 'Macrostrat_ages':
-            xage_res_rels_x = xage_res_rels.loc[(xage_res_rels["reference_title"]=="Macrostrat")]
         if agecon== 'PBDB_ages':
             xage_res_rels_x = xage_res_rels.loc[(xage_res_rels["reference_title"]=="Paleobiology Database")]
         if agecon== 'RN_ages':
             xage_res_rels_x = xage_res_rels.loc[~(xage_res_rels["reference_title"]=="Paleobiology Database")]
-            xage_res_rels_x = xage_res_rels_x.loc[~(xage_res_rels_x["reference_title"]=="Macrostrat")]
         if (xage_res_rels_x.shape[0]==0):
             print('No absolute time scale exists for binning approach.')
         if (xage_res_rels_x.shape[0]>0):
@@ -496,9 +472,7 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
                 binned_ages.rename(columns={'oldest_age_x':'oldest_age', 'name_id_x': 'name_id'},inplace = True)
                 return (binned_ages)
         return pd.DataFrame()
-    
-    # we can do this also as a loop, looping through all three agecon options and concat them
-    # and adding a column with binned_with_abs_ages['age_constraints']=agecon
+
     binned_with_abs_ages = agebinbin(xage_res_rels = xage_res_rels,agecon = agecon)
 
     ###################
