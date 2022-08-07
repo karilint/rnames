@@ -12,10 +12,9 @@ router.register(r'qualifier-names', views.QualifierNameViewSet, basename='api-qu
 router.register(r'structured-names', views.StructuredNameViewSet, basename='api-structured-name')
 router.register(r'references', views.ReferenceViewSet, basename='api-reference')
 router.register(r'relations', views.RelationViewSet, basename='api-relation')
+router.register(r'time-slices', views.TimeSliceViewSet, basename='api-time-slice')
 router.register(r'binnings', views.BinningViewSet, basename='api-binning')
-router.register(r'absolute-age-values', views.AbsoluteAgeValueViewSet, basename='api-absolute-age-value')
-router.register(r'time-scales', views.TimeScaleViewSet, basename='api-time-scale')
-router.register(r'time-scale-names', views.BinningSchemeNameViewSet, basename='api-time-scale-name')
+router.register(r'inline-relations', views.InlineRelationViewSet, basename='api-inline-relation')
 
 urlpatterns = [
 	path('', include(router.urls)),

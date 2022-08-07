@@ -34,7 +34,7 @@ class StructuredNameSerializer(serializers.HyperlinkedModelSerializer):
 	location = serializers.HyperlinkedRelatedField(view_name='api-location-detail', queryset=models.Location.objects.all())
 	name = serializers.HyperlinkedRelatedField(view_name='api-name-detail', queryset=models.Name.objects.all())
 	qualifier = serializers.HyperlinkedRelatedField(view_name='api-qualifier-detail', queryset=models.Qualifier.objects.all())
-	reference = serializers.HyperlinkedRelatedField(view_name='api-reference-detail', queryset=models.Reference.objects.all(), allow_null=True)
+	reference = serializers.HyperlinkedRelatedField(view_name='api-reference-detail', queryset=models.Reference.objects.all())
 
 	class Meta:
 		model = models.StructuredName
@@ -54,10 +54,15 @@ class RelationSerializer(serializers.HyperlinkedModelSerializer):
 		model = models.Relation
 		fields = ['id', 'belongs_to', 'name_one', 'name_two', 'reference']
 
+class TimeSliceSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = models.TimeSlice
+		fields = ['id', 'order', 'scheme']
+
 class BinningSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = models.Binning
-		fields = ['binning_scheme', 'name', 'oldest_name', 'youngest_name', 'ts_count', 'refs', 'rule']
+		fields = ['binning_scheme', 'name', 'oldest', 'youngest', 'ts_count', 'refs', 'rule']
 
 class QualifierInlineSerializer(serializers.ModelSerializer):
 	qualifier_name = QualifierNameSerializer(read_only=True)
@@ -85,28 +90,3 @@ class RelationInlineSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = models.Relation
 		fields = ['id', 'belongs_to', 'name_one', 'name_two', 'reference']
-
-class AbsoluteAgeValueSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = models.AbsoluteAgeValue
-		fields = ['structured_name', 'age', 'age_upper_confidence', 'age_lower_confidence', 'reference']
-
-class TimeScaleSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = models.TimeScale
-		fields = ['id', 'ts_name']
-
-class BinningSchemeNameSerializer(serializers.ModelSerializer):
-	ts_name = serializers.HyperlinkedRelatedField(view_name='api-time-scale-detail', queryset=models.TimeScale.objects.all())
-	structured_name = serializers.HyperlinkedRelatedField(view_name='api-structured-name-detail', queryset=models.StructuredName.objects.all())
-
-	class Meta:
-		model = models.BinningSchemeName
-		fields = ['id', 'ts_name', 'structured_name', 'sequence']
-
-class BinningSchemeNameInlineSerializer(serializers.ModelSerializer):
-	ts_name = TimeScaleSerializer(read_only=True)
-	structured_name = StructuredNameInlineSerializer(read_only=True)
-	class Meta:
-		model = models.BinningSchemeName
-		fields = ['id', 'ts_name', 'structured_name', 'sequence']

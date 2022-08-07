@@ -1,0 +1,37 @@
+{% extends 'base_generic.html' %}
+{% block title %}RNames - Time Slice: {{ timeslice.id }}{% endblock %}
+
+{% block content %}
+<!-- Write your comments here -->
+<article>
+    <div class="timeslice">
+        <header class="w3-hide">
+            <h2>RNames - Time Slice: {{ timeslice.id }}</h2>
+         </header>
+        <table class="w3-table-all">
+          <div>
+            <h1 class="w3-left">Time Slice: {{ timeslice.id }}</h1>
+            <p class="w3-right icons">
+              {% if user.is_authenticated %}
+                <a class="btn btn-default" href="{% url 'timeslice-edit' pk=timeslice.pk %}"><span class="fa fa-pencil-square-o"></span></a>
+                <a class="btn btn-default" href="{% url 'timeslice-delete' pk=timeslice.pk %}"><span class="fa  fa-trash-o"></span></a>
+              {% endif %}
+            </p>
+          </div>
+          <tr>
+            <th>Scheme</th>
+            <td>{{ timeslice.scheme }}</td>
+          </tr>
+          <tr>
+            <th>Order</th>
+            <td>{{ timeslice.order }}</td>
+          </tr>
+          <tr>
+            <th>Name</th>
+            <td>{{ timeslice.name }}</td>
+          </tr>
+        </table>
+
+    </div>
+  </article>
+{% endblock %}

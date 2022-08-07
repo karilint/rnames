@@ -7,7 +7,7 @@
 
 <section class="w3-section">
   <h1>Run binning</h1>
-  <form id='binningForm' action="{% url 'done-binning' scheme_id=scheme_id %}" method="post">
+  <form id='binningForm' action="/rnames/admin/binning_done" method="post">
     {% csrf_token %}
     <input class="w3-button w3-light-grey" type="submit" value="Start">
   </form>
