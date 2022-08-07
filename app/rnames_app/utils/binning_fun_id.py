@@ -1174,7 +1174,6 @@ def bin_names(ibs, PBDB_id, ntts, xnames_raw, bifu_selector, result_selector=res
             data = rn_funs.bifu_y(col.ntts, data, PBDB_id)
         if ibs == 2:
             data = rn_funs.bifu_c(col.ntts, data, PBDB_id)
->>>>>>> 79ccdca133298101714b32f8f37e5df26040c51d
 
         # Use selector function to produce final result
         rows.append(result_selector(name, data, col.ntts))
