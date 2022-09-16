@@ -46,35 +46,8 @@
             <a href="{% url 'binning-scheme-add-name' pk=scheme.pk %}"><div class="w3-btn w3-grey">Add name</div></a>
             <a href="{% url 'run-binning' scheme_id=scheme.pk %}"><div class="w3-btn w3-green">Run binning</div></a>
           {% endif %}
-          {% if page_obj %}
-            <h3>Binning results</h3>
-            <table class="w3-table-all">
-              <thead>
-                <tr>
-                  <th>Structured Name</th>
-                  <th>Oldest Name</th>
-                  <th>Youngest Name</th>
-                  <th>TS Count</th>
-                  <th>References</th>
-                  <th>Rule</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for result in page_obj %}
-                <tr>
-                  <td>{{ result.name }}</td>
-                  <td>{{ result.oldest_name }}</td>
-                  <td>{{ result.youngest_name }}</td>
-                  <td>{{ result.ts_count }}</td>
-                  <td>{{ result.refs }}</td>
-                  <td>{{ result.rule }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          {% endif %}
-      {% load url_replace %}
-      {% include 'pagination.html' %}
+          <a href="{% url 'time-scale-result-binning' pk=scheme.pk %}"><div class="w3-btn w3-green">Bins</div></a>
+          <a href="{% url 'time-scale-result-absolute-age' pk=scheme.pk %}"><div class="w3-btn w3-green">Absolute Age bins</div></a>
     </div>
   </article>
 {% endblock %}

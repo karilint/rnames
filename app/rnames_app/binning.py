@@ -65,44 +65,48 @@ def get_structured_names_df():
 
     return get_table_as_df(db_columns, models.StructuredName)
 
-def process_results(scheme_id, result, info = None):
+def process_binning_result(scheme_id, df, info = None):
     scheme = models.TimeScale.objects.get(pk=scheme_id)
     create_objects = []
 
+    print('Processing binning result')
+
     models.Binning.objects.filter(binning_scheme=scheme_id).delete()
 
-    def process_result(df):
-        col = SimpleNamespace(**{k: v for v, k in enumerate(df.columns)})
+    col = SimpleNamespace(**{k: v for v, k in enumerate(df.columns)})
 
-        for row in df.values:
-            obj = models.Binning(name=row[col.name], binning_scheme=scheme, oldest_name=row[col.oldest_name], youngest_name=row[col.youngest_name], ts_count=row[col.ts_count], refs=row[col.refs], rule=row[col.rule])
-            create_objects.append(obj)
+    for row in df.values:
+        obj = models.Binning(refs=row[col.refs], binning_scheme=scheme)
+        obj.structured_name_id = structured_name=row[col.name_id]
+        obj.youngest_id = youngest=row[col.youngest_id]
+        obj.oldest_id = oldest=row[col.oldest_id]
 
-    # todo
-    result['binning']['rule'] = '-1'
-    result['generalised']['rule'] = '-1'
-    result['absolute_ages']['rule'] = '-1'
-
-    result['binning']['ts_count'] = 0
-    result['generalised']['ts_count'] = 0
-    result['absolute_ages']['ts_count'] = 0
-
-    result['generalised']['refs'] = ''
-    result['generalised'].rename(inplace=True, columns={'oldest': 'oldest_name', 'youngest': 'youngest_name'})
-
-    ########
-
-    print('Processing binning')
-    process_result(result['binning'])
-    print('Processing generalised')
-    process_result(result['generalised'])
-    print('Processing absolute_ages')
-    process_result(result['absolute_ages'])
+        create_objects.append(obj)
 
     models.Binning.objects.bulk_create(create_objects, 100)
-    print('Binning finished')
     # info.finish_binning()
 
+def process_binning_absolute_age_result(scheme_id, df, info = None):
+    scheme = models.TimeScale.objects.get(pk=scheme_id)
+    create_objects = []
+
+    print('Processing binning result')
+
+    models.BinningAbsoluteAge.objects.filter(binning_scheme=scheme_id).delete()
+
+    col = SimpleNamespace(**{k: v for v, k in enumerate(df.columns)})
+
+    for row in df.values:
+        obj = models.BinningAbsoluteAge(refs=row[col.refs], binning_scheme=scheme, oldest_age=row[col.oldest_age],
+            youngest_age=row[col.youngest_age], reference_age=row[col.ref_age], age_constraints=row[col.age_constraints])
+        obj.structured_name_id = structured_name=row[col.name_id]
+        obj.youngest_id = youngest=row[col.youngest_id]
+        obj.oldest_id = oldest=row[col.oldest_id]
+
+        create_objects.append(obj)
+
+    models.BinningAbsoluteAge.objects.bulk_create(create_objects, 100)
+    # info.finish_binning()
 
 def binning_process(scheme_id):
     connection.connect()
@@ -143,4 +147,6 @@ def binning_process(scheme_id):
     # Index(['name_id', 'name', 'qualifier_name', 'oldest_id', 'oldest_name', 'youngest_id', 'youngest_name', 'refs', 'binning_scheme', 'oldest_age', 'youngest_age', 'ref_age', 'age_constraints'], dtype='object')
     print(result['absolute_ages'])
 
-    process_results(scheme_id, result);
+    process_binning_result(scheme_id, result['binning'])
+    process_binning_absolute_age_result(scheme_id, result['absolute_ages'])
+    print('Binning finished')
