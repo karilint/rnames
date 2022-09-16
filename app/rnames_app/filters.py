@@ -15,7 +15,8 @@ from .models import (Binning
     , StratigraphicQualifier
     , StructuredName
     , TimeScale
-    , AbsoluteAgeValue)
+    , AbsoluteAgeValue
+    , BinningAbsoluteAge)
 from django.contrib.auth.models import User
 
 class TimeScaleFilter(filters.FilterSet):
@@ -117,3 +118,20 @@ class BinningFilter(filters.FilterSet):
     class Meta:
         model = Binning
         fields = ['binning_scheme__ts_name', 'binning_scheme']
+
+class BinningResultsBaseFilter(filters.FilterSet):
+    structured_name__qualifier__qualifier_name__name = filters.CharFilter(lookup_expr='icontains')
+    structured_name__qualifier__stratigraphic_qualifier__name = filters.CharFilter(lookup_expr='icontains')
+    structured_name__name__name = filters.CharFilter(lookup_expr='icontains')
+    structured_name__location__name = filters.CharFilter(lookup_expr='icontains')
+
+class BinningResultsFilter(BinningResultsBaseFilter):
+    class Meta:
+        fields = ['structured_name__name__name','structured_name__qualifier__qualifier_name__name',
+            'structured_name__qualifier__stratigraphic_qualifier__name','structured_name__location__name']
+        model = Binning
+
+class BinningAbsoluteAgeResultsFilter(BinningResultsBaseFilter):
+    class Meta:
+        fields = BinningResultsFilter.Meta.fields
+        model = BinningAbsoluteAge

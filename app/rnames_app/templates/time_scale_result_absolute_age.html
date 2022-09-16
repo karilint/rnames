@@ -1,0 +1,51 @@
+{% extends 'base_generic.html' %}
+{% block title %}RNames - Scheme: {{ scheme.id }}{% endblock %}
+
+{% block content %}
+<!-- Write your comments here -->
+<article>
+    <div class="scheme">
+        <header class="w3-hide">
+            <h2>RNames - Scheme: {{ scheme.ts_name }} ({{ scheme.id }})</h2>
+         </header>
+    </div>
+    <form action="" method="get">
+      {{ filter.form.as_p }}
+      <button type="submit" class="w3-button w3-border w3-hover-light-grey"><i class="fas fa-search"> Search</i></button>
+      <a href="{% url 'structuredname-list' %}" class="w3-button w3-border w3-hover-light-grey"><i class="fas fa-undo"> Reset filter</i></a>
+    </form>
+    {% if page_obj %}
+      <h3>Binning results</h3>
+      <table class="w3-table-all">
+        <thead>
+          <tr>
+            <th>Structured Name</th>
+            <th>Oldest</th>
+            <th>Youngest</th>
+            <th>Oldest Age</th>
+            <th>Youngest Age</th>
+            <th>Reference Age</th>
+            <th>Age Constraints</th>
+            <th>References</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for result in page_obj %}
+          <tr>
+            <td><a href="{% url 'structuredname-detail' pk=result.structured_name_id %}">{{ result.structured_name }}</a></td>
+            <td><a href="{% url 'structuredname-detail' pk=result.oldest_id %}">{{ result.oldest }}</a></td>
+            <td><a href="{% url 'structuredname-detail' pk=result.youngest_id %}">{{ result.youngest }}</a></td>
+            <td>{{ result.oldest_age }}</td>
+            <td>{{ result.youngest_age }}</td>
+            <td>{{ result.reference_age }}</td>
+            <td>{{ result.age_constraints }}</td>
+            <td>{{ result.refs }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+    {% load url_replace %}
+    {% include 'pagination.html' %}
+  </article>
+{% endblock %}
