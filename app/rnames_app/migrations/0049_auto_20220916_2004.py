@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('rnames_app', '0047_auto_20220916_1925'),
+        ('rnames_app', '0048_add_binning_fields'),
     ]
 
     operations = [
