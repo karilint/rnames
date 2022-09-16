@@ -9,7 +9,7 @@ import re
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('rnames_app', '0048_auto_20220916_2004'),
+        ('rnames_app', '0049_auto_20220916_2004'),
     ]
 
     operations = [
