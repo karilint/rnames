@@ -340,9 +340,9 @@ class Binning(BaseModel):
     """
     Model representing a Binning Scheme result in RNames (e.g. Ordovician Time Slices, Phanerozoic Stages, Phanerozoic Epochs, etc.)
     """
-    structured_name = models.ForeignKey(StructuredName, on_delete=models.CASCADE, related_name='structured_name')
-    oldest = models.ForeignKey(StructuredName, on_delete=models.CASCADE, related_name='oldest')
-    youngest = models.ForeignKey(StructuredName, on_delete=models.CASCADE, related_name='youngest')
+    structured_name = models.ForeignKey(StructuredName, on_delete=models.CASCADE, related_name='+')
+    oldest = models.ForeignKey(StructuredName, on_delete=models.CASCADE, related_name='+')
+    youngest = models.ForeignKey(StructuredName, on_delete=models.CASCADE, related_name='+')
     binning_scheme = models.ForeignKey(TimeScale, blank=True, null=True, help_text='The Binning Scheme', on_delete=models.CASCADE)
     refs = models.CharField(max_length=200, validators=[validate_comma_separated_integer_list])
 
