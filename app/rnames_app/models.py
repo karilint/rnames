@@ -40,43 +40,6 @@ class TimeScale(BaseModel):
     class Meta:
         unique_together = [['ts_name', 'created_by']]
 
-class Binning(BaseModel):
-    """
-    Model representing a Binning Scheme result in RNames (e.g. Ordovician Time Slices, Phanerozoic Stages, Phanerozoic Epochs, etc.)
-    """
-
-    binning_scheme = models.ForeignKey(TimeScale, blank=True, null=True, help_text='The Binning Scheme', on_delete=models.CASCADE)
-    name = models.CharField(
-        max_length=200, help_text="Enter a Name (e.g. Katian, Viru, etc.)")
-    oldest_name = models.CharField(
-        max_length=200, help_text="Enter a Name (e.g. Katian, Viru, etc.)")
-    youngest_name = models.CharField(
-        max_length=200, help_text="Enter a Name (e.g. Katian, Viru, etc.)")
-    ts_count = models.PositiveSmallIntegerField(
-        default=0, blank=False, help_text='The count of Time Slices within the binned Name.')
-    refs = models.CharField(max_length=200, validators=[
-                            validate_comma_separated_integer_list])
-    rule = models.CharField(max_length=5, blank=False,
-                            help_text='Enter the rule for the Binning.')
-
-    class Meta:
-        pass
-        # ordering = ['name', 'binning_scheme']
-        # unique_together = ('binning_scheme', 'name',)
-
-    def get_absolute_url(self):
-        """
-        Returns the url to access a particular binning instance.
-        """
-        return reverse('binning-detail', args=[str(self.id)])
-
-    def __str__(self):
-        """
-        String for representing the Model object (in Admin site etc.)
-        """
-        return '%s: %s' % (self.binning_scheme.ts_name, self.name)
-
-
 class Location(BaseModel):
     """
     Model representing a Location in RNames (e.g. Sweden, Baltoscandia, New Mexico, China, North Atlantic, etc.)
@@ -372,3 +335,31 @@ class AbsoluteAgeValue(BaseModel):
     age_upper_confidence = models.FloatField(default=0, help_text="Upper Confidence Value in millions of years")
     age_lower_confidence = models.FloatField(default=0, help_text="Lower Confidence Value in millions of years")
     reference = models.ForeignKey(Reference, on_delete=models.CASCADE)
+
+class Binning(BaseModel):
+    """
+    Model representing a Binning Scheme result in RNames (e.g. Ordovician Time Slices, Phanerozoic Stages, Phanerozoic Epochs, etc.)
+    """
+    structured_name = models.ForeignKey(StructuredName, on_delete=models.CASCADE, related_name='structured_name')
+    oldest = models.ForeignKey(StructuredName, on_delete=models.CASCADE, related_name='oldest')
+    youngest = models.ForeignKey(StructuredName, on_delete=models.CASCADE, related_name='youngest')
+    binning_scheme = models.ForeignKey(TimeScale, blank=True, null=True, help_text='The Binning Scheme', on_delete=models.CASCADE)
+    refs = models.CharField(max_length=200, validators=[validate_comma_separated_integer_list])
+
+    class Meta:
+        pass
+        # ordering = ['name', 'binning_scheme']
+        # unique_together = ('binning_scheme', 'name',)
+
+    def get_absolute_url(self):
+        """
+        Returns the url to access a particular binning instance.
+        """
+        return reverse('binning-detail', args=[str(self.id)])
+
+    def __str__(self):
+        """
+        String for representing the Model object (in Admin site etc.)
+        """
+        return '%s: %s' % (self.binning_scheme.ts_name, self.name)
+
