@@ -75,30 +75,15 @@ def process_results(scheme_id, result, info = None):
         col = SimpleNamespace(**{k: v for v, k in enumerate(df.columns)})
 
         for row in df.values:
-            obj = models.Binning(name=row[col.name], binning_scheme=scheme, oldest_name=row[col.oldest_name], youngest_name=row[col.youngest_name], ts_count=row[col.ts_count], refs=row[col.refs], rule=row[col.rule])
+            obj = models.Binning(refs=row[col.refs], binning_scheme=scheme)
+            obj.structured_name_id = structured_name=row[col.name_id]
+            obj.youngest_id = youngest=row[col.youngest_id]
+            obj.oldest_id = oldest=row[col.oldest_id]
+
             create_objects.append(obj)
-
-    # todo
-    result['binning']['rule'] = '-1'
-    result['generalised']['rule'] = '-1'
-    result['absolute_ages']['rule'] = '-1'
-
-    result['binning']['ts_count'] = 0
-    result['generalised']['ts_count'] = 0
-    result['absolute_ages']['ts_count'] = 0
-
-    result['generalised']['refs'] = ''
-    result['generalised'].rename(inplace=True, columns={'oldest': 'oldest_name', 'youngest': 'youngest_name'})
-
-    ########
 
     print('Processing binning')
     process_result(result['binning'])
-    print('Processing generalised')
-    process_result(result['generalised'])
-    print('Processing absolute_ages')
-    process_result(result['absolute_ages'])
-
     models.Binning.objects.bulk_create(create_objects, 100)
     print('Binning finished')
     # info.finish_binning()
