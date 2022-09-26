@@ -1,4 +1,4 @@
 .env
-nginx/certs/cert.pem
-nginx/certs/key.pem
-certs
+nginx/certbot/*
+nginx/certs/*
+!nginx/certs/.keep
