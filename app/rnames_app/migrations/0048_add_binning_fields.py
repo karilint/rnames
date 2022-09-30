@@ -11,6 +11,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL("DELETE FROM rnames_app_binning;"),
         migrations.AddField(
             model_name='binning',
             name='oldest',
