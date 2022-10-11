@@ -3,75 +3,9 @@
 
 import numpy as np
 import pandas as pd
-import requests
 import time
 from . import binning_fun_id # to be changedx
 from . import binning_fun_PBDB # to be changedx
-
-def download_relations_from_api():
-    ###################
-    #download relations from RNames API
-    # this takes up to c. 0.5h
-    # any possibility to speed this up?
-    start = time.time()
-    url = "https://rnames-staging.it.helsinki.fi/api/relations/?format=json&inline=true&page_size=10000"
-    # if url does not work use:
-    #url = "https://rnames-staging.it.helsinki.fi/api/relations/?format=json&inline=true"    
-    print(url)
-    response = requests.get(url)
-    response_json = response.json()
-    flat_json = pd.json_normalize(response_json['results'], sep='_')
-    res_rels_RN_raw = pd.DataFrame(flat_json)
-
-    while True:
-        url = response_json['next']
-        if url == None:
-            # There is no next page to download
-            break
-
-        #print(url)
-        response = requests.get(url)
-        response_json = response.json()
-        flat_json = pd.json_normalize(response_json['results'], sep='_')
-        res_rels_RN_raw = pd.concat([res_rels_RN_raw, pd.DataFrame(flat_json)])
-        
-    ende = time.time()
-
-    print("download took:",(ende - start)/60, "mins")
-    return res_rels_RN_raw
-
-def download_structured_names_from_api():
-    ###################
-    #download structured names from RNames API
-    # this takes c. 1 min
-    # any possibility to speed this up?
-
-    start = time.time()
-    #url = "https://rnames-staging.it.helsinki.fi/api/structured-names/?inline=true&format=json&page_size=10000"
-    # if url does not work use instead
-    url = "https://rnames-staging.it.helsinki.fi/api/structured-names/?inline=true&format=json"
-    print(url)
-    response = requests.get(url)
-    response_json = response.json()
-    flat_json = pd.json_normalize(response_json['results'], sep='_')
-    res_sn_raw = pd.DataFrame(flat_json)
-
-    while True:
-        url = response_json['next']
-        if url == None:
-            # There is no next page to download
-            break
-
-        #print(url)
-        response = requests.get(url)
-        response_json = response.json()
-        flat_json = pd.json_normalize(response_json['results'], sep='_')
-        res_sn_raw = pd.concat([res_sn_raw, pd.DataFrame(flat_json)])
-
-    ende = time.time()
-
-    print("download took:",(ende - start)/60, "mins")
-    return res_sn_raw
 
 def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_RN_raw = None, res_sn_raw = None):
     ###################
