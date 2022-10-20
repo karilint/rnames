@@ -79,3 +79,8 @@ One way to verify a user’s e-mail address is the following:
 2. Navigate to http://localhost:8001/
 3. Open the database table _account_emailaddress_ under _django_rnames_.
 4. Click _Edit_ on the e-mail address to be verified, and enter `1` into the columns _verified_ and _primary_.
+
+
+## Paleobiology database migration
+
+To run the Paleobiology database migration, the country codes from county_codes.csv must be imported into the database with column order `iso3166_1_alpha_2, official_name_en, region_name`

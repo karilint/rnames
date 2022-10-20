@@ -3,8 +3,8 @@
 {% block content %}
 <!-- Write your comments here -->
   {% if user.is_authenticated %}
-    <h1>Delete Binning Scheme</h1>
-    <p>Are you sure you want to delete the binning scheme: <b><i>{{ binningscheme.name }}</i></b>?</p>
+    <h1>Delete Time Scale</h1>
+    <p>Are you sure you want to delete the time scale: <b><i>{{ timescale.ts_name }}</i></b>?</p>
 
     <form action="" method="POST">
       {% csrf_token %}

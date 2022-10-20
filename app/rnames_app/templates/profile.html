@@ -12,10 +12,10 @@
 
 	{% for scheme in schemes %}
 		<tr>
-			<td>{{ scheme.name }}</td>
+			<td>{{ scheme.ts_name }}</td>
 			<td>
-			<a class="btn btn-default" href="{% url 'binning-scheme-detail' pk=scheme.pk %}"><span class="fa fa-search"></span></a>
-			<a class="btn btn-default" href="{% url 'binning-scheme-delete' pk=scheme.pk %}"><span class="fa  fa-trash-o"></span></a>
+			<a class="btn btn-default" href="{% url 'time-scale-detail' pk=scheme.pk %}"><span class="fa fa-search"></span></a>
+			<a class="btn btn-default" href="{% url 'time-scale-delete' pk=scheme.pk %}"><span class="fa  fa-trash-o"></span></a>
 			</td>
 		</tr>
 	{% endfor %}
