@@ -47,9 +47,6 @@ def create_structured_name_components(relations_df, cache):
 		name_2.clean()
 		create_names.append(name_2)
 
-		row['Name_one'] = name_1.name
-		row['Name_two'] = name_2.name
-
 		location_1 = models.Location(name=row['Location_one'])
 		location_1.clean_fields()
 		location_1.clean()
@@ -59,9 +56,6 @@ def create_structured_name_components(relations_df, cache):
 		location_2.clean_fields()
 		location_2.clean()
 		create_locations.append(location_2)
-
-		row['Location_one'] = location_1.name
-		row['Location_two'] = location_2.name
 
 	models.Name.objects.bulk_create(create_names, ignore_conflicts=True)
 	models.Location.objects.bulk_create(create_locations, ignore_conflicts=True)
