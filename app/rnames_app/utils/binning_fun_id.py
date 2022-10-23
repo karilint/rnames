@@ -136,8 +136,6 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
     ##################################################################################
     cr_g = c_rels.loc[~(c_rels["strat_qualifier_1"]=="Biostratigraphy")
                               & ~(c_rels["strat_qualifier_2"]=="Biostratigraphy"),
-                              #& ~(c_rels["qualifier_name_1"]==t_scheme)
-                              #& ~(c_rels["qualifier_name_2"]==t_scheme),
                               ["reference_id","name_1","name_2", "reference_year"]]
     
     cr_g =  cr_g[~cr_g["name_1"].isin(used_ts["ts"])]
@@ -152,7 +150,6 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
     ### Rule 6: indirect relations of non-bio* to resis_bio to binning scheme (route via resis_bio)
     #rule 6 corrected at 23.03.2020
     results['rule_6'] = rule6(results, cr_g, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id)
-    #info.update()
 
     end = time.time()
     dura = (end - start)/60
@@ -171,7 +168,7 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
     #info.update()
     dura2 = (end - start)/60
     print("We find", len(combi_names),
-          "binned names. It took ", round(dura, 2), "+", round(dura2, 2),  "minutes.")
+          "binned names within RN. It took ", round(dura, 2), "+", round(dura2, 2),  "minutes.")
     return combi_names
 
 def rule0(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id):
@@ -325,8 +322,6 @@ def rule3(results, c_rels, t_scheme, runrange, used_ts, xnames_raw, b_scheme, no
             x2b = cr_b[~cr_b["name_1"].isin(x1["name_1"])] # all not yet binned in cr_g
             x2b = pd.DataFrame.drop_duplicates(x2b)
 
-            if k == 1:
-                x6 = x3 # das ist ok nach zweitem durchlauf
             if len(x2)== len(x2b):
                 break
             x2 = x2b
@@ -539,8 +534,6 @@ def rule6(results, cr_g, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB
             x2b = cr_g[~cr_g["name_1"].isin(x1["name_1"])] # all not yet binned in cr_g
             x2b = pd.DataFrame.drop_duplicates(x2b)
 
-            if k == 1:
-                x6 = x3 # das ist ok nach zweitem durchlauf
             if len(x2)== len(x2b):
                 break
             x2 = x2b
