@@ -280,7 +280,7 @@ class Relation(BaseModel):
         __empty__ = _('(Unknown)')
         RNAMES = 1, _('RNames')
         PBDB = 2, _('Paleobiology Database')
-        Macrostrat = 3, _('Macrostrat')
+        MACROSTRAT = 3, _('Macrostrat')
 
     database_origin = models.IntegerField(choices=DatabaseOrigin.choices, default=DatabaseOrigin.RNAMES)
 
