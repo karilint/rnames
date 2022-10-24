@@ -112,7 +112,7 @@ def get_structured_name(name_str, location_str, qualifier_name_str, remarks_str,
 	cache['structured_name'][key] = structured_name
 	return structured_name
 
-def create_relations(references_map, relations_df, cache):
+def create_relations(references_map, relations_df, cache, database_origin):
 	create_relations = []
 	row_count = str(relations_df.shape[0])
 	i = 0
@@ -146,7 +146,8 @@ def create_relations(references_map, relations_df, cache):
 				name_one=name_one,
 				name_two=name_two,
 				belongs_to=belongs_to,
-				reference=reference
+				reference=reference,
+				database_origin=database_origin
 			))
 
 	models.Relation.objects.bulk_create(create_relations, ignore_conflicts=True)
@@ -161,7 +162,7 @@ def macrostrat_reference():
 	title = 'Macrostrat'
 	return models.Reference.objects.get_or_create(year=year,title=title,)[0]
 
-def import_data(data, references_map):
+def import_data(data, references_map, database_origin):
 	cache = {}
 	cache['name'] = {}
 	cache['location'] = {}
@@ -177,7 +178,7 @@ def import_data(data, references_map):
 	print('Finished creating references')
 
 	print('Creating relations')
-	create_relations(references_map, data['relations'], cache)
+	create_relations(references_map, data['relations'], cache, database_origin)
 	print('Finished creating relations')
 
 	print('Finished importing data')
@@ -192,7 +193,7 @@ def paleobiology_database_import():
 
 	references_map = {}
 	references_map['PBDB'] = pbdb_reference()
-	import_data(data, references_map);
+	import_data(data, references_map, models.Relation.DatabaseOrigin.PBDB);
 
 def macrostrat_database_import():
 	print('Starting macrostrat import')
@@ -218,4 +219,4 @@ def macrostrat_database_import():
 	data['relations']['Reference'] = 'MSDB'
 
 	references_map = {'MSDB': macrostrat_reference()}
-	import_data(data, references_map);
+	import_data(data, references_map, models.Relation.DatabaseOrigin.MACROSTRAT);
