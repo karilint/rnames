@@ -3,7 +3,12 @@ import time
 import json
 import sys
 import pandas as pd
-sys.path.append('../')
+import os
+import inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
 
 from app.rnames_app.utils.root_binning_ids import main_binning_fun
 

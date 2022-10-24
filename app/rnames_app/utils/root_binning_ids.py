@@ -3,9 +3,10 @@
 
 import numpy as np
 import pandas as pd
-import time
-from . import binning_fun_id # to be changedx
-from . import binning_fun_PBDB # to be changedx
+from . import binning_fun_id 
+from . import binning_fun_PBDB
+from . import binning_fun_macrostrat
+from . import binning_fun_abs_time
 
 def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_RN_raw = None, res_sn_raw = None):
     ###################
@@ -39,7 +40,7 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
 
     #print(res_sn_raw.keys())
     res_sn = res_sn_raw[['id', 'name_name', 'qualifier_qualifier_name_name','location_name',
-                               'reference_first_author', 'reference_year','reference_id']]
+                               'reference_first_author', 'reference_year','reference_id', 'remarks']]
 
     ###################
     # object with all structured names with name 'not specified'
@@ -77,16 +78,42 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     ###################
     ###################
     ## binning of structured names imported from PBDB without reference
-    PBDB_names_binned= binning_fun_PBDB.bin_fun_PBDB(c_rels = res_rels_RN_raw, c_strat= res_sn_raw,
+    res_rels_RN_PBDB = res_rels_RN_raw[res_rels_RN_raw['reference_title'] =='Paleobiology Database']
+    print('###### raw relations:', res_rels_RN_raw.shape[0])
+    print('###### subset of PBDB relations:', res_rels_RN_PBDB.shape[0])
+    PBDB_names_binned = binning_fun_PBDB.bin_fun_PBDB(c_rels = res_rels_RN_PBDB,
+                               binning_scheme = binning_scheme, ts_names = ts_names, t_scales = t_scales)
+    print("###### PBDB_binned:", PBDB_names_binned.shape[0])
+    
+    
+    ###################
+    ###################
+    ## binning of structured names imported from macrostrat without reference
+    res_rels_RN_MS = res_rels_RN_raw[res_rels_RN_raw['reference_title'] =='Macrostrat']
+
+    MS_names_binned = binning_fun_macrostrat.bin_fun_macrostrat(c_rels = res_rels_RN_MS,
                                binning_scheme = binning_scheme, ts_names = ts_names, t_scales = t_scales)
 
     ###################
     ###################
     ## binning of all other strucured names
-    resi_binned_raw = binning_fun_id.bin_fun(c_rels = res_rels_RN_raw, binning_algorithm = binning_algorithm,
+    imp_ids = res_rels_RN_PBDB['id']+res_rels_RN_MS['id']
+    res_rels_RN_RN = res_rels_RN_raw[~res_rels_RN_raw['id'].isin(imp_ids)]
+    resi_binned_raw = binning_fun_id.bin_fun(c_rels = res_rels_RN_RN, binning_algorithm = binning_algorithm,
                                binning_scheme = binning_scheme, ts_names = ts_names,
                                t_scales = t_scales, not_spec = not_spec)
     #print(resi_binned_raw)
+    
+    ###################
+    ###################
+    ## binning via absolute ages (except PBDB and Macrostrat)
+    abs_names_binned = binning_fun_abs_time.bin_fun_abs(c_rels = res_rels_RN_raw,
+                               binning_scheme = binning_scheme, ts_names = ts_names, t_scales = t_scales)
+   # abs_names_binnedx = abs_names_binned[~xxx] # only the names which are not binned yet
+
+    ###################
+    ###################
+    ## binning of remaining names (rule 9)
 
 
     ###################
@@ -97,7 +124,7 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     # binned_generalised: gives binning of identical names
 
     #make results readable
-    binned_raw = pd.concat([resi_binned_raw, PBDB_names_binned], axis=0)
+    binned_raw = pd.concat([resi_binned_raw, PBDB_names_binned, MS_names_binned], axis=0) # xx
     binned_raw = binned_raw. drop_duplicates()
     binned_raw = pd.merge(binned_raw, res_sn, left_on="name", right_on="id")
     binned_raw.rename(columns={'name':'name_id', 'name_name': 'name',
@@ -148,8 +175,6 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
         uni_binned_x = uni_binned.iloc[i]
         resi_binned_sub = binned_raw.loc[(binned_raw["name"]==uni_binned_x['name'])
                                        & (binned_raw["qualifier_name"]==uni_binned_x['qualifier_name'])]
-        resi_binned_sub_oldest = resi_binned_sub['oldest_id']
-        resi_binned_sub_youngest = resi_binned_sub['youngest_id']
         ts_tot_oldest = time_slices[time_slices["ts"].isin(resi_binned_sub['oldest_id'])]
         ts_tot_youngest = time_slices[time_slices["ts"].isin(resi_binned_sub['youngest_id'])]
         ts_youngest = time_slices.loc[(time_slices['ts_index']==max(ts_tot_youngest['ts_index']))]
