@@ -276,6 +276,14 @@ class Relation(BaseModel):
     belongs_to = models.PositiveSmallIntegerField(
         choices=BELONGS, default=0, blank=True, help_text='Belongs to')
 
+    class DatabaseOrigin(models.IntegerChoices):
+        __empty__ = _('(Unknown)')
+        RNAMES = 1, _('RNames')
+        PBDB = 2, _('Paleobiology Database')
+        Macrostrat = 3, _('Macrostrat')
+
+    database_origin = models.IntegerField(choices=DatabaseOrigin.choices, default=DatabaseOrigin.RNAMES)
+
     class Meta:
         ordering = ['reference', 'name_one', 'name_two']
         unique_together = ('reference', 'name_one', 'name_two',)
