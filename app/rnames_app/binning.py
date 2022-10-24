@@ -42,6 +42,8 @@ def get_relations_df():
         'name_two__qualifier__qualifier_name__name',
         'name_two__qualifier__stratigraphic_qualifier__name',
         'name_two__remarks',
+
+        'database_origin',
     ]
 
     return get_table_as_df(db_columns, models.Relation)
