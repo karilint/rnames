@@ -101,15 +101,25 @@ def bin_fun_PBDB (c_rels, binning_scheme, ts_names, t_scales):
         # get all other PBDB based absolute ages
         c_rels_abs = c_rels_abs[~c_rels_abs['name_1'].isin(PBDB_ts_binned_abs['name'])]
         print('####### c_rels_abs:',c_rels_abs)
-        
+
+        # ###
+        # Convert column data to numeric
+        PBDB_ts_binned_abs['youngest_abs'] = pd.to_numeric(PBDB_ts_binned_abs['youngest_abs'])
+        PBDB_ts_binned_abs['oldest_abs'] = pd.to_numeric(PBDB_ts_binned_abs['oldest_abs'])
+        # ###
+
         #test this is the problematic part in the loop below: ########################
         # this is a snipped from the loop below line 124 for testing, because the loop takes some minutes
         names_with_PBDB_age = c_rels_abs['name_1'].drop_duplicates()
         names_with_PBDB_age = names_with_PBDB_age.to_frame()
         x_c_rels_abs = c_rels_abs[c_rels_abs['name_1'] == names_with_PBDB_age['name_1'].iloc[2]]
         print('####### x_c_rels_abs:',x_c_rels_abs)
-        oldest = max(x_c_rels_abs['struct_name_2'])   
-        youngest = pd.to_numeric(min(x_c_rels_abs['struct_name_2']))
+
+        # ###
+        # Convert column to numeric before min/max
+        oldest = max(pd.to_numeric(x_c_rels_abs['struct_name_2']))
+        youngest = min(pd.to_numeric(x_c_rels_abs['struct_name_2']))
+        # ###
         print('####### youngest:',(youngest))
         #print('####### PBDB_ts_binned_abs["youngest_abs"]:',PBDB_ts_binned_abs['youngest_abs'])
         
@@ -124,8 +134,8 @@ def bin_fun_PBDB (c_rels, binning_scheme, ts_names, t_scales):
         for i in range(0,len(names_with_PBDB_age)):
             x_c_rels_abs = c_rels_abs[c_rels_abs['name_1'] == names_with_PBDB_age['name_1'].iloc[i]]
             if x_c_rels_abs.shape[0]>0:
-                oldest = max(x_c_rels_abs['struct_name_2'])   
-                youngest = min(x_c_rels_abs['struct_name_2']) # 
+                oldest = max(pd.to_numeric(x_c_rels_abs['struct_name_2']))
+                youngest = min(pd.to_numeric(x_c_rels_abs['struct_name_2']))
                 x_strat_oldest = PBDB_ts_binned_abs[(PBDB_ts_binned_abs['youngest_abs']<=oldest) & 
                                                     (PBDB_ts_binned_abs['oldest_abs']>=oldest)]
                 x_strat_youngest = PBDB_ts_binned_abs[(PBDB_ts_binned_abs['youngest_abs']<=youngest) & 
