@@ -157,8 +157,8 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
     print("############################################")
     print("The binning took", round(dura, 2), "minutes")
     print("############################################")
-
     print("Now we search for the shortest time bins within these 6 results.")
+    
     ##################################################################################
     ##################################################################################
     ## search for shortest time bins among 5 & 6
@@ -167,8 +167,10 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
     end = time.time()
     #info.update()
     dura2 = (end - start)/60
+    print("############################################")
     print("We find", len(combi_names),
-          "binned names within RN. It took ", round(dura, 2), "+", round(dura2, 2),  "minutes.")
+          "binned names via RNames. It took ", round(dura, 2), "+", round(dura2, 2),  "minutes.")
+    print("############################################")
     return combi_names
 
 def rule0(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id):
@@ -391,7 +393,6 @@ def rule4(results, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b
 
             x4 = pd.merge(x4a, cr_d, left_on="name", right_on="name_2") # name_2 is already binned here
             x1 = merge_time_info(x4, used_ts)
-            #x1 =  x1.loc[~(x1["name_1"]=="not specified")]
             x1 = x1[~x1['name_1'].isin(not_spec['id'])]
             x1 =  x1[~x1["name_1"].isin(resi_0["name"])]
             x1["rule"] = 6.7
