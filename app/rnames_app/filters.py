@@ -18,6 +18,7 @@ from .models import (Binning
     , AbsoluteAgeValue
     , BinningAbsoluteAge)
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 class TimeScaleFilter(filters.FilterSet):
     ts_name = filters.CharFilter(lookup_expr='icontains')
@@ -56,11 +57,15 @@ class QualifierNameFilter(filters.FilterSet):
         fields = ['name', ]
 
 class RelationFilter(filters.FilterSet):
+    name = filters.CharFilter(method='evaluate_both_names', label ='Filter both names')
 
     name_one__name__name = filters.CharFilter(lookup_expr='icontains')
     name_two__name__name = filters.CharFilter(lookup_expr='icontains')
     reference__doi = filters.CharFilter(lookup_expr='icontains')
     reference__title = filters.CharFilter(lookup_expr='icontains')
+
+    def evaluate_both_names(self, queryset, name, value):
+        return queryset.filter(Q(name_one__name__name__icontains=value) | Q(name_two__name__name__icontains=value))
 
     class Meta:
         model = Relation
