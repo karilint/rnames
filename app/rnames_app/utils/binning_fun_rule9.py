@@ -45,7 +45,6 @@ def bin_fun_rule9 (c_rels, already_binned, binning_scheme, binning_algorithm, ts
                         'name_one_remarks','name_two_remarks','reference_id', 'reference_year']
     c_rels = pd.concat([c_rels.reset_index(drop=False), c_relsx.reset_index(drop=False)], axis=0)
     c_rels = c_rels.reset_index(drop=True)  
-    #print('####### c_rels two sided:', c_rels.shape[0])
     
     # exclude not specified relations (check for improvement, needs evtl placed somewhere else)
     not_spec_x = c_rels[c_rels['name_1'].isin(not_spec['id'])]
@@ -70,28 +69,27 @@ def bin_fun_rule9 (c_rels, already_binned, binning_scheme, binning_algorithm, ts
     for i in bnurange:
         x_name = bnu.iloc[i]
         xrels = c_rels_combined[c_rels_combined['name']==x_name]
-        xrels = xrels[xrels['ts_count']== min(xrels['ts_count'])] # filter for shortest range
-        bins_o = xrels['oldest'].drop_duplicates()
-        bins_y = xrels['youngest'].drop_duplicates()
-        mbins_o = pd.merge(bins_o, used_ts, how = 'inner', left_on = "oldest", right_on="ts")
-        mbins_y = pd.merge(bins_y, used_ts, how = 'inner', left_on = "youngest", right_on="ts")
-        new_oldest = mbins_o[mbins_o['ts_index'] == min(mbins_o['ts_index'])]
-        new_youngest = mbins_y[mbins_y['ts_index'] == max(mbins_y['ts_index'])]
-        refs = xrels['reference_id'].drop_duplicates()
-        if (refs.shape[0]==1):
-            refs = xrels['reference_id'].iloc[0]           
-        elif (refs.shape[0]>1):
-            refs = pd.DataFrame(refs)
-            refs = ','.join(map(str, refs["reference_id"]))                     
-        combi = pd.DataFrame([{'name': x_name,
-                               'oldest': new_oldest['ts'].iloc[0], 'youngest': new_youngest['ts'].iloc[0],
-                               'ts_count': new_youngest['ts_index'].iloc[0]-new_oldest['ts_index'].iloc[0],
-                               'refs':refs, 'rule': 9.0}])
-        r9_names_binned = pd.concat([r9_names_binned, combi], axis=0)
-    #r9_names_binned = c_rels_combined
-    #print(c_rels_combined['name'])
-    #print(x_name)
-    #print(bnu.iloc[6110])
+        if xrels.shape[0]>0:
+            xrels = xrels[xrels['ts_count']== min(xrels['ts_count'])] # filter for shortest range
+            bins_o = xrels['oldest'].drop_duplicates()
+            bins_y = xrels['youngest'].drop_duplicates()
+            mbins_o = pd.merge(bins_o, used_ts, how = 'inner', left_on = "oldest", right_on="ts")
+            mbins_y = pd.merge(bins_y, used_ts, how = 'inner', left_on = "youngest", right_on="ts")
+            if ((mbins_o.shape[0]>0)& (mbins_y.shape[0]>0)):
+                new_oldest = mbins_o[mbins_o['ts_index'] == min(mbins_o['ts_index'])]
+                new_youngest = mbins_y[mbins_y['ts_index'] == max(mbins_y['ts_index'])]
+                refs = xrels['reference_id'].drop_duplicates()
+                if (refs.shape[0]==1):
+                    refs = xrels['reference_id'].iloc[0]           
+                elif (refs.shape[0]>1):
+                    refs = pd.DataFrame(refs)
+                    refs = ','.join(map(str, refs["reference_id"]))                     
+                combi = pd.DataFrame([{'name': x_name,
+                                       'oldest': new_oldest['ts'].iloc[0], 'youngest': new_youngest['ts'].iloc[0],
+                                       'ts_count': new_youngest['ts_index'].iloc[0]-new_oldest['ts_index'].iloc[0],
+                                       'refs':refs, 'rule': 9.0}])
+                r9_names_binned = pd.concat([r9_names_binned, combi], axis=0)
+
     end = time.time()
     #info.update()
     dura = (end - start)/60
