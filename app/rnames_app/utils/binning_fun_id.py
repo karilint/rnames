@@ -157,8 +157,8 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
     print("############################################")
     print("The binning took", round(dura, 2), "minutes")
     print("############################################")
-
     print("Now we search for the shortest time bins within these 6 results.")
+    
     ##################################################################################
     ##################################################################################
     ## search for shortest time bins among 5 & 6
@@ -167,8 +167,10 @@ def bin_fun (c_rels, binning_scheme, binning_algorithm, ts_names, t_scales, not_
     end = time.time()
     #info.update()
     dura2 = (end - start)/60
+    print("############################################")
     print("We find", len(combi_names),
-          "binned names within RN. It took ", round(dura, 2), "+", round(dura2, 2),  "minutes.")
+          "binned names via RNames. It took ", round(dura, 2), "+", round(dura2, 2),  "minutes.")
+    print("############################################")
     return combi_names
 
 def rule0(c_rels_d, t_scheme, runrange, used_ts, xnames_raw, b_scheme, not_spec, PBDB_id):
@@ -391,7 +393,6 @@ def rule4(results, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_raw, b
 
             x4 = pd.merge(x4a, cr_d, left_on="name", right_on="name_2") # name_2 is already binned here
             x1 = merge_time_info(x4, used_ts)
-            #x1 =  x1.loc[~(x1["name_1"]=="not specified")]
             x1 = x1[~x1['name_1'].isin(not_spec['id'])]
             x1 =  x1[~x1["name_1"].isin(resi_0["name"])]
             x1["rule"] = 6.7
@@ -434,7 +435,7 @@ def rule5(results, cr_g, resis_bio, c_rels, t_scheme, runrange, used_ts, xnames_
     x1 = pd.merge(resi_4, cr_g, left_on="name", right_on="name_2")
     x1 = merge_time_info(x1, used_ts)
     x1 = x1[~x1["name_1"].isin(resi_2["name"])] # filter first level  linked non-bio*
-    x1 =  x1[~x1["name_1"].isin(resi_0["name"])] # filter direct  chronostrat rule 0
+    x1 = x1[~x1["name_1"].isin(resi_0["name"])] # filter direct  chronostrat rule 0
     x1 = x1[~x1['name_1'].isin(not_spec['id'])]
     x1["rule"] = 5.0
     x1 = x1.drop_duplicates()
@@ -569,6 +570,15 @@ def shortest_time_bins(results, used_ts):
     resi_4 = results["rule_4"]
     resi_5 = results["rule_5"]
     resi_6 = results["rule_6"]
+    
+    #resi_0.to_csv('resi_0.csv')
+    #resi_1.to_csv('resi_1.csv')
+    #resi_2.to_csv('resi_2.csv')
+    #resi_3.to_csv('resi_3.csv')
+    #resi_4.to_csv('resi_4.csv')
+    #resi_5.to_csv('resi_5.csv')
+    #resi_6.to_csv('resi_6.csv')
+    
     ## search for shortest time bins among 5 & 6
     # all where names of 5 and 6 in common and range is identical
     com_a = pd.merge(resi_5, resi_6,how='inner', on="name") # all names that 5 and 6 have in common
@@ -588,7 +598,7 @@ def shortest_time_bins(results, used_ts):
         cas.at[k,"refs"]=xs.str.cat(sep=', ')
     com_56_r = cas[['name', 'oldest_x', 'youngest_x', 'ts_count_x', 'refs', 'rule_x']]
     com_56_r.columns = ['name', 'oldest', 'youngest', 'ts_count', 'refs', 'rule']
-    com_56_r.loc[:,'rule'] = "5, 6" 
+    com_56_r.loc[:,'rule'] = "6" 
 
     # all where names of 5 and 6 in common and time length is identical
     car = com_a.loc[com_a["ts_count_x"]==com_a["ts_count_y"],
@@ -626,7 +636,7 @@ def shortest_time_bins(results, used_ts):
         ts_c = young_max-old_min
         res_youngest = ts_numbered.iloc[young_max-1] [0] # corrected BK
         res_oldest = ts_numbered.iloc[old_min-1] [0]  # corrected BK
-        rule = "5, 6"
+        rule = "6"
         com_56_da = pd.DataFrame([i_name, res_oldest,res_youngest, ts_c, refs_f, rule],
                            index=["name", "oldest", "youngest", "ts_count", "refs", "rule"])
         com_56_d = pd.concat([com_56_d, com_56_da], axis=1, sort=True)
@@ -668,7 +678,7 @@ def shortest_time_bins(results, used_ts):
         ts_c = young_max-old_min      
         res_youngest = ts_numbered.iloc[young_max-1] [0] # corrected
         res_oldest = ts_numbered.iloc[old_min-1] [0] # corrected
-        rows.append((i_name, res_oldest,res_youngest, ts_c, refs_f, "5, 6"))
+        rows.append((i_name, res_oldest,res_youngest, ts_c, refs_f, "6"))
     com_56_s = pd.DataFrame(rows, columns=["name", "oldest", "youngest", "ts_count", "refs", "rule"])
 
     # all where 5 and 6 are not in common
@@ -733,9 +743,9 @@ def merge_cc(resi_s, resi_y, resi_c, used_ts):
             x_range_c = np.arange(np.min(x2_subc[:, col.oldest_index]), np.max(x2_subc[:, col.youngest_index])+1,1)
 
         rax = np.concatenate((x_range_s, x_range_y, x_range_c))
-        # filter for third quantile, only bins with highest score
+        # filter for third quantile, only bins with highest score, or full for complete range
         rax_counts = np.unique(rax, return_counts=True) #rax_counts[0] is ts_bins, rax_counts[1] is counts
-        rq = round(np.quantile(rax_counts[1], 0.75),0)
+        rq = round(np.quantile(rax_counts[1], 0.75),0) 
         rax_counts = rax_counts[0][rax_counts[1] >= rq]
         rax_sub = used_ts[np.isin(used_ts[:, 1], rax_counts)] # Inner join on table with only one column is identical to filtering
 
