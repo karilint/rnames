@@ -6,7 +6,8 @@ db.sqlite3
 locallibrary
 mytestsite
 www_rnames
-/static
+static/*
+!static/.keep
 .DS_Store
 .venv
 config.json
