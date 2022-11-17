@@ -4,3 +4,4 @@ nginx/certs/*
 !nginx/certs/.keep
 dev/*.csv
 dev/*.json
+certs/
