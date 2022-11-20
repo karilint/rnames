@@ -72,6 +72,23 @@ def process_binning_absolute_age_result(scheme_id, df, info = None):
     models.BinningAbsoluteAge.objects.bulk_create(create_objects, 100)
     # info.finish_binning()
 
+def process_binning_generalised(scheme_id, df):
+    scheme = models.TimeScale.objects.get(pk=scheme_id)
+    create_objects = []
+
+    print('Processing generalised binning result')
+
+    models.BinningGeneralised.objects.filter(binning_scheme=scheme_id).delete()
+
+    col = SimpleNamespace(**{k: v for v, k in enumerate(df.columns)})
+
+    for row in df.values:
+        obj = models.BinningGeneralised(name=row[col.name], oldest=row[col.oldest], youngest=row[col.youngest], binning_scheme=scheme)
+        create_objects.append(obj)
+
+    models.BinningGeneralised.objects.bulk_create(create_objects, 100)
+    # info.finish_binning()
+
 def binning_process(scheme_id):
     connection.connect()
     # info = BinningProgressUpdater()
@@ -110,5 +127,6 @@ def binning_process(scheme_id):
     print(result['absolute_ages'])
 
     process_binning_result(scheme_id, result['binning'])
+    process_binning_generalised(scheme_id, result['generalised'])
     process_binning_absolute_age_result(scheme_id, result['absolute_ages'])
     print('Binning finished')
