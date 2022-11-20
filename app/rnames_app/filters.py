@@ -124,7 +124,10 @@ class BinningFilter(filters.FilterSet):
         model = Binning
         fields = ['binning_scheme__ts_name', 'binning_scheme']
 
-class BinningResultsBaseFilter(filters.FilterSet):
+class BinningResultsIntervalFilter(filters.FilterSet):
+    pass
+
+class BinningResultsBaseFilter(BinningResultsIntervalFilter):
     structured_name__qualifier__qualifier_name__name = filters.CharFilter(lookup_expr='icontains')
     structured_name__qualifier__stratigraphic_qualifier__name = filters.CharFilter(lookup_expr='icontains')
     structured_name__name__name = filters.CharFilter(lookup_expr='icontains')
@@ -137,6 +140,11 @@ class BinningResultsFilter(BinningResultsBaseFilter):
         model = Binning
 
 class BinningAbsoluteAgeResultsFilter(BinningResultsBaseFilter):
+    class Meta:
+        fields = BinningResultsFilter.Meta.fields
+        model = BinningAbsoluteAge
+
+class BinningGeneralisedResultsFilter(BinningResultsIntervalFilter):
     class Meta:
         fields = BinningResultsFilter.Meta.fields
         model = BinningAbsoluteAge
