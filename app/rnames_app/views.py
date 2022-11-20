@@ -35,10 +35,10 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 from .models import (Binning, Location, Name, Qualifier, QualifierName, BinningProgress,
                      Relation, Reference, StratigraphicQualifier, StructuredName, TimeScale, BinningSchemeName,
-                     BinningAbsoluteAge)
+                     BinningAbsoluteAge, BinningGeneralised)
 from .filters import (TimeScaleFilter, LocationFilter, NameFilter, QualifierFilter, QualifierNameFilter,
                       ReferenceFilter, RelationFilter, StratigraphicQualifierFilter, StructuredNameFilter,
-                      BinningAbsoluteAgeResultsFilter, BinningResultsFilter)
+                      BinningAbsoluteAgeResultsFilter, BinningResultsFilter, BinningGeneralisedResultsFilter)
 from .forms import (ColorfulContactForm, ContactForm, LocationForm, NameForm, QualifierForm, QualifierNameForm, ReferenceForm,
                     ReferenceRelationForm, RelationForm, StratigraphicQualifierForm, StructuredNameForm,
                     TimeScaleForm, AddBinningSchemeNameForm, BinningSchemeNameOrderForm)
@@ -1428,6 +1428,23 @@ def time_scale_result_binning(request, pk):
         page_obj = paginator.page(paginator.num_pages)
 
     return render(request, 'time_scale_result_binning.html', {'scheme': scheme, 'page_obj': page_obj, 'filter': f})
+
+def time_scale_result_generalised(request, pk):
+    scheme = get_object_or_404(TimeScale, pk=pk)
+    results = BinningGeneralised.objects.filter(binning_scheme=scheme).select_related().order_by('name')
+    f = BinningGeneralisedResultsFilter(request.GET, queryset=results)
+    paginator = Paginator(f.qs, 20)
+
+    page_number = request.GET.get('page')
+
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    return render(request, 'time_scale_result_generalised.html', {'scheme': scheme, 'page_obj': page_obj})
 
 def time_scale_result_absolute_age(request, pk):
     scheme = get_object_or_404(TimeScale, pk=pk)

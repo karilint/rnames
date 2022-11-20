@@ -43,7 +43,7 @@ services:
       - 443:443
     volumes:
       - ./app/static:/vol/web/static
-      - ./certs/:/certs/
+      - ./certs/:/etc/nginx/ssl/live/${RNAMES_DOMAIN}/
     environment:
       - RNAMES_DOMAIN=${RNAMES_DOMAIN}
       - PMA_DOMAIN=${PMA_DOMAIN}
