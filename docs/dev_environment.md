@@ -17,7 +17,8 @@ Using openssl on linux, run in project root folder:
 
 ```
 mkdir certs
-sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./certs/key.pem -out ./certs/cert.pem
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./certs/privkey.pem -out ./certs/fullchain.pem
+sudo openssl dhparam -out nginx/certs/dhparam.pem 4096
 ```
 
 [More details here](https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-nginx-in-ubuntu-16-04)

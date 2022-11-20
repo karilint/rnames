@@ -371,6 +371,12 @@ class Binning(BaseModel):
         """
         return '%s: %s' % (self.binning_scheme.ts_name, self.name)
 
+class BinningGeneralised(models.Model):
+    name = models.CharField(max_length=255)
+    oldest = models.CharField(max_length=255)
+    youngest = models.CharField(max_length=255)
+    binning_scheme = models.ForeignKey(TimeScale, on_delete=models.CASCADE)
+
 class BinningAbsoluteAge(models.Model):
     structured_name = models.ForeignKey(StructuredName, on_delete=models.CASCADE, related_name='+')
     oldest = models.ForeignKey(StructuredName, on_delete=models.CASCADE, related_name='+')

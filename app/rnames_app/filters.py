@@ -16,7 +16,8 @@ from .models import (Binning
     , StructuredName
     , TimeScale
     , AbsoluteAgeValue
-    , BinningAbsoluteAge)
+    , BinningAbsoluteAge
+    , BinningSchemeName)
 from django.contrib.auth.models import User
 from django.db.models import Q
 
@@ -124,7 +125,26 @@ class BinningFilter(filters.FilterSet):
         model = Binning
         fields = ['binning_scheme__ts_name', 'binning_scheme']
 
-class BinningResultsBaseFilter(filters.FilterSet):
+class BinningResultsIntervalFilter(filters.FilterSet):
+    oldest = filters.CharFilter(method='eval_oldest', label ='Oldest name in sequence')
+    youngest = filters.CharFilter(method='eval_youngest', label ='Youngest name in sequence')
+
+    def eval_oldest(self, queryset, name, value):
+        from django.db.models import OuterRef, Subquery, F, Min
+        return queryset.annotate(
+            val=Subquery(BinningSchemeName.objects.filter(ts_name=OuterRef('binning_scheme'), structured_name=OuterRef('oldest')).values('sequence')[:1]),
+            lim=Subquery(BinningSchemeName.objects.filter(ts_name=OuterRef('binning_scheme'), structured_name__name__name__icontains=value).order_by('sequence').values('sequence')[:1])
+        ).filter(val__gte=F('lim'))
+
+    def eval_youngest(self, queryset, name, value):
+        from django.db.models import OuterRef, Subquery, F, Max
+        return queryset.annotate(
+            val=Subquery(BinningSchemeName.objects.filter(ts_name=OuterRef('binning_scheme'), structured_name=OuterRef('oldest')).values('sequence')[:1]),
+            lim=Subquery(BinningSchemeName.objects.filter(ts_name=OuterRef('binning_scheme'), structured_name__name__name__icontains=value).order_by('-sequence').values('sequence')[:1])
+        ).filter(val__lte=F('lim'))
+        return queryset
+
+class BinningResultsBaseFilter(BinningResultsIntervalFilter):
     structured_name__qualifier__qualifier_name__name = filters.CharFilter(lookup_expr='icontains')
     structured_name__qualifier__stratigraphic_qualifier__name = filters.CharFilter(lookup_expr='icontains')
     structured_name__name__name = filters.CharFilter(lookup_expr='icontains')
@@ -137,6 +157,11 @@ class BinningResultsFilter(BinningResultsBaseFilter):
         model = Binning
 
 class BinningAbsoluteAgeResultsFilter(BinningResultsBaseFilter):
+    class Meta:
+        fields = BinningResultsFilter.Meta.fields
+        model = BinningAbsoluteAge
+
+class BinningGeneralisedResultsFilter(filters.FilterSet):
     class Meta:
         fields = BinningResultsFilter.Meta.fields
         model = BinningAbsoluteAge

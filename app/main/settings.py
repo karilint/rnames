@@ -41,6 +41,12 @@ if ALLOWED_HOSTS_ENV:
 else:
     ALLOWED_HOSTS.append('*')
 
+CSRF_TRUSTED_ORIGINS = []
+TRUSTED_ORIGINS_ENV = os.environ.get('TRUSTED_ORIGINS')
+if TRUSTED_ORIGINS_ENV:
+    CSRF_TRUSTED_ORIGINS.extend(TRUSTED_ORIGINS_ENV.split(','))
+
+
 # For debug_toolbar
 INTERNAL_IPS = ('127.0.0.1', '0.0.0.0', 'localhost',)
 
