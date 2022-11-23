@@ -45,6 +45,8 @@ from .forms import (ColorfulContactForm, ContactForm, LocationForm, NameForm, Qu
 from django.contrib.auth.models import User
 from .filters import UserFilter
 
+from . import tasks
+
 import sys
 from subprocess import run, PIPE
 from . import tools
@@ -78,9 +80,7 @@ def external(request, scheme_id):
     if not request.user.groups.filter(name='data_admin').exists():
         raise PermissionDenied
 
-    db.connections.close_all()
-    handle = mp.Process(target=binning_process, args=(scheme_id,))
-    handle.start()
+    tasks.binning.delay(scheme_id)
     return redirect('/rnames/admin/binning_progress')
 
 def binning(request):
