@@ -20,4 +20,5 @@ python -u manage.py test -v2
 
 echo
 echo "STARTING DEVELOPMENT SERVER"
+celery -A main worker --detach -l INFO
 gunicorn main.wsgi:application --bind 0.0.0.0:8000 --reload

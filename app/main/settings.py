@@ -255,3 +255,8 @@ CACHES = {
 }
 
 SELECT2_CACHE_BACKEND = 'select2'
+
+# celery settings
+CELERY_BROKER_URL = 'redis://redis:6379'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'

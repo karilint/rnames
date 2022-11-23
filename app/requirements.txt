@@ -43,3 +43,4 @@ toml==0.10.2
 urllib3==1.26.12
 django-cprofile-middleware==1.0.5
 django-silk==5.0.2
+celery==5.2.7
