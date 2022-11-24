@@ -10,24 +10,49 @@ from types import SimpleNamespace
 
 import pandas as pd
 
-def get_flat_df(serializer):
-    j = json.loads(json.dumps(serializer.data))
-    return pd.json_normalize(j, sep='_')
+def get_prefixed_fields(serializer_instance, prefix='', output=None):
+    from rest_framework.serializers import BaseSerializer
+
+    fields = serializer_instance.get_fields()
+
+    if output == None:
+        output = []
+
+    for k in fields:
+        v = fields[k]
+        output.append(prefix + k)
+
+        if issubclass(type(v), BaseSerializer):
+            get_prefixed_fields(v, prefix + k + '__', output)
+
+    return output
+
+def get_table_as_df(cols, qs):
+    queryset_list = list(qs.values_list(*cols))
+    df = pd.DataFrame(queryset_list)
+    columns = []
+    for col in cols:
+        columns.append(col.replace('__', '_'))
+    df.columns = columns
+    return df
 
 def get_relations():
     qs = models.Relation.objects.select_related().all()
-    ser = serializers.RelationInlineSerializer(qs, many=True)
-    return get_flat_df(ser)
+    ser = serializers.RelationInlineSerializer()
+    cols = get_prefixed_fields(ser)
+    return get_table_as_df(cols, qs)
 
 def get_structured_names():
     qs = models.StructuredName.objects.select_related().all()
-    ser = serializers.StructuredNameInlineSerializer(qs, many=True)
-    return get_flat_df(ser)
+    ser = serializers.StructuredNameInlineSerializer()
+    cols = get_prefixed_fields(ser)
+    return get_table_as_df(cols, qs)
 
 def get_sequence(scheme_id):
     qs = models.BinningSchemeName.objects.filter(ts_name=scheme_id).order_by('sequence').select_related()
-    ser = serializers.BinningSchemeNameInlineSerializer(qs, many=True)
-    return get_flat_df(ser)
+    ser = serializers.BinningSchemeNameInlineSerializer()
+    cols = get_prefixed_fields(ser)
+    return get_table_as_df(cols, qs)
 
 def process_binning_result(scheme_id, df, info = None):
     scheme = models.TimeScale.objects.get(pk=scheme_id)
