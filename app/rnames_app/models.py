@@ -11,6 +11,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from simple_history.models import HistoricalRecords
 # Used to generate URLs by reversing the URL patterns
 from django.urls import reverse
+from rnames_api.models import ApiKeyHistoricalModel
 
 class BaseModel(models.Model):
     """
@@ -25,6 +26,7 @@ class BaseModel(models.Model):
         auto_user=True, verbose_name="The user that is automatically assigned", related_name='modifiedby_%(class)s')
 # https://django-simple-history.readthedocs.io/en/2.6.0/index.html
     history = HistoricalRecords(
+        bases=[ApiKeyHistoricalModel,],
         history_change_reason_field=models.TextField(null=True),
         inherit=True)
 # https://stackoverflow.com/questions/5190313/django-booleanfield-how-to-set-the-default-value-to-true
