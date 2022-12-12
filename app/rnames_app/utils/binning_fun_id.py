@@ -588,7 +588,10 @@ def shortest_time_bins(results, used_ts):
     cas = cas.loc[cas["oldest_x"]==cas["oldest_y"],
                     ["name","rule_x","oldest_x", "youngest_x",
                      "ts_count_x", "refs_x", "oldest_y", "youngest_y", "ts_count_y", "refs_y"]]
-    cas['refs'] = cas[['refs_x', 'refs_y']].apply(lambda x: ', '.join(x), axis=1)
+    if cas.empty:
+        cas['refs'] = ''
+    else:
+        cas['refs'] = cas[['refs_x', 'refs_y']].apply(lambda x: ', '.join(x), axis=1)
     for k in cas.index.tolist():
         xs = pd.Series(cas.at[k,"refs"]).str.replace(",", '')
         xs = xs.str.split(pat = " ", expand=True)
