@@ -344,7 +344,7 @@ class AbsoluteAgeValue(BaseModel):
     age_lower_confidence = models.FloatField(default=0, help_text="Lower Confidence Value in millions of years")
     reference = models.ForeignKey(Reference, on_delete=models.CASCADE)
 
-class Binning(BaseModel):
+class Binning(models.Model):
     """
     Model representing a Binning Scheme result in RNames (e.g. Ordovician Time Slices, Phanerozoic Stages, Phanerozoic Epochs, etc.)
     """
