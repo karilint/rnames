@@ -328,8 +328,9 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
                 if (xxage_res_rels.shape[0] >= agerange.shape[0]*2):
                     xage_res_rels_x = pd.concat([xage_res_rels_x, xxage_res_rels], axis=0)
             # use youngest reference only
-            xage_res_rels_x = xage_res_rels_x[xage_res_rels_x['reference_year'] == max(xage_res_rels_x['reference_year'])]
-            xage_res_rels_x = xage_res_rels_x[xage_res_rels_x['database_origin'] == min(xage_res_rels_x['database_origin'])]
+            if not xage_res_rels_x.empty:
+                xage_res_rels_x = xage_res_rels_x[xage_res_rels_x['reference_year'] == max(xage_res_rels_x['reference_year'])]
+                xage_res_rels_x = xage_res_rels_x[xage_res_rels_x['database_origin'] == min(xage_res_rels_x['database_origin'])]
 
         if (xage_res_rels_x.shape[0]==0):
             print('No absolute time scale exists for binning approach.')
