@@ -5,24 +5,16 @@
   <!-- Beginning of binning -->
   <!DOCTYPE html>
 
-<section class="w3-section">
+<section class="w3-section" id='binning-log'>
   <h1>Binning progress information</h1>
-  <p id="binningProgressLabel">Binning progress:</p>
-
-  <div id="binningProgressBarContainer" class="w3-light-grey">
-    <div id="binningProgressBar" class="w3-container w3-green" style="height:24px; width:0%">
-    </div>
-  </div>
-
-  <p id="updateProgressLabel" class="w3-hide">Database update progress:</p>
-  <div id="updateProgressBarContainer" class="w3-light-grey w3-hide">
-    <div id="updateProgressBar" class="w3-container w3-green" style="height:24px; width:0%">
-    </div>
-  </div>
-  <p id="binningStatus"></p>
+  <h3>Event log:</h3>
 </section>
 
 <script>
+
+let query_url = '{% url "binning-status" task_id %}'
+let redirect_url = '{% url "time-scale-detail" pk %}'
+let log = []
 
 window.addEventListener('DOMContentLoaded', () => {
   const binningProgressBar = document.getElementById('binningProgressBar')
@@ -30,42 +22,21 @@ window.addEventListener('DOMContentLoaded', () => {
   const updateProgressLabel = document.getElementById('updateProgressLabel')
   const updateProgressBar = document.getElementById('updateProgressBar')
   const updateProgressBarContainer = document.getElementById('updateProgressBarContainer')
-  const update = () => fetch('/rnames/admin/binning_info')
+  const update = () => fetch(query_url)
     .then(v => v.json())
     .then(v => {
-      binningProgressBar.style.width = `${v.binning[0] / v.binning[1] * 100}%`
-      if (v.binning[0] == v.binning[1] && v.binning[1] > 0) {
-        updateProgressLabel.classList.remove('w3-hide')
-        updateProgressBarContainer.classList.remove('w3-hide')
-        updateProgressBar.style.width = `${v.update[0] / v.update[1] * 100}%`
-      } else {
-        // Hide database update progress bars if binning is started anew while the page is open
-        if (!updateProgressLabel.classList.contains('w3-hide')) {
-          updateProgressLabel.classList.add('w3-hide')
-          updateProgressBarContainer.classList.add('w3-hide')
-        }
-      }
-      let statusMsg = ''
-      switch(v.status) {
-        case -1: {
-          statusMsg: 'Binning error.'
-          break
-        }
-        case 0: {
-          statusMsg = 'Binning has not been started.'
-          break
-        }
-        case 1: {
-          statusMsg = 'Binning in progress.'
-          break
-        }
-        case 2: {
-          statusMsg = 'Binning complete.'
-          break
-        }
-      }
-      document.getElementById('binningStatus').innerHTML = ''
-      document.getElementById('binningStatus').appendChild(document.createTextNode(`Status: ${statusMsg}`))
+      console.log(v)
+      let str = `[${v.state}]${v.info ? ' ' + v.info.msg : ''}`
+      if (log.empty || log[log.length - 1] == str)
+        return
+
+      log.push(str)
+      let p = document.createElement('p')
+      p.appendChild(document.createTextNode(str))
+      document.getElementById('binning-log').appendChild(p)
+
+      if (v.state == 'SUCCESS')
+        window.location.replace(redirect_url);
     })
   update()
   setInterval(update, 5000)
