@@ -9,7 +9,7 @@ from . import binning_fun_macrostrat
 from . import binning_fun_abs_time
 from . import binning_fun_rule9
 
-def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_RN_raw = None, res_sn_raw = None):
+def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_RN_raw = None, res_sn_raw = None, info = None):
     ###################
     ###################
     # first we download and create all objects needed for binning
@@ -130,6 +130,8 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     ## binning of structured names imported from PBDB (rule 7.1)
     res_rels_RN_PBDB = res_rels_RN_raw[res_rels_RN_raw['database_origin'] == 2]
     print('##### Now we are searching for binnings within',res_rels_RN_PBDB.shape[0],' PBDB entries:')
+    if info is not None:
+        info.update('Binning PBDB entries')
     PBDB_names_binned = binning_fun_PBDB.bin_fun_PBDB(c_rels = res_rels_RN_PBDB,
                                binning_scheme = binning_scheme, ts_names = ts_names, t_scales = t_scales)
 
@@ -140,6 +142,8 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     ## binning of structured names imported from macrostrat (rule 7.2)
     res_rels_RN_MS = res_rels_RN_raw[res_rels_RN_raw['database_origin'] == 3]
     print('##### Now we are searching for binnings within',res_rels_RN_MS.shape[0],' Macrostrat entries:')
+    if info is not None:
+        info.update('Binning Macrostrat entries')
     MS_names_binned = binning_fun_macrostrat.bin_fun_macrostrat(c_rels = res_rels_RN_MS,
                                binning_scheme = binning_scheme, ts_names = ts_names, t_scales = t_scales)
 
@@ -148,6 +152,8 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     ## binning of RNames structured names (rules 0-6.9)
     res_rels_RN_RN = res_rels_RN_raw[res_rels_RN_raw['database_origin'] == 1]
     print('##### Now we are searching for binnings within',res_rels_RN_RN.shape[0],'RNames entries:')
+    if info is not None:
+        info.update('Binning Rnames entries')
     RN_names_binned = binning_fun_id.bin_fun(c_rels = res_rels_RN_RN, binning_algorithm = binning_algorithm,
                                binning_scheme = binning_scheme, ts_names = ts_names,
                                t_scales = t_scales, not_spec = not_spec)
@@ -157,6 +163,8 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     ###################
     ## binning via absolute ages (except PBDB and Macrostrat) (rule 8)
     print('##### Now we are searching for RN binnings within', res_rels_RN_RN.shape[0],' entries for absolute time relations:')
+    if info is not None:
+        info.update('Search for absolute time relations')
     abs_names_binned_full = binning_fun_abs_time.bin_fun_abs(c_rels = res_rels_RN_RN,
                                binning_scheme = binning_scheme, ts_names = ts_names, 
                                t_scales = t_scales, not_spec = not_spec)
@@ -171,6 +179,8 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     ###################
     ## binning of remaining names (rule 9)
     ## here we bin as an additional step the remaing based on what is known at this step
+    if info is not None:
+        info.update('Bin remaining names based on rule 9')
     binned_raw_rule9 = pd.concat([RN_names_binned, PBDB_names_binned, MS_names_binned, abs_names_binned], axis=0)
     binned_yet = pd.concat([RN_names_binned['name'], PBDB_names_binned['name'], MS_names_binned['name'], 
                            abs_names_binned['name']], axis=0) 
@@ -187,6 +197,9 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     # there will be two output tables
     # resi_binned: gives binning of each individual structured name with relations
     # binned_generalised: gives binning of identical names
+
+    if info is not None:
+        info.update('Preparing binning output')
 
     #make results readable
     binned_raw = pd.concat([RN_names_binned, PBDB_names_binned, MS_names_binned, 
@@ -356,6 +369,8 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
         return pd.DataFrame()
     
     print('##### Now we are adding absolute times to binned names:')
+    if info is not None:
+        info.update('Adding absolute times to binned names')
     binned_with_abs_ages = agebinbin(xage_res_rels = xage_res_rels) #,agecon = agecon
 
     ###################

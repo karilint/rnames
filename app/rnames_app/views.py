@@ -26,14 +26,14 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import (HttpResponse, JsonResponse, HttpResponseBadRequest)
 from django.shortcuts import render, get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 #from rest_framework.views import APIView
 from rest_framework.response import Response
 #from .utils.utils import YourClassOrFunction
 from rest_framework import status, generics
-from .models import (Binning, Location, Name, Qualifier, QualifierName, BinningProgress,
+from .models import (Binning, Location, Name, Qualifier, QualifierName,
                      Relation, Reference, StratigraphicQualifier, StructuredName, TimeScale, BinningSchemeName,
                      BinningAbsoluteAge, BinningGeneralised)
 from .filters import (TimeScaleFilter, LocationFilter, NameFilter, QualifierFilter, QualifierNameFilter,
@@ -50,7 +50,6 @@ from . import tasks
 import sys
 from subprocess import run, PIPE
 from . import tools
-from .binning import binning_process
 from io import StringIO
 from contextlib import redirect_stdout
 import multiprocessing as mp
@@ -80,8 +79,8 @@ def external(request, scheme_id):
     if not request.user.groups.filter(name='data_admin').exists():
         raise PermissionDenied
 
-    tasks.binning.delay(scheme_id)
-    return redirect('/rnames/admin/binning_progress')
+    result = tasks.binning.delay(scheme_id)
+    return redirect(reverse('binning-progress', kwargs={'task_id': result.id, 'pk': scheme_id}))
 
 def binning(request):
 
@@ -91,32 +90,18 @@ def binning(request):
     )
 
 @login_required
-def binning_info(request):
-    data = {}
-
-    data['binning'] = [0, 0]
-    data['update'] = [0, 0]
-
-    for entry in BinningProgress.objects.all():
-        if entry.name == 'status':
-            data['status'] = entry.value_one
-            continue
-
-        if entry.name == 'error' or entry.name == 'lock' or entry.name == 'status':
-            continue
-
-        if entry.name == 'db_update':
-            data['update'] = [entry.value_one, entry.value_two]
-            continue
-
-        data['binning'][0] += entry.value_one
-        data['binning'][1] += entry.value_two
+def binning_status(request, task_id):
+    from celery.result import AsyncResult
+    result = AsyncResult(id=task_id)
+    data = {'state': result.state}
+    if isinstance(result.info, dict): # Don't send info in case of an error
+        data['info'] = result.info
 
     return JsonResponse(data)
 
 @login_required
-def binning_progress(request):
-    return render(request, 'binning_progress.html')
+def binning_progress(request, task_id, pk):
+    return render(request, 'binning_progress.html', {'task_id': task_id, 'pk': pk})
 
 def binning_scheme_list(request):
     f = TimeScaleFilter(

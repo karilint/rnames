@@ -320,12 +320,6 @@ class Relation(BaseModel):
         """
         return '%s | %s' % (self.name_one, self.name_two)
 
-class BinningProgress(models.Model):
-    name = models.CharField(max_length=1000, unique=True)
-    text = models.CharField(max_length=1000, default='')
-    value_one = models.IntegerField(default=0)
-    value_two = models.IntegerField(default=0)
-
 class BinningSchemeName(models.Model):
     ts_name = models.ForeignKey(TimeScale, on_delete=models.CASCADE)
     structured_name = models.ForeignKey(StructuredName, on_delete=models.CASCADE)

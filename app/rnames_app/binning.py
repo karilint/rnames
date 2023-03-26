@@ -7,6 +7,7 @@ import json
 
 from django.db import connection
 from types import SimpleNamespace
+from celery import states as celery_states
 
 import pandas as pd
 
@@ -87,7 +88,7 @@ def process_binning_absolute_age_result(scheme_id, df, info = None):
 
     for row in df.values:
         obj = models.BinningAbsoluteAge(refs=row[col.refs], binning_scheme=scheme, oldest_age=row[col.oldest_age],
-            youngest_age=row[col.youngest_age], reference_age=row[col.ref_age], age_constraints=row[col.age_constraints])
+            youngest_age=row[col.youngest_age], reference_age=row[col.ref_age])
         obj.structured_name_id = structured_name=row[col.name_id]
         obj.youngest_id = youngest=row[col.youngest_id]
         obj.oldest_id = oldest=row[col.oldest_id]
@@ -114,16 +115,14 @@ def process_binning_generalised(scheme_id, df):
     models.BinningGeneralised.objects.bulk_create(create_objects, 100)
     # info.finish_binning()
 
-def binning_process(scheme_id):
+def binning_process(task, scheme_id):
+    task.update_state(state=celery_states.STARTED)
+    info = BinningProgressUpdater(task)
     connection.connect()
-    # info = BinningProgressUpdater()
-
-    # if not info.start_binning():
-    #     return
 
     print('Binning ' + str(scheme_id))
 
-    pd.set_option('display.max_columns', None)
+    # pd.set_option('display.max_columns', None)
 
     relations = get_relations()
     structured_names = get_structured_names()
@@ -133,9 +132,12 @@ def binning_process(scheme_id):
 
     print('Binning ' + time_scale['ts_name'][0])
 
+    connection.close()
+
     try:
-        result = main_binning_fun(time_scale['ts_name'], time_scale, sequence, relations, structured_names)
+        result = main_binning_fun(time_scale['ts_name'], time_scale, sequence, relations, structured_names, info)
     except:
+        task.update_state(state=celery_states.FAILURE)
         traceback.print_exc()
         return
 
@@ -151,7 +153,12 @@ def binning_process(scheme_id):
     # Index(['name_id', 'name', 'qualifier_name', 'oldest_id', 'oldest_name', 'youngest_id', 'youngest_name', 'refs', 'binning_scheme', 'oldest_age', 'youngest_age', 'ref_age', 'age_constraints'], dtype='object')
     print(result['absolute_ages'])
 
+    connection.connect()
+
+    info.update('Saving results')
     process_binning_result(scheme_id, result['binning'])
     process_binning_generalised(scheme_id, result['generalised'])
     process_binning_absolute_age_result(scheme_id, result['absolute_ages'])
+
+    task.update_state(celery_states.SUCCESS)
     print('Binning finished')
