@@ -131,7 +131,10 @@ def run_binning(config):
     structured_names = pd.read_csv(structured_names_file)
 
     time_scale_name = time_scale['ts_name']
-    main_binning_fun(time_scale_name, time_scale, sequence, relations, structured_names)
+    result = main_binning_fun(time_scale_name, time_scale, sequence, relations, structured_names)
+    result['binning'].to_csv('binning.csv')
+    result['generalised'].to_csv('generalised.csv')
+    result['absolute_ages'].to_csv('absolute_ages.csv')
     return False
 
 def change_config(config):
