@@ -30,18 +30,6 @@ class ApiViewSet(viewsets.ModelViewSet):
 		
 		return [permission() for permission in permission_classes]
 
-	def create(self, request):
-		serializer = self.get_serializer(data=request.data)
-		if serializer.is_valid():
-			serializer.save()
-
-			if not (request.user != None and request.user.is_staff): # Api request using IsAdminUser permission
-				api_key = get_api_key(request)
-				self.log_access(api_key, serializer.instance)
-
-			return Response(serializer.data, status=status.HTTP_201_CREATED)
-		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 	class Meta:
 		abstract = True
 
@@ -49,16 +37,11 @@ class LocationViewSet(ApiViewSet):
 	queryset = models.Location.objects.all()
 	serializer_class = serializers.LocationSerializer
 	filterset_class = filters.LocationFilter
-	def log_access(self, api_key, instance):
-		api_models.KeyLocation(location=instance, api_key=api_key).save()
 
 class NameViewSet(ApiViewSet):
 	queryset = models.Name.objects.all()
 	serializer_class = serializers.NameSerializer
 	filterset_class = filters.NameFilter
-
-	def log_access(self, api_key, instance):
-		api_models.KeyName(name=instance, api_key=api_key).save()
 
 class QualifierViewSet(ApiViewSet):
 	filterset_class = filters.QualifierFilter
@@ -74,24 +57,15 @@ class QualifierViewSet(ApiViewSet):
 			return serializers.QualifierInlineSerializer
 		return serializers.QualifierSerializer
 
-	def log_access(self, api_key, instance):
-		api_models.KeyQualifier(qualifier=instance, api_key=api_key).save()
-
 class QualifierNameViewSet(ApiViewSet):
 	queryset = models.QualifierName.objects.all()
 	serializer_class = serializers.QualifierNameSerializer
 	filterset_class = filters.QualifierNameFilter
 
-	def log_access(self, api_key, instance):
-		api_models.KeyQualifierName(qualifier_name=instance, api_key=api_key).save()
-
 class StratigraphicQualifierViewSet(ApiViewSet):
 	queryset = models.StratigraphicQualifier.objects.all()
 	serializer_class = serializers.StratigraphicQualifierSerializer
 	filterset_class = filters.StratigraphicQualifierFilter
-
-	def log_access(self, api_key, instance):
-		api_models.KeyStratigraphicQualifier(stratigraphic_qualifier=instance, api_key=api_key).save()
 
 class StructuredNameViewSet(ApiViewSet):
 	filterset_class = filters.StructuredNameFilter
@@ -108,16 +82,10 @@ class StructuredNameViewSet(ApiViewSet):
 			return serializers.StructuredNameInlineSerializer
 		return serializers.StructuredNameSerializer
 
-	def log_access(self, api_key, instance):
-		api_models.KeyStructuredName(structured_name=instance, api_key=api_key).save()
-
 class ReferenceViewSet(ApiViewSet):
 	queryset = models.Reference.objects.all()
 	serializer_class = serializers.ReferenceSerializer
 	filterset_class = filters.ReferenceFilter
-
-	def log_access(self, api_key, instance):
-		api_models.KeyReference(reference=instance, api_key=api_key).save()
 
 class RelationViewSet(ApiViewSet):
 	filterset_class = filters.RelationFilter
@@ -132,9 +100,6 @@ class RelationViewSet(ApiViewSet):
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
 			return serializers.RelationInlineSerializer
 		return serializers.RelationSerializer
-
-	def log_access(self, api_key, instance):
-		api_models.KeyRelation(relation=instance, api_key=api_key).save()
 
 class BinningViewSet(viewsets.ReadOnlyModelViewSet):
 	filterset_class = filters.BinningFilter
@@ -164,6 +129,3 @@ class BinningSchemeNameViewSet(ApiViewSet):
 		if self.request.method == 'GET' and 'inline' in self.request.query_params:
 			return serializers.BinningSchemeNameInlineSerializer
 		return serializers.BinningSchemeNameSerializer
-
-	def log_access(self, api_key, instance):
-		pass
