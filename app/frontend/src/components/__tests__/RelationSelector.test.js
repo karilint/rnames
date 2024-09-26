@@ -187,7 +187,7 @@ describe('When some structured names have been selected, but no relations formed
 
 		expect(relationSelectorOnTheLeft.childNodes).toHaveLength(3)
 		relationSelectorOnTheLeft.childNodes.forEach(childNode => {
-			expect(options).toContain(childNode.innerHTML)
+			expect(options).toContain(childNode.childNodes[1].innerHTML)
 		})
 	})
 
@@ -198,7 +198,9 @@ describe('When some structured names have been selected, but no relations formed
 		const options = [dbSname1Formatted, dbSname2Formatted]
 		expect(relationSelectorOnTheRight.childNodes).toHaveLength(2)
 		relationSelectorOnTheRight.childNodes.forEach(childNode => {
-			expect(options).toContain(childNode.childNodes[3].innerHTML)
+			expect(options).toContain(
+				childNode.childNodes[1].childNodes[3].innerHTML
+			)
 		})
 	})
 
@@ -313,7 +315,8 @@ describe('When some structured names have been selected, but no relations formed
 		const relationSelectorOnTheRight = screen.getByTestId(
 			relationSelectorSidesTestIds.right
 		)
-		const firstOption = relationSelectorOnTheRight.childNodes[0].lastChild
+		const firstOption =
+			relationSelectorOnTheRight.childNodes[0].childNodes[1].childNodes[3]
 		const firstOptionsFormattedName = firstOption.innerHTML
 		userEvent.click(firstOption)
 		const relationsList = screen.getByTestId('active-relations-list')
@@ -324,7 +327,8 @@ describe('When some structured names have been selected, but no relations formed
 		const relationSelectorOnTheRight = screen.getByTestId(
 			relationSelectorSidesTestIds.right
 		)
-		const firstOption = relationSelectorOnTheRight.childNodes[0].lastChild
+		const firstOption =
+			relationSelectorOnTheRight.childNodes[0].childNodes[1].childNodes[3]
 		userEvent.click(firstOption)
 		const checkbox = await screen.findByRole('checkbox')
 		expect(checkbox).not.toBeChecked()

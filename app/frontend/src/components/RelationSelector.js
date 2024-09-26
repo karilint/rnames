@@ -4,6 +4,7 @@ import { makeId, formatStructuredName } from '../utilities'
 import { addRel, deleteRel } from '../store/relations/actions'
 import { BelongsToSelector } from './BelongsToSelector'
 import { Relation } from './Relation'
+import { SnameTooltip } from './SnameTooltip'
 
 export const RelationSelector = () => {
 	const dispatch = useDispatch()
@@ -12,6 +13,7 @@ export const RelationSelector = () => {
 			.map(v => {
 				return {
 					id: v,
+					structuredName: state.map[v],
 					formattedName: formatStructuredName(state.map[v], state),
 				}
 			})
@@ -71,14 +73,16 @@ export const RelationSelector = () => {
 					data-testid='relselector-left-test-id'
 				>
 					{structuredNames.map(v => (
-						<div
-							key={v.id}
-							className={`w3-button w3-bar hide-overflow ${
-								v.id === primaryName ? 'w3-grey' : ''
-							}`}
-							onClick={() => setPrimaryName(v.id)}
-						>
-							{v.formattedName}
+						<div key={v.id} className='tooltip'>
+							<SnameTooltip sname={v.structuredName} />
+							<div
+								className={`w3-button w3-bar hide-overflow ${
+									v.id === primaryName ? 'w3-grey' : ''
+								}`}
+								onClick={() => setPrimaryName(v.id)}
+							>
+								{v.formattedName}
+							</div>
 						</div>
 					))}
 				</div>
@@ -89,24 +93,30 @@ export const RelationSelector = () => {
 					{structuredNames
 						.filter(v => v.id !== primaryName)
 						.map(v => (
-							<div className='w3-bar hide-overflow' key={v.id}>
-								<BelongsToSelector
-									idA={primaryName}
-									idB={v.id}
-									relation={relationExists(primaryName, v.id)}
-								/>
-								<div
-									className={`w3-button w3-bar hide-overflow ${
-										relationExists(primaryName, v.id)
-											? 'w3-grey'
-											: ''
-									}`}
-									style={{ width: '70%' }}
-									onClick={() =>
-										toggleRelation(primaryName, v.id)
-									}
-								>
-									{v.formattedName}
+							<div key={v.id} className='tooltip'>
+								<SnameTooltip sname={v.structuredName} />
+								<div className='w3-bar hide-overflow'>
+									<BelongsToSelector
+										idA={primaryName}
+										idB={v.id}
+										relation={relationExists(
+											primaryName,
+											v.id
+										)}
+									/>
+									<div
+										className={`w3-button w3-bar hide-overflow ${
+											relationExists(primaryName, v.id)
+												? 'w3-grey'
+												: ''
+										}`}
+										style={{ width: '70%' }}
+										onClick={() =>
+											toggleRelation(primaryName, v.id)
+										}
+									>
+										{v.formattedName}
+									</div>
 								</div>
 							</div>
 						))}
