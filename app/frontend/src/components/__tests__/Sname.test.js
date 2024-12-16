@@ -68,12 +68,8 @@ describe('Sname', () => {
 	})
 
 	test('shows structured name information', () => {
-		const name = screen.getByText(/1a/)
-		const qualifier = screen.getByText(/Bio_Ammonite/)
-		const location = screen.getByText(/Alabama/)
-		expect(name).toBeInTheDocument()
-		expect(qualifier).toBeInTheDocument()
-		expect(location).toBeInTheDocument()
+		const sname = screen.getByText('1a / Bio_Ammonite / Alabama')
+		expect(sname).toBeInTheDocument()
 	})
 
 	test('shows "delete" button', () => {

@@ -10,6 +10,7 @@ import {
 import { deleteName } from '../store/names/actions'
 import { deselectStructuredName } from '../store/selected_structured_names/actions'
 import { formatStructuredName, parseId } from '../utilities'
+import { SnameTooltip } from './SnameTooltip'
 
 const CAN_DELETE_ERROR_MSG =
 	'Added relation is dependent on this structured name. Please remove the relation associated with this structured name first.'
@@ -88,16 +89,19 @@ export const Sname = ({
 
 	return (
 		<div className='w3-container'>
-			<p>
-				{formatStructuredName(sname, { map })}
-				<button
-					className='w3-button w3-grey w3-circle w3-margin-left'
-					type='button'
-					onClick={deleteSnameHandler}
-				>
-					<i title='Delete' className='fa fa-trash'></i>
-				</button>
-			</p>
+			<div className='tooltip'>
+				<SnameTooltip sname={sname} />
+				<p>
+					{formatStructuredName(sname, { map })}
+					<button
+						className='w3-button w3-grey w3-circle w3-margin-left'
+						type='button'
+						onClick={deleteSnameHandler}
+					>
+						<i title='Delete' className='fa fa-trash'></i>
+					</button>
+				</p>
+			</div>
 		</div>
 	)
 }
