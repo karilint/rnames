@@ -6,6 +6,7 @@ cffi==1.17.1
 charset-normalizer==3.4.2
 cryptography==44.0.3
 cycler==0.12.1
+debugpy==1.8.14
 defusedxml==0.7.1
 Django==4.2.21
 django-allauth==0.51.0

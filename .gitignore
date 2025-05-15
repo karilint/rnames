@@ -5,3 +5,4 @@ nginx/certs/*
 dev/*.csv
 dev/*.json
 certs/
+.vscode

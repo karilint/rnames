@@ -1,16 +1,30 @@
-version: '3.8'
-
 services:
   web:
     build: ./app
     volumes:
       - ./app:/src/app
+    ports:
+      - 3000:3000
+      - 8000:8000
     env_file:
       - ./.env
     depends_on: 
       - db
       - redis
     container_name: rnames_web
+
+  celery:
+    command: python -m debugpy --listen 0.0.0.0:3001 -m celery -A main worker -l INFO
+    build: ./app
+    volumes:
+      - ./app:/src/app
+    ports:
+      - 3001:3001
+    env_file:
+      - ./.env
+    depends_on:
+      - web
+    container_name: rnames_celery
 
   db:
     image: mariadb
@@ -34,23 +48,6 @@ services:
       - PMA_USER=${DB_USER}
       - PMA_PASSWORD=${DB_PASSWORD}
     container_name: rnames_phpmyadmin
-
-  nginx:
-    build: ./nginx
-    restart: always
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./app/static:/vol/web/static
-      - ./certs/:/etc/nginx/ssl/live/${RNAMES_DOMAIN}/
-    environment:
-      - RNAMES_DOMAIN=${RNAMES_DOMAIN}
-      - PMA_DOMAIN=${PMA_DOMAIN}
-    depends_on:
-      - web
-      - db
-    container_name: rnames_nginx
 
   redis:
     image: redis
