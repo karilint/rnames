@@ -23,6 +23,14 @@ sudo openssl dhparam -out nginx/certs/dhparam.pem 4096
 
 [More details here](https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-nginx-in-ubuntu-16-04)
 
+## Initializing the database with existing database (eg. staging database)
+
+```
+mariadb-dump -h {DB_HOST} -P {DB_PORT} -u {DB_USERNAME} -p {DB_NAME} > db.dump
+docker compose up -d db
+docker compose exec -T db mariadb -u {ROOT_USERNAME} -p {DB_NAME} < db.dump
+```
+
 ## Running the environment
 
 To start the environment, you have to run this command in the root the repository. 
