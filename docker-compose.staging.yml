@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 
   web:
@@ -15,6 +13,18 @@ services:
     depends_on:
       - redis
     container_name: rnames_web_staging
+
+  celery:
+    image: palaeontologyhelsinki/rnames_staging
+    restart: unless-stopped
+    command: celery -A main worker -l INFO
+    volumes:
+      - static:/vol/web
+    env_file:
+      - ./.env
+    depends_on:
+      - redis
+    container_name: rnames_celery_staging
 
   nginx:
     build: ./nginx

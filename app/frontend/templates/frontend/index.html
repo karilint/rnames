@@ -1,12 +1,14 @@
 {% extends 'base_generic.html' %}
+{% load static %}
+
 {% block title %}RNames - Wizard{% endblock %}
 
 {% block content %}
-<head>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-    <title>Wizard</title>
+    {% csrf_token %}
+    <div id="app"></div>
+{% endblock %}
+
+{% block script %}
     {{ names|json_script:"DATA_NAMES" }}
     {{ locations|json_script:"DATA_LOCATIONS" }}
     {{ qualifier_names|json_script:"DATA_QUALIFIER_NAMES" }}
@@ -14,11 +16,5 @@
     {{ structured_names|json_script:"DATA_STRUCTURED_NAMES" }}
     {{ references|json_script:"DATA_REFERENCES" }}
     {{ amend_info|json_script:"AMEND_INFO" }}
-    {% load static %}
-</head>
-<body>
-    {% csrf_token %}
-    <div id="app"></div>
     <script src="{% static 'frontend/main.js' %}"></script>
-</body>
 {% endblock %}

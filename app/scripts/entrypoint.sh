@@ -8,7 +8,6 @@ echo
 echo "RUNNING: MAKEMIGRATIONS & MIGRATE"
 python manage.py makemigrations
 python manage.py migrate
-python manage.py collectstatic --no-input
 
 echo
 echo "INITIALIZING DATABASE"
@@ -20,6 +19,4 @@ python -u manage.py test -v2
 
 echo
 echo "STARTING DEVELOPMENT SERVER"
-celery -A main beat --detach -s /var/run/celerybeat-schedule
-celery -A main worker --detach -l INFO
-gunicorn main.wsgi:application --bind 0.0.0.0:8000 --reload
+python -m debugpy --listen 0.0.0.0:3000 manage.py runserver 0.0.0.0:8000
