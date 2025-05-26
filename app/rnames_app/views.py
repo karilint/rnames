@@ -4,15 +4,11 @@
 # These two are combined using a solution provided by 'Reinstate Monica'
 # at https://stackoverflow.com/questions/2047622/how-to-paginate-django-with-other-get-variables/57899037#57899037
 import csv
-# Start for matplotlib
 import io
 from django.http.response import Http404
-import matplotlib.pyplot as plt
 import urllib
 import base64
-import mpltern
 import traceback
-from mpltern.ternary.datasets import get_scatter_points
 import numpy as np
 # end
 import json
