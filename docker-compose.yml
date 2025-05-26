@@ -1,11 +1,18 @@
 services:
   web:
     build: ./app
-    volumes:
-      - ./app:/src/app
     ports:
       - 3000:3000
       - 8000:8000
+    develop:
+      watch:
+        - action: sync
+          path: ./app
+          target: /app
+          ignore:
+            - .venv/
+        - action: rebuild
+          path: ./uv.lock
     env_file:
       - ./.env
     depends_on: 
@@ -16,10 +23,17 @@ services:
   celery:
     command: python -m debugpy --listen 0.0.0.0:3001 -m celery -A main worker -l INFO
     build: ./app
-    volumes:
-      - ./app:/src/app
     ports:
       - 3001:3001
+    develop:
+      watch:
+        - action: sync
+          path: ./app
+          target: /app
+          ignore:
+            - .venv/
+        - action: rebuild
+          path: ./uv.lock
     env_file:
       - ./.env
     depends_on:
@@ -28,7 +42,7 @@ services:
 
   db:
     image: mariadb
-    restart: always
+    restart: unless-stopped
     environment:
       - MYSQL_DATABASE=${DB_NAME}
       - MYSQL_USER=${DB_USER}
@@ -42,7 +56,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin
-    restart: always
+    restart: unless-stopped
     environment:
       - PMA_HOST=${DB_HOST}
       - PMA_USER=${DB_USER}
@@ -51,7 +65,7 @@ services:
 
   redis:
     image: redis
-    restart: always
+    restart: unless-stopped
     container_name: rnames_redis
 
 volumes:
