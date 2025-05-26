@@ -1,0 +1,34 @@
+[project]
+name = "RNames"
+version = "0.1.0"
+description = "RNames is a relational database linking stratigraphic names with each other that are considered to be time-equivalent or time-overlapping."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "celery>=5.5.2",
+    "django>=5.2.1",
+    "django-allauth>=65.8.1",
+    "django-cprofile-middleware>=1.0.5",
+    "django-debug-toolbar>=5.2.0",
+    "django-filter>=25.1",
+    "django-redis>=5.4.0",
+    "django-select2>=8.4.0",
+    "django-silk>=5.3.2",
+    "django-simple-history>=3.8.0",
+    "django-userforeignkey>=0.5.0",
+    "djangorestframework>=3.16.0",
+    "djangorestframework-api-key>=3.1.0",
+    "gunicorn>=23.0.0",
+    "matplotlib>=3.10.3",
+    "mpltern>=1.0.4",
+    "mysqlclient>=2.2.7",
+    "numpy>=2.2.6",
+    "pandas>=2.2.3",
+    "requests>=2.32.3",
+    "requests-oauthlib>=2.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "debugpy>=1.8.14",
+]
