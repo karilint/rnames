@@ -1,10 +1,10 @@
-FROM python:3.9-slim AS compile-image
+FROM python:3.13-slim AS compile-image
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update && \
-    apt-get install -y build-essential gcc default-libmysqlclient-dev npm curl && \
+    apt-get install -y gcc build-essential python3-dev default-libmysqlclient-dev pkg-config npm curl && \
     useradd -m user
 
 RUN npm install -g n && n 16
@@ -22,7 +22,7 @@ RUN npm ci && npm run build
 
 # ---------------------------------
 
-FROM python:3.9-slim AS build-image
+FROM python:3.13-slim AS build-image
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
