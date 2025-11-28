@@ -233,14 +233,13 @@ DEBUG_TOOLBAR_PANELS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', config.get(
-    'SENDGRID_API_KEY', None))
-
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', config.get(
     'EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend'))
-EMAIL_HOST = 'smtp.sendgrid.com'
-EMAIL_HOST_USER = 'apikey'
-EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+EMAIL_HOST = os.environ.get("EMAIL_HOST", config.get("EMAIL_HOST", None))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", config.get(
+    "EMAIL_HOST_USER", None))
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", config.get(
+    "EMAIL_HOST_PASSWORD", None))
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', config.get(
