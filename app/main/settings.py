@@ -134,10 +134,26 @@ AUTHENTICATION_BACKENDS = [
 
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+
+# Allauth settings
+
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+
+ACCOUNT_RATE_LIMITS = {
+    'signup': '5/m/ip',
+    'reset_password': '5/m/ip,3/m/key',
+    'social_signup': '5/m/ip',
+    'manage_email': '3/m/user',
+}
+
+# The maximum amount of email addresses a user can associate to his account
+ACCOUNT_MAX_EMAIL_ADDRESSES = 3
+
+# https://docs.allauth.org/en/latest/account/configuration.html#signup
 ACCOUNT_SIGNUP_FORM_HONEYPOT_FIELD = "phone_number"
+
 if DEBUG:
     ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
 else:
@@ -247,8 +263,15 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', config.get(
     'DEFAULT_FROM_EMAIL', None))
 
 CACHES = {
+    # Use Redis to cache allauth rate limit counters globally and not
+    # per gunicorn worker. Use Redis DB 1 to avoid key collisions with
+    # the select2 below (DB 0).
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://redis:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
     },
     'select2': {
         'BACKEND': 'django_redis.cache.RedisCache',
