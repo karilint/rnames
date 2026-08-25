@@ -56,6 +56,8 @@ services:
 
   phpmyadmin:
     image: phpmyadmin
+    ports:
+      - 8001:80
     restart: unless-stopped
     environment:
       - PMA_HOST=${DB_HOST}
