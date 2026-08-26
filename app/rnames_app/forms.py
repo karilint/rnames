@@ -2,7 +2,37 @@ from django import forms
 from django_select2.forms import (
     ModelSelect2Widget,
 )
+from allauth.account.forms import SignupForm, ResetPasswordForm
+from allauth.core import ratelimit
+from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from .models import Location, Name, Qualifier, QualifierName, Reference, Relation, StratigraphicQualifier, StructuredName, TimeScale, BinningSchemeName
+from .captcha import TurnstileField
+
+
+class CaptchaSignupForm(SignupForm):
+    """Signup form with a Cloudflare Turnstile CAPTCHA challenge"""
+    captcha = TurnstileField()
+
+
+class CaptchaResetPasswordForm(ResetPasswordForm):
+    """Password-reset-request form with a Cloudflare Turnstile CAPTCHA
+    challenge
+    """
+    captcha = TurnstileField()
+
+
+class CaptchaSocialSignupForm(SocialSignupForm):
+    """Fallback social signup form with a Cloudflare Turnstile CAPTCHA
+    challenge
+    """
+    captcha = TurnstileField()
+
+    def try_save(self, request):
+        # allauth doesn't rate limit this view itself
+        if not ratelimit.consume(request, action="social_signup"):
+            return None, ratelimit.respond_429(request)
+        return super().try_save(request)
+
 
 class ContactForm(forms.Form):
     name = forms.CharField(max_length=30)
