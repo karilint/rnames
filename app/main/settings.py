@@ -137,6 +137,19 @@ ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 
+# Cloudflare Turnstile CAPTCHA, see rnames_app/captcha.py and forms.py
+ACCOUNT_FORMS = {
+    'signup': 'rnames_app.forms.CaptchaSignupForm',
+    'reset_password': 'rnames_app.forms.CaptchaResetPasswordForm',
+}
+SOCIALACCOUNT_FORMS = {
+    'signup': 'rnames_app.forms.CaptchaSocialSignupForm',
+}
+
+# defaults to Cloudflare's always-pass test keypair
+TURNSTILE_SITE_KEY = os.environ.get('TURNSTILE_SITE_KEY', config.get('TURNSTILE_SITE_KEY', ''))
+TURNSTILE_SECRET_KEY = os.environ.get('TURNSTILE_SECRET_KEY', config.get('TURNSTILE_SECRET_KEY', ''))
+
 # Allauth settings
 
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
