@@ -1,0 +1,9 @@
+{% extends "base_generic.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Too Many Requests" %}{% endblock %}
+
+{% block content %}
+<h1>{% trans "Too Many Requests" %}</h1>
+<p>{% trans "You've made too many requests in a short period of time. Please wait a minute and try again." %}</p>
+{% endblock %}
