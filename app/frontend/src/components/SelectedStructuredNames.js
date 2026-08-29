@@ -6,6 +6,7 @@ import {
 } from '../store/selected_structured_names/actions'
 import { loadServerData } from '../services/server'
 import { formatStructuredName, parseId } from '../utilities'
+import {SnameTooltip} from './SnameTooltip'
 
 export const SelectedStructuredNames = () => {
 	const [selection, dbNames] = useSelector(state => {
@@ -23,6 +24,7 @@ export const SelectedStructuredNames = () => {
 				.map(v => {
 					return {
 						id: v,
+						structuredName: state.map[v],
 						formattedName: formatName(state.map[v]),
 					}
 				}),
@@ -74,7 +76,8 @@ export const SelectedStructuredNames = () => {
 				))}
 			</datalist>
 			{selection.map(v => (
-				<div key={v.id}>
+				<div key={v.id} className='tooltip'>
+					<SnameTooltip sname={v.structuredName} />
 					<p>
 						{v.formattedName}
 						<button
