@@ -268,7 +268,7 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     # generate generalised binning
     # unique names without absolute time
     uni_binned = binned_raw[binned_raw['qualifier_name'] !='mya']
-    uni_binned = uni_binned[['name', 'qualifier_name']]
+    uni_binned = uni_binned[['name']]
     uni_binned = uni_binned.drop_duplicates()
     #print('##### uni_binned:', uni_binned)
 
@@ -287,7 +287,7 @@ def main_binning_fun(binning_scheme, ts_names = None, t_scales = None, res_rels_
     for i in bnurange:
         uni_binned_x = uni_binned.iloc[i]
         resi_binned_sub = binned_raw.loc[(binned_raw["name"]==uni_binned_x['name'])
-                                       & (binned_raw["qualifier_name"]==uni_binned_x['qualifier_name'])]
+                                       & (binned_raw["qualifier_name"]!='mya')]
         if resi_binned_sub.shape[0]>0:
             ts_tot_oldest = time_slices[time_slices["ts"].isin(resi_binned_sub['oldest_id'])]
             ts_tot_youngest = time_slices[time_slices["ts"].isin(resi_binned_sub['youngest_id'])]
